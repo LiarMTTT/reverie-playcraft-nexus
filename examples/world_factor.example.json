@@ -1,0 +1,22 @@
+{
+  "packageVersion": "1.0.0",
+  "id": "xingyue-world-factor-watch-authority",
+  "type": "world_factor",
+  "cardScope": "xingyue",
+  "title": "腕表权限社会强化",
+  "summary": "强化纳米腕表在校内权限、通行和资源分配中的作用。",
+  "authorName": "official-example",
+  "rating": "general",
+  "language": "zh-CN",
+  "tags": ["世界因子", "腕表"],
+  "createdAt": "2026-06-22T00:00:00.000Z",
+  "updatedAt": "2026-06-22T00:00:00.000Z",
+  "payload": {
+    "worldFactors": [
+      {
+        "title": "腕表权限强化",
+        "content": "校内大多数门禁、消费、预约、课程权限和特殊区域访问都由纳米腕表记录与判定。"
+      }
+    ]
+  }
+}

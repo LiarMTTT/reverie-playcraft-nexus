@@ -1,0 +1,37 @@
+{
+  "packageVersion": "1.0.0",
+  "id": "xingyue-user-identity-transfer-student",
+  "type": "user_identity",
+  "cardScope": "xingyue",
+  "title": "交换生身份模板",
+  "summary": "适合从外校转入星月私立高等学院的玩家身份。",
+  "authorName": "official-example",
+  "rating": "general",
+  "language": "zh-CN",
+  "tags": [
+    "身份",
+    "开局"
+  ],
+  "createdAt": "2026-06-22T00:00:00.000Z",
+  "updatedAt": "2026-06-22T00:00:00.000Z",
+  "payload": {
+    "identity": "交换生",
+    "callname": "转学生",
+    "background": "因校际合作项目转入星月私立高等学院，需要完成入学登记、宿舍安排与班级适应。",
+    "appearance": "深色短发，制服穿着整洁，随身携带交换项目证件夹。",
+    "skills": "跨校课程适应\n基础礼仪\n敏锐观察",
+    "core_attributes": {
+      "格斗": 3,
+      "平衡": 4,
+      "反应": 5,
+      "感知": 7,
+      "技巧": 7,
+      "精神": 4
+    },
+    "media": {
+      "avatar": "bond|%7B%7Buser%7D%7D|avatar|normal",
+      "portrait": "bond|%7B%7Buser%7D%7D|portrait|normal"
+    },
+    "grade": "初三"
+  }
+}

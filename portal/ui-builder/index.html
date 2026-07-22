@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UI Builder</title>
+    <link rel="icon" href="data:," />
+    <script>
+      // 嵌入版运行于 opaque sandbox，不能访问浏览器持久存储；这里只提供
+      // 当前 iframe 会话内的 Storage 兼容面，设计稿仍由 RPN 宿主桥接保存。
+      if (new URLSearchParams(location.hash.slice(1)).get('embed') === '1') {
+        try {
+          void window.localStorage;
+        } catch (_) {
+          const values = new Map();
+          Object.defineProperty(window, 'localStorage', {
+            value: {
+              get length() { return values.size; },
+              clear() { values.clear(); },
+              getItem(key) { key = String(key); return values.has(key) ? values.get(key) : null; },
+              key(index) { return [...values.keys()][Number(index)] ?? null; },
+              removeItem(key) { values.delete(String(key)); },
+              setItem(key, value) { values.set(String(key), String(value)); },
+            },
+          });
+        }
+      }
+    </script>
+    <script defer src="./assets/index-_AcZ43x9.js"></script>
+    <link rel="stylesheet" href="./assets/index-ub-fhs2K.css">
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>

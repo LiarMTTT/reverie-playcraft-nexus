@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Reverie Playcraft Nexus",
+  "version": "../package.json",
+  "identifier": "io.github.liarmttt.reverie-playcraft-nexus",
+  "mainBinaryName": "rpn-desktop",
+  "build": {
+    "beforeDevCommand": "npm run build:pages",
+    "beforeBuildCommand": "npm run desktop:prepare",
+    "frontendDist": "../dist-pages"
+  },
+  "app": {
+    "windows": [],
+    "withGlobalTauri": true,
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: http: https:; font-src 'self' data:; connect-src 'self' http: https:; frame-src 'self' data: blob:; worker-src 'self' blob:; media-src 'self' data: blob: http: https:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "createUpdaterArtifacts": false,
+    "icon": ["icons/icon.ico"],
+    "windows": {
+      "allowDowngrades": false,
+      "minimumWebview2Version": "110.0.1531.0",
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["SimpChinese", "English"],
+        "customLanguageFiles": {
+          "SimpChinese": "windows/SimpChinese.nsh",
+          "English": "windows/English.nsh"
+        },
+        "displayLanguageSelector": false
+      }
+    }
+  }
+}

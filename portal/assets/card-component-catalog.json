@@ -1,0 +1,1924 @@
+{
+  "format": "rolecard-component-catalog",
+  "schemaVersion": 1,
+  "libraryVersion": "0.3.0",
+  "sourceCardVersion": "3.9.6",
+  "source": "registry.json",
+  "modules": [
+    {
+      "id": "shared.cf_mvu_var_groups",
+      "title": "变量分组配置",
+      "commonName": "变量分组与面板分类配置",
+      "category": "shared",
+      "defaultEnabled": true,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "同步 data.extensions.cfMvuVarGroups；服务变量面板分组，不直接进入模型提示。"
+    },
+    {
+      "id": "shared.worldbook_manager",
+      "title": "世界书管理器内核",
+      "commonName": "世界书读写/校验/转换通用内核",
+      "category": "shared",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "v0.4.0 运行层独立内核：在 P5 快照恢复基础上增加原子编辑 session、世界书名+revision 双绑定的两阶段保存、runtime 校验档、未知运行期字段深合并、核心/变量额外确认、工坊 localModifiedAt 与 program-only 专用脱离。公开事务不能剥离、启用或删除受管 program-only 条目；no-op 不建立快照。共享仿真已覆盖 259 项断言。"
+    },
+    {
+      "id": "shared.worldbook_manager_ui",
+      "title": "世界书管理器 UI 基础",
+      "commonName": "世界书条目列表、出厂基线与备份恢复界面",
+      "category": "shared",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "shared.worldbook_manager"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern 世界书",
+        "角色卡创作平台"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "P5 只读与备份恢复界面：条目列表、当前 revision、39 条出厂基线 SHA、快照后端/历史列表、核心/核心+变量/历史快照三类恢复、diff 与二次确认，以及独立的开局正文恢复动作。明确不包含 P6 的正文编辑、搜索筛选、AI 辅助或 program-only 脱离。"
+    },
+    {
+      "id": "shared.worldbook_manager_editor_ui",
+      "title": "世界书完整编辑器 UI",
+      "commonName": "世界书全条目编辑、对比与本地辅助界面",
+      "category": "shared",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "shared.worldbook_manager"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern 世界书",
+        "角色卡创作平台"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "P7 独立懒加载全屏编辑器 v0.2.0：完整保留 P6-1 的 SillyTavern 1.14.0 原生字段层级与确定性本地建议；通过注入式 aiAssistant 接入当前 ST 模型或会话级自定义 API，严格限制单条上下文、JSON Schema、输出白名单、可见提案 diff、用户应用到草稿及既有保存确认链。支持取消/报错/重试、内存或显式 sessionStorage 密钥，以及无同源/表单/弹窗权限的研究 iframe "
+    },
+    {
+      "id": "variables.base_schema",
+      "title": "变量系统共享规则基线",
+      "commonName": "变量规则、摘要与校验共享底座",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "shared.cf_mvu_var_groups"
+      ],
+      "conflictsWith": [
+        "variables.base_schema_xingyue"
+      ],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "v0.1.1 起不再承载 InitialVariables 整包；每个顶层变量根独立 emit 自己的 initial.json。本模块继续共享承载 MVU 规则、compact 规则、输出格式、EJS 摘要和 Zod Schema，保证 v2.1.5 等价复刻稳定。"
+    },
+    {
+      "id": "variables.prompt_value_baseline.airp_objective_state",
+      "title": "提示词价值基线：AIRP 上帝视角与目标导向",
+      "commonName": "上帝视角与目标导向价值基线",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "AIRP 上帝视角与目标导向价值基线（写为可执行规则）。单一真相源声明，无 build.emit、不进 recipe；phase 3 由 profile 与生成器拼装进 mvu_update_full/compact。星月与交错宙域均启用。"
+    },
+    {
+      "id": "variables.prompt_baseline.global_rules",
+      "title": "提示词基线：全局变量更新原则",
+      "commonName": "全局变量更新原则基线",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "全局变量更新原则通用子集（add/replace/remove/move 边界、首登建外壳、信息去重、字段职责分离、长文本拆分、男性角色禁写身体状态/私密档案——本卡系男性成人向属通用全局 check）。合法顶层容器与关系网等字段归属由 profile 注入，基线不写死星月专属容器（莉莉丝商店/校卡/现金）。单一真相源声明，无 build.emit、不进 recipe。"
+    },
+    {
+      "id": "variables.prompt_baseline.output_jsonpatch",
+      "title": "提示词基线：变量输出协议 jsonpatch-only",
+      "commonName": "jsonpatch-only 变量输出协议基线",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "jsonpatch-only 输出协议基线：UpdateVariable 内只含 JSONPatch 数组，禁 inner-analysis；变量预分析由独立 [cot]变量预分析 世界书条目指导。对齐 manifest.updateProtocol，不是 2.5.0 inner-analysis。顶层根由 profile 注入。单一真相源声明，无 build.emit、不进 recipe。"
+    },
+    {
+      "id": "variables.prompt_baseline.analysis_cot",
+      "title": "提示词基线：变量预分析 cot",
+      "commonName": "万金油变量预分析 cot 基线",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "万金油变量预分析 cot 基线：正文后、UpdateVariable 前输出 <analysis>，与 JSONPatch 双向配对；配套 analysis_omni 渲染 + output_jsonpatch separate-cot-worldbook-entry 协议。顶层根分类 profile 注入。弃 3.0.x 卡专属。单一真相源声明，无 build.emit、不进 recipe。"
+    },
+    {
+      "id": "variables.prompt_baseline.recent_event_compaction_20_to_10",
+      "title": "提示词基线：近期事件压缩 20→10",
+      "commonName": "近期事件压缩规则基线（20→10）",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "近期事件压缩规则，参数化 compactTriggerCount=20 / compactTargetCount=10；保留集与阶段归档逻辑不依赖星月专属字段。单一真相源声明，无 build.emit、不进 recipe。"
+    },
+    {
+      "id": "variables.prompt_baseline.radar_active_maintenance",
+      "title": "提示词基线：雷达积极维护",
+      "commonName": "雷达积极维护规则基线",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "雷达积极维护规则：目标仍相关 replace、失效或离场才 remove，稳定信号编号、禁重复 add。目标类型清单由 profile 注入。单一真相源声明，无 build.emit、不进 recipe。"
+    },
+    {
+      "id": "variables.reference.xingyue_2_5_0",
+      "title": "参考范本：星月学院 2.5.0 变量提示词快照",
+      "commonName": "星月学院 2.5.0 变量提示词参考快照",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "现代都市",
+        "校园剧情",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 2.5.0 变量提示词逐字快照（参考/对照用，不参与组装）。保留 2.5.0 原貌（含星月专属内容与 inner-analysis 协议），用于核对基线抽取覆盖度与 phase 3 拼装目标对照。无 build.emit、不进 recipe。"
+    },
+    {
+      "id": "variables.environment.core",
+      "title": "环境变量根",
+      "commonName": "时间地点与太空环境变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [
+        "variables.environment.urban_simple"
+      ],
+      "applicableScenarios": [
+        "太空歌剧",
+        "机甲战争",
+        "开放世界"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "时间、位置、空间环境、近期节日、活动和新闻。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.environment.urban_simple",
+      "title": "都市简化环境变量根",
+      "commonName": "城市位置、天气与环境信息变量包",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [
+        "variables.environment.core"
+      ],
+      "applicableScenarios": [
+        "现代都市",
+        "日常剧情",
+        "开放世界"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "现代都市简化环境根：时间、城市位置、城市环境、近期节日、活动和新闻。与太空歌剧环境根互斥，不用于交错宙域 v2.1.5 等价复刻。"
+    },
+    {
+      "id": "variables.user.core",
+      "title": "user 变量根",
+      "commonName": "主角资料、属性与状态变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "角色互动",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "主角身份、外貌穿着、成长属性、核心属性、资源值、性器状态、性经验和成就。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.talents_skills.core",
+      "title": "天赋与技能变量根",
+      "commonName": "天赋、技能与血统变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "资源管理",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "天赋、技能、血统三类可成长能力容器。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.inventory.core",
+      "title": "持有物变量根",
+      "commonName": "随身物品变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "资源管理",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "随身物品与个人持有资源。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.storage.core",
+      "title": "仓库变量根",
+      "commonName": "仓库库存变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "资源管理",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "非随身库存、仓储物品和批量管理对象。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.mobile_suit.core",
+      "title": "机体信息变量根",
+      "commonName": "机体档案与装备状态变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "太空歌剧",
+        "机甲战争",
+        "开放世界"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "机体唯一 key、动态装备、受损维修状态和格纳库回查来源。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.radar.core",
+      "title": "雷达系统变量根",
+      "commonName": "雷达探测目标变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [
+        "variables.radar.simple_entities"
+      ],
+      "applicableScenarios": [
+        "太空歌剧",
+        "机甲战争",
+        "开放世界"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "雷达探测条目、距离、方位、备注和离场清理对象。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.radar.simple_entities",
+      "title": "简化实体雷达变量根",
+      "commonName": "角色与物品物体雷达变量包",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [
+        "variables.radar.core"
+      ],
+      "applicableScenarios": [
+        "现代都市",
+        "日常剧情",
+        "开放世界"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "现代都市简化雷达根：单层 /雷达系统 record，只记录角色与物品物体；状态栏适配延后到具体卡装配。"
+    },
+    {
+      "id": "variables.current_character.core",
+      "title": "当前互动角色变量根",
+      "commonName": "当前互动角色档案变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "角色互动",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "当前同场互动角色档案、冻结生命周期和媒体读取对象。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.relationships.core",
+      "title": "关系网变量根",
+      "commonName": "人物与组织关系变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "角色互动",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "角色关系、组织关系和状态栏关系页来源。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.bond_character.core",
+      "title": "羁绊角色变量根",
+      "commonName": "羁绊角色长期档案变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "角色互动",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "羁绊角色档案、部分冻结、关系数值和媒体读取对象。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.rule_changes.core",
+      "title": "规则变化变量根",
+      "commonName": "世界规则变化记录包",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "资源管理",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": [
+        "variables.rule_changes.v2"
+      ],
+      "replacementStatus": "已被替换",
+      "summary": "世界变化等规则层状态记录。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.rule_changes.v2",
+      "title": "规则变化变量根 v2（世界变化七字段）",
+      "commonName": "世界变化七字段记录包 v2",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "资源管理",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": "替换组件",
+      "summary": "规则变化变量根升级版：世界变化七字段（规则内容/生效范围/影响对象/执行强度/来源/生效期限/备注），世界细节降级为 legacyReadKeys 旧档只读。该模块实际参与 InitialVariables.json 的 jsonMerge 组装。替换 variables.rule_changes.core。"
+    },
+    {
+      "id": "variables.placed_items.core",
+      "title": "道具放置列表变量根",
+      "commonName": "场景道具放置记录包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "资源管理",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "场景内放置道具、位置和批量删除对象。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.trade_goods.core",
+      "title": "商贸已知货物变量根",
+      "commonName": "商贸货物与交易情报包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "资源管理",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已知货物、交易信息和商贸状态栏来源。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.lilith_shop.core",
+      "title": "莉莉丝的商店变量根",
+      "commonName": "莉莉丝固定店铺商品变量包",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [
+        "variables.trade_goods.core"
+      ],
+      "applicableScenarios": [
+        "商店经营",
+        "现代都市",
+        "资源管理"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "基于商贸已知货物改造的莉莉丝固定店铺变量根；商品只保留价格、类型、描述、效果和字符串稀有度。状态栏适配延后到具体卡装配。"
+    },
+    {
+      "id": "mvu_runtime.dual_zod_scripts",
+      "title": "MVU 双 Zod 运行脚本",
+      "commonName": "MVU运行时双CDN脚本",
+      "category": "shared",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "MVU 双 Zod 运行脚本；3.9.6 回落后，全局脚本等待星月世界书 ready，并按 jsDelivr → testingcf 双源加载 MagVarUpdate，双源失败时显式记录错误。"
+    },
+    {
+      "id": "variables.base_resource.core",
+      "title": "基地与资源变量根",
+      "commonName": "基地设施与资源库存变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [
+        "variables.residence.core"
+      ],
+      "applicableScenarios": [
+        "太空歌剧",
+        "机甲战争",
+        "开放世界"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "固定据点、设施列表、防御工事、资源储备和驻留人员。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.residence.core",
+      "title": "居所变量根",
+      "commonName": "住宅、店铺与房间系统变量包",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [
+        "variables.base_resource.core"
+      ],
+      "applicableScenarios": [
+        "现代都市",
+        "日常剧情",
+        "开放世界",
+        "资源管理"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "现代都市居所根：生活据点、经营状态、基础储物、人员、访客和房间系统；状态栏适配延后到具体卡装配。"
+    },
+    {
+      "id": "variables.tasks.core",
+      "title": "任务变量根",
+      "commonName": "任务记录与进度变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "角色互动",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "任务记录、任务状态、任务页读取点和批量删除对象。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.recent_events.core",
+      "title": "近期事件变量根",
+      "commonName": "近期事件与新闻记录变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "开放世界",
+        "角色互动",
+        "长篇剧情"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "近期事件记录、新闻联动和状态栏批量删除对象。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.mothership.core",
+      "title": "母舰变量根",
+      "commonName": "母舰设施、资源与格纳库变量包",
+      "category": "variables",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [
+        "variables.vehicle.core"
+      ],
+      "applicableScenarios": [
+        "太空歌剧",
+        "机甲战争",
+        "开放世界"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "舰内设施、舰防系统、舰船资源、格纳库系统和驻留人员。 该模块实际参与 InitialVariables.json 的 jsonMerge 组装。"
+    },
+    {
+      "id": "variables.vehicle.core",
+      "title": "载具变量根",
+      "commonName": "城市车辆、座位与模块系统变量包",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [
+        "variables.mothership.core"
+      ],
+      "applicableScenarios": [
+        "现代都市",
+        "日常剧情",
+        "开放世界",
+        "资源管理"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "现代都市载具根：移动状态、驾驶权限、能源耐久、座位详情、储物空间和模块系统；状态栏适配延后到具体卡装配。"
+    },
+    {
+      "id": "status_bar.core",
+      "title": "状态栏模板核心",
+      "commonName": "状态栏模板骨架与基础运行时",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [],
+      "conflictsWith": [
+        "status_bar.mount_shell_remote"
+      ],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "v0.2.0 模板插槽核心，承载状态栏 HTML/CSS/JS 装配骨架、基础样式片段和基础运行时片段；功能逻辑由状态栏 slot 组件注入。模板新增可选插槽 status_bar.tab_set.multicolor_css（位于 visibility_css 之后），由 tab-set 展开器按 multiColorCss 标志数据化生成多彩 Tab CSS；未开启时该插槽为空，不影响产出（故不进 requiredSlots）。"
+    },
+    {
+      "id": "status_bar.mount_shell_remote",
+      "title": "状态栏远程挂载壳（git-mount loader·含变量桥）",
+      "commonName": "状态栏 git 挂载壳（变量桥版）",
+      "category": "status_bar",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [
+        "status_bar.core"
+      ],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "git-mount 交付形态的卡内壳（~4KB loader）：fetch git runtime 真身 status-bar.html → injectBridge 注入变量桥（blob 自载 jQuery/lodash + 镜像壳 TH 全局 + getVariables 走顶层 Mvu 强取本楼）→ Blob URL 挂内层 iframe + 高度同步。真身一字不改。修 3.1.0 起长期潜伏的「blob 非 TH 托管读不到变量"
+    },
+    {
+      "id": "status_bar.tab_set.crossed_zone",
+      "title": "状态栏 Tab 集：交错宙域",
+      "commonName": "交错宙域状态栏分页结构",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.render_orchestrator"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "太空歌剧",
+        "机甲战争",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "声明式交错宙域 Tab 集；生成 radio/label/panel/CSS checked 选择器和 renderer map，保留太空、机体、母舰、基地与商贸页面。可选 multiColorCss 标志（默认未开）控制是否生成每页多彩 Tab CSS（status_bar.tab_set.multicolor_css 插槽）；交错线沿用单色 Tab，不开启。"
+    },
+    {
+      "id": "status_bar.tab_set.xingyue_academy_2_5_0",
+      "title": "状态栏 Tab 集：星月私立高等学院 v2.5.0",
+      "commonName": "星月私立高等学院 v2.5.0 状态栏分页结构",
+      "category": "status_bar",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [
+        "status_bar.tab_set.crossed_zone"
+      ],
+      "applicableScenarios": [
+        "现代都市",
+        "校园剧情",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 2.5.0 专用声明式 Tab 集；继承 2.4.9 状态栏 r1 基线，状态栏版本显示更新至 HUD v2.5.0；不包含已弃用的正文尾部 analysis 方案。已开启 multiColorCss 标志：由 tab-set 展开器按各页 id+themeColor 数据化生成多彩 Tab CSS（status_bar.tab_set.multicolor_css 插槽），等价于 beauty 成品里原本手写的多彩 Tab 样式"
+    },
+    {
+      "id": "status_bar.tab_set.xingyue_academy_3_1_0",
+      "title": "状态栏 Tab 集：星月私立高等学院 v3.1.0",
+      "commonName": "星月私立高等学院 v3.1.0 状态栏分页结构",
+      "category": "status_bar",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.crafting",
+        "status_bar.masonry",
+        "status_bar.self"
+      ],
+      "conflictsWith": [
+        "status_bar.tab_set.crossed_zone",
+        "status_bar.tab_set.xingyue_academy_2_5_0"
+      ],
+      "applicableScenarios": [
+        "现代都市",
+        "校园剧情",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.1.0 升格状态栏 Tab 集：13 根三合一结构（角色档案/资产库聚合 + 净新增 配方·制造 tab）。multiColorCss 数据化生成多彩 Tab CSS。星月专属渲染器全部自包含于 xingyue_3_1_0_renderers.js（含三合一归一派生 normalizeXingyue29View、聚合 renderCharacterArchive/renderAssetLibrary、收编自 extra 的 r"
+    },
+    {
+      "id": "status_bar.crafting",
+      "title": "状态栏交互式制造改造系统",
+      "commonName": "状态栏交互式制造改造 tab",
+      "category": "status_bar",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.render_orchestrator"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "校园剧情",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.1.0 升格净新增·前台 HUD「制造」tab（重交互不放控制中心）。读 配方 根 + 资产库.物品 材料检查，updateVariablesWith 当前楼扣料/写产物/递增已制造次数。renderCrafting 由 3.1.0 tab-set renderer_map 引用；tab 显隐/多色 statusTabSet 数据化生成。仅星月 3.1.0 引用，不进交错/2.5.0。"
+    },
+    {
+      "id": "status_bar.xingyue_char",
+      "title": "状态栏3.0.x角色档案富渲染管线",
+      "commonName": "星月3.0.x角色富渲染",
+      "category": "status_bar",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.render_orchestrator",
+        "status_bar.media_adapter"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "校园剧情",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 角色档案富渲染管线（从 3.0.2 runtime verbatim 入源）。撞名隔离 renderCharList3/renderUserXingyue3（2.5.0 同名版仍供 2.5.0/交错）；净新增 renderCharacterMainParts/MetricBlock/renderBondMediaLayout/renderMediaAvatarAsideBlock 等。被 masonry(renderC"
+    },
+    {
+      "id": "status_bar.masonry",
+      "title": "状态栏角色档案/资产库雷达式masonry",
+      "commonName": "状态栏雷达式masonry档案/资产",
+      "category": "status_bar",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.render_orchestrator",
+        "status_bar.batch_delete",
+        "status_bar.layout.reusable_masonry",
+        "status_bar.xingyue_char"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "校园剧情",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.1.0·角色档案/资产库 雷达式流式瀑布 + 顶部筛选 chip（P-A 用户已 Chrome 1:1 核验）。compose-native 具名 czRenderCharacterArchive/czRenderAssetLibrary 由 3.1.0 tab-set renderer_map 直接引用。聚合读派生根→本地 normalizeXingyue29View 包一层。仅星月 3.1.0。"
+    },
+    {
+      "id": "status_bar.self",
+      "title": "状态栏自身页增强",
+      "commonName": "状态栏自身页立绘流增强",
+      "category": "status_bar",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.render_orchestrator",
+        "status_bar.media_adapter",
+        "status_bar.xingyue_char"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "校园剧情",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.1.0·自身页增强（P-A 已核验）。compose-native 具名 renderUserEnhanced = renderUserXingyue3 + 房间流 chip + 立绘左列/多列流后处理。3.1.0 tab-user 面板声明 userStatCards(校卡余额/现金)。仅星月 3.1.0。"
+    },
+    {
+      "id": "status_bar.enhancements",
+      "title": "状态栏布局增强(固定高度+滚动进度条)",
+      "commonName": "状态栏固定高度+滚动进度条",
+      "category": "status_bar",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.1.0·纯表现层布局增强（P-A 已核验）。响应式固定高度(440/600/720)+内部滚动+底部发光进度条+tab定宽+宽屏增列。零变量/零 ST API，不影响 DOM 结构等价。"
+    },
+    {
+      "id": "status_bar.environment.space",
+      "title": "状态栏太空环境页",
+      "commonName": "太空位置与空间环境状态栏页",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core",
+        "variables.environment.core"
+      ],
+      "conflictsWith": [
+        "status_bar.environment.urban_simple"
+      ],
+      "applicableScenarios": [
+        "太空歌剧",
+        "机甲战争",
+        "开放世界",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "v2.1.5 默认太空环境页 slot，提供空间环境读取、位置面包屑、机体相关性环境读取和环境页 HTML 容器。"
+    },
+    {
+      "id": "status_bar.environment.urban_simple",
+      "title": "状态栏都市环境页",
+      "commonName": "城市环境状态栏展示页",
+      "category": "status_bar",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [
+        "status_bar.environment.space"
+      ],
+      "applicableScenarios": [
+        "现代都市",
+        "日常剧情",
+        "开放世界",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "都市环境页 slot，替换环境页读取路径、字段列表、标题和空状态文案，读取 环境.城市环境；已从旧 textReplace transform 迁移为模板插槽片段。"
+    },
+    {
+      "id": "status_bar.batch_delete",
+      "title": "状态栏批量删除功能",
+      "commonName": "状态栏多选批量删除控件",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：提供批量选择、全选可见、清空选择、删除所选和当前楼层变量刷新逻辑。"
+    },
+    {
+      "id": "status_bar.media_adapter",
+      "title": "状态栏媒体库接入",
+      "commonName": "头像立绘媒体库显示接入",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core",
+        "control_center.media_library"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：提供媒体库读取、头像/立绘渲染、媒体设置弹窗、导入/清除操作和媒体状态刷新逻辑。"
+    },
+    {
+      "id": "status_bar.card_framework",
+      "title": "状态栏卡片框架",
+      "commonName": "状态栏通用卡片展示框架",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：提供记录去重、展开状态、通用卡片字段、详情块、房间系统、格纳库与机体摘要展示框架。"
+    },
+    {
+      "id": "status_bar.settings_panel",
+      "title": "状态栏设置面板",
+      "commonName": "状态栏设置与调色面板",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": "被局部视觉替换",
+      "summary": "已拆分源码组件：提供 HUD 设置默认值、持久化同步、调色板、原生控件绑定和状态栏设置事件桥。"
+    },
+    {
+      "id": "status_bar.layout.reusable_masonry",
+      "title": "状态栏布局：可复用瀑布流",
+      "commonName": "记录卡片纯 CSS 瀑布流布局",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "通用纯 CSS 瀑布流布局组件，用于高度不一致的记录卡片；提供 reusable-masonry / event-masonry 展开单列能力，不绑定变量字段。"
+    },
+    {
+      "id": "status_bar.layout.inline_flow",
+      "title": "状态栏布局：横向紧凑 Flow",
+      "commonName": "短文本变量横向紧凑排列",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "通用横向紧凑 flow 布局组件，用于短变量串在空间足够时同行排列、空间不足时自然换行。"
+    },
+    {
+      "id": "status_bar.theme.transparent_surface",
+      "title": "状态栏主题：通透表面",
+      "commonName": "通透 HUD 背景与轻毛玻璃表面",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.settings_panel"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": "视觉层替换",
+      "summary": "通用视觉层替换组件：降低 HUD 背景、卡片和 settings-surface 的遮挡感，替换旧重毛玻璃表面样式，但不替代 settings_panel 的交互功能。"
+    },
+    {
+      "id": "status_bar.data_bridge",
+      "title": "状态栏数据桥",
+      "commonName": "状态栏当前楼层变量读取桥",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：读取当前楼层 MVU 变量、缓存 last-good HUD 数据，并为渲染调度提供 stat_data 存在性判断。"
+    },
+    {
+      "id": "status_bar.render_orchestrator",
+      "title": "状态栏渲染调度",
+      "commonName": "状态栏 Tab 渲染与事件调度",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.data_bridge",
+        "status_bar.card_framework",
+        "status_bar.batch_delete",
+        "status_bar.media_adapter"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": "部分渲染已替换",
+      "summary": "已拆分源码组件：承载非环境 Tab 渲染器、Tab 渲染表、延迟渲染、主动切换、事件绑定和初始化调度。"
+    },
+    {
+      "id": "status_bar.render.item_record_cards",
+      "title": "状态栏渲染：物品记录卡片 v2",
+      "commonName": "持有物与仓库物品卡片显示 v2",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.card_framework",
+        "status_bar.batch_delete"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": "替换组件",
+      "summary": "同源整块替换基础 renderItemRecord：持有物/仓库卡片改为高度自适应物品卡，位置、效果、备注纵向显示，避免效果下方空块。"
+    },
+    {
+      "id": "status_bar.render.recent_events_v2",
+      "title": "状态栏渲染：近期事件 v2",
+      "commonName": "近期事件排序与展开显示 v2",
+      "category": "status_bar",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core",
+        "status_bar.card_framework",
+        "status_bar.batch_delete",
+        "status_bar.layout.reusable_masonry"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": "替换组件",
+      "summary": "同源整块替换基础 renderRecentEvents：近期事件按事件 ID 排序，展开内容分为摘要、影响、后续钩子，并在展开时切换单列阅读。"
+    },
+    {
+      "id": "regex_suite.status_placeholder",
+      "title": "状态栏占位符正则",
+      "commonName": "变量更新后插入状态栏占位符",
+      "category": "regex_suite",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "status_bar.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "归一化 UpdateVariable 后的 <StatusPlaceHolderImpl/>，完整 Tavern Regex 对象元数据保存在 regex_object.json。"
+    },
+    {
+      "id": "regex_suite.update_variable_omni_wrap",
+      "title": "变量更新包裹美化正则",
+      "commonName": "变量更新同步状态美化包裹",
+      "category": "regex_suite",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "regex_suite.status_placeholder"
+      ],
+      "conflictsWith": [
+        "regex_suite.update_variable_omni_mount"
+      ],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": [
+        "regex_suite.update_variable_omni_mount"
+      ],
+      "replacementStatus": "已被替换",
+      "summary": "Tavern Regex 层 UpdateVariable 美化包裹：完整同步块与流式同步中块各一条，元数据由目标 manifest 绑定。"
+    },
+    {
+      "id": "regex_suite.update_variable_omni_mount",
+      "title": "变量更新美化正则·无框挂载版（远程皮肤）",
+      "commonName": "变量同步美化·无框挂载（皮肤版）",
+      "category": "regex_suite",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "regex_suite.status_placeholder"
+      ],
+      "conflictsWith": [
+        "regex_suite.update_variable_omni_wrap"
+      ],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": "替换组件",
+      "summary": "变量更新无框挂载版；3.9.6 回落后完成态使用 fail-soft 提示占位，由 media_library/runtime 接管最终皮肤，避免在 DOM 中复制原始 JSONPatch。"
+    },
+    {
+      "id": "regex_suite.analysis_omni",
+      "title": "变量预分析 OMNI 美化正则",
+      "commonName": "变量预分析青框美化",
+      "category": "regex_suite",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [
+        "regex_suite.analysis_omni_mount"
+      ],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": [
+        "regex_suite.analysis_omni_mount"
+      ],
+      "replacementStatus": "已被替换",
+      "summary": "Tavern Regex 层 <analysis> 变量预分析渲染：青框折叠 OMNI 面板。markdownOnly 只显示不进 prompt；findRegex 不跨同名标签防吞正文；data-attr 选择器绕 custom- 前缀。配套 analysis_cot 提示基线。"
+    },
+    {
+      "id": "regex_suite.analysis_omni_mount",
+      "title": "变量预分析 OMNI 美化正则·无框挂载版（远程皮肤）",
+      "commonName": "变量预分析美化·无框挂载（皮肤版）",
+      "category": "regex_suite",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [
+        "regex_suite.analysis_omni"
+      ],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": "替换组件",
+      "summary": "analysis_omni 的无框挂载变体（3.2.0 真机修复回库）：渲染模板只出 data-xy-omni=analysis mount + 原文，花哨 OMNI-NEXUS 青框（含 ✎编辑/⟳重roll 按钮）由 runtime 远程皮肤 omni-analysis.html 提供。结构性消除套娃；皮肤拉不到兜底为无框可读原文。findRegex 不跨同名标签防吞正文、markdownOnly 等契约与内联版逐字节一致。运行前提"
+    },
+    {
+      "id": "control_center.core",
+      "title": "控制中心模板核心",
+      "commonName": "控制中心模板骨架与全局 API 门面",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "variables.base_schema"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "v0.2.0 模板插槽核心，承载控制中心常量、生命周期调度、生成提示注入调度和全局 API 门面；具体功能由控制中心 slot 组件注入。"
+    },
+    {
+      "id": "control_center.core.xingyue",
+      "title": "星月控制中心整合骨架(3.0.2 compose 化 · M1)",
+      "commonName": "星月控制中心整合骨架",
+      "category": "control_center",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [
+        "control_center.core",
+        "control_center.core.xingyue.dw"
+      ],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": [
+        "control_center.xingyue_3_9_6_release"
+      ],
+      "replacementStatus": "历史基线",
+      "summary": "M1 打样:星月 3.0.2 CC 单体全量分片 compose 还原(21 slot 全归本 module),compose === 原 control-center.js 字节等价证拆分无损;M1-4 将拆多 module + 去工坊。"
+    },
+    {
+      "id": "control_center.core.xingyue.dw",
+      "title": "星月控制中心整合骨架·去工坊(3.2.0 M1)",
+      "commonName": "星月控制中心整合骨架(去工坊)",
+      "category": "control_center",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [
+        "control_center.core",
+        "control_center.core.xingyue"
+      ],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "3.2.0 M1 去工坊变体:丢弃 workshop_session_api/workshop_crud 两块 + main_panel/lifecycle_api 精修去工坊引用;opening_page 工坊 UI 经 cc? 守卫降级,随 M2 opening_page 重建彻底移除。"
+    },
+    {
+      "id": "control_center.media_library",
+      "title": "媒体资产库",
+      "commonName": "头像立绘媒体资产存储脚本",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "隔离持久化羁绊角色、机体、母舰头像/立绘，供状态栏和控制中心调用，不写入 MVU 变量。"
+    },
+    {
+      "id": "control_center.entry_button",
+      "title": "控制中心入口按钮",
+      "commonName": "控制中心入口按钮注册",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "control_center.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：提供 Tavern Helper 脚本按钮注册、魔棒菜单入口、点击事件绑定和入口状态 debug。"
+    },
+    {
+      "id": "control_center.settings_store",
+      "title": "控制中心设置持久化",
+      "commonName": "控制中心设置持久化模块",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "control_center.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：提供 HUD 设置默认值、旧脚本变量迁移、设置读写、归一化与跨窗口设置事件广播。"
+    },
+    {
+      "id": "control_center.omni_safe_block",
+      "title": "OMNI 安全块渲染",
+      "commonName": "正文信息块安全美化模块",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "control_center.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：提供 DOM Range 安全包裹、预设锚点、消息级恢复、生成后稳定补扫和 HUD guide 渲染。"
+    },
+    {
+      "id": "control_center.news_policy",
+      "title": "新闻刷新策略",
+      "commonName": "新闻刷新提示注入模块",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "control_center.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：构建生成前新闻刷新策略注入提示；该功能会影响模型可见提示。"
+    },
+    {
+      "id": "control_center.dice",
+      "title": "1d100 真随机骰子",
+      "commonName": "真随机1d100骰子注入模块",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "control_center.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：提供 crypto.getRandomValues 点数生成、战斗检测、区间解释和生成前骰子提示注入。"
+    },
+    {
+      "id": "control_center.radar_cleanup",
+      "title": "雷达离场清理策略",
+      "commonName": "雷达目标离场清理提示模块",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "control_center.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：构建雷达离场清理策略注入提示；脚本不直接写雷达变量。"
+    },
+    {
+      "id": "control_center.summary_policy",
+      "title": "摘要更新策略",
+      "commonName": "记录摘要 I/O 提示注入模块",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "control_center.core"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：构建记录摘要 I/O 动态注入提示，关闭设置后不注入。"
+    },
+    {
+      "id": "control_center.panel_ui",
+      "title": "控制中心面板 UI",
+      "commonName": "控制中心浮窗面板与操作控件",
+      "category": "control_center",
+      "defaultEnabled": true,
+      "dependsOn": [
+        "control_center.core",
+        "control_center.settings_store",
+        "control_center.omni_safe_block",
+        "control_center.media_library"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "通用",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "已拆分源码组件：提供控制中心面板、tooltip、拖拽缩放、设置控件同步、OMNI 预设和媒体库导入导出。"
+    },
+    {
+      "id": "variables.base_schema_xingyue",
+      "title": "星月 3.9.6 变量共享规则基线",
+      "commonName": "星月 3.9.6 变量基线",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [
+        "variables.base_schema"
+      ],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 per-family base：由 3.9.6 稳定成品回落，emit full/compact/output_format/zod/cfMvuVarGroups；13 个变量根的 initial/full/zod 分片已同步刷新并做字节对齐。与交错 variables.base_schema 互斥。"
+    },
+    {
+      "id": "variables.environment.xingyue",
+      "title": "星月变量根 环境",
+      "commonName": "星月环境",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 环境（per-family）。"
+    },
+    {
+      "id": "variables.user.xingyue",
+      "title": "星月变量根 user",
+      "commonName": "星月user",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 user（per-family）。"
+    },
+    {
+      "id": "variables.talents_skills.xingyue",
+      "title": "星月变量根 天赋与技能",
+      "commonName": "星月天赋与技能",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 天赋与技能（per-family）。"
+    },
+    {
+      "id": "variables.character_archive.xingyue",
+      "title": "星月变量根 角色档案",
+      "commonName": "星月角色档案",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 角色档案（per-family）。"
+    },
+    {
+      "id": "variables.asset_library.xingyue",
+      "title": "星月变量根 资产库",
+      "commonName": "星月资产库",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 资产库（per-family）。"
+    },
+    {
+      "id": "variables.recipe.xingyue",
+      "title": "星月变量根 配方",
+      "commonName": "星月配方",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 配方（per-family）。"
+    },
+    {
+      "id": "variables.rule_changes.xingyue",
+      "title": "星月变量根 规则变化",
+      "commonName": "星月规则变化",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 规则变化（per-family）。无 full 块·简单根。"
+    },
+    {
+      "id": "variables.tasks.xingyue",
+      "title": "星月变量根 任务",
+      "commonName": "星月任务",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 任务（per-family）。"
+    },
+    {
+      "id": "variables.recent_events.xingyue",
+      "title": "星月变量根 近期事件",
+      "commonName": "星月近期事件",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 近期事件（per-family）。"
+    },
+    {
+      "id": "variables.radar.xingyue",
+      "title": "星月变量根 雷达系统",
+      "commonName": "星月雷达系统",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 雷达系统（per-family）。无 full 块·简单根。"
+    },
+    {
+      "id": "variables.residence.xingyue",
+      "title": "星月变量根 居所",
+      "commonName": "星月居所",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 居所（per-family）。"
+    },
+    {
+      "id": "variables.vehicle.xingyue",
+      "title": "星月变量根 载具",
+      "commonName": "星月载具",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 载具（per-family）。"
+    },
+    {
+      "id": "variables.lilith_shop.xingyue",
+      "title": "星月变量根 莉莉丝的商店",
+      "commonName": "星月莉莉丝的商店",
+      "category": "variables",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": true,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "星月 3.0.x 变量根 莉莉丝的商店（per-family）。"
+    },
+    {
+      "id": "control_center.xingyue_3_9_6_release",
+      "title": "星月 3.9.6 控制中心发布壳",
+      "commonName": "星月 3.9.6 控制中心安全发布壳",
+      "category": "control_center",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [
+        "control_center.core",
+        "control_center.core.xingyue",
+        "control_center.core.xingyue.dw"
+      ],
+      "applicableScenarios": [
+        "星月私立高等学院 3.9.6+",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": "替换组件",
+      "summary": "3.9.6 稳定发布形态：control_center loader 安全内嵌 runtime/opening，所有小于号以 JSON 字符串安全编码，在线失败自动回落卡内副本，并保留相关世界书/扩展入口组件。"
+    },
+    {
+      "id": "control_center.media_library.xingyue_3_9_6",
+      "title": "星月 3.9.6 媒体库与内置资产",
+      "commonName": "星月 3.9.6 媒体库",
+      "category": "control_center",
+      "defaultEnabled": false,
+      "dependsOn": [],
+      "conflictsWith": [
+        "control_center.media_library"
+      ],
+      "applicableScenarios": [
+        "星月私立高等学院 3.9.6+",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "3.9.6 已验证媒体库脚本与内置资产索引，供状态栏、控制中心、气泡和 OMNI 挂载读取；不写 MVU 变量。"
+    },
+    {
+      "id": "regex_suite.xingyue_3_9_6_release",
+      "title": "星月 3.9.6 开局与对话显示适配",
+      "commonName": "星月 3.9.6 开局与气泡适配",
+      "category": "regex_suite",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "control_center.media_library.xingyue_3_9_6"
+      ],
+      "conflictsWith": [],
+      "applicableScenarios": [
+        "星月私立高等学院 3.9.6+",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "3.9.6 已验证的状态栏占位、变量更新 fail-soft 挂载、开局提示剥离、开局展开与正文/COT 气泡组件；全部由 3.9.6 media_library/runtime 接管，不依赖旧本地 status_bar.core。"
+    },
+    {
+      "id": "mvu_runtime.dual_zod_scripts.xingyue_3_9_6",
+      "title": "星月 3.9.6 MVU 双 Zod 运行脚本",
+      "commonName": "星月 3.9.6 MVU 运行时双源脚本",
+      "category": "shared",
+      "defaultEnabled": false,
+      "dependsOn": [
+        "variables.base_schema_xingyue"
+      ],
+      "conflictsWith": [
+        "mvu_runtime.dual_zod_scripts"
+      ],
+      "applicableScenarios": [
+        "星月私立高等学院 3.9.6+",
+        "SillyTavern MVU"
+      ],
+      "modelVisible": false,
+      "replacedBy": null,
+      "replacementStatus": null,
+      "summary": "复用已回落的双 Zod 脚本源码，但把依赖绑定到星月 3.9.6 变量基线；避免 release recipe 为满足旧依赖而错误启用 2.5.0 base_schema。"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "crossed-zone-v2.1.5-equivalent",
+      "title": "交错宙域 v2.1.5 等价复刻",
+      "file": "recipes/crossed-zone-v2.1.5-equivalent.json"
+    },
+    {
+      "id": "new-card-minimal",
+      "title": "新卡最小功能烟测",
+      "file": "recipes/new-card-minimal.json"
+    },
+    {
+      "id": "urban-card-minimal",
+      "title": "都市简化变量源码烟测",
+      "file": "recipes/urban-card-minimal.json"
+    },
+    {
+      "id": "lilith-shop-minimal",
+      "title": "莉莉丝商店变量源码烟测",
+      "file": "recipes/lilith-shop-minimal.json"
+    },
+    {
+      "id": "xingyue-academy-v2.5.0",
+      "title": "星月私立高等学院 v2.5.0 组装测试",
+      "file": "recipes/xingyue-academy-v2.5.0.json"
+    },
+    {
+      "id": "xingyue-academy-v3.9.6",
+      "title": "星月私立高等学院 v3.9.6 稳定发布组件",
+      "file": "recipes/xingyue-academy-v3.9.6.json"
+    }
+  ]
+}

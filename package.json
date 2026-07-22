@@ -1,0 +1,43 @@
+{
+  "name": "reverie-playcraft-nexus",
+  "version": "0.17.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "npm run check:batch-version && npm run check:rolecard-io && npm run check:rolecard-analysis && npm run check:rolecard-export-plan && npm run check:workflow-blueprint && npm run check:mvu-simulator && npm run check:mvu-variable-structure && npm run check:ui-simulation-package && npm run check:ui-builder-embed && npm run check:web-boundary && npm run check:workspace-persistence && npm run check:local-workspace && npm run check:studio-ai && npm run check:studio-knowledge && npm run check:component-workshop && npm run check:desktop-shell",
+    "build:pages": "node tools/build_pages.mjs",
+    "desktop:prepare": "npm run check && npm run build:pages",
+    "desktop:check": "npm run desktop:prepare && cargo test --manifest-path src-tauri/Cargo.toml",
+    "desktop:dev": "cargo tauri dev",
+    "desktop:build:rc": "cargo tauri build --bundles nsis",
+    "desktop:build:release": "node tools/build_desktop_release.mjs",
+    "batch:next": "node tools/next_batch_version.mjs",
+    "sync:ui-builder": "node tools/sync_ui_builder_embed.mjs",
+    "refresh:studio-components": "node tools/refresh_studio_component_catalog.mjs",
+    "check:batch-version": "node tools/batch_version.test.mjs",
+    "check:rolecard-io": "node tools/rolecard_file_codec.test.mjs",
+    "check:rolecard-analysis": "node tools/rolecard_import_analysis.test.mjs",
+    "check:rolecard-export-plan": "node tools/rolecard_export_plan.test.mjs",
+    "check:workflow-blueprint": "node tools/workflow_blueprint.test.mjs",
+    "check:mvu-simulator": "node tools/mvu_turn_simulator.test.mjs && node tools/mvu_simulator_portal_contract.test.mjs",
+    "check:mvu-variable-structure": "node tools/mvu_variable_structure.test.mjs",
+    "check:ui-simulation-package": "node tools/ui_simulation_package.test.mjs",
+    "check:ui-builder-embed": "node tools/check_ui_builder_embed.mjs",
+    "check:web-boundary": "node tools/rpn_web_boundary.test.mjs",
+    "check:workspace-persistence": "node tools/studio_workspace_persistence.test.mjs",
+    "check:local-workspace": "node tools/studio_local_workspace.test.mjs",
+    "check:studio-ai": "node tools/studio_ai.test.mjs",
+    "check:studio-knowledge": "node tools/studio_knowledge.test.mjs",
+    "check:component-workshop": "node tools/component_workshop_contract.test.mjs && node tools/component_workshop_frontend.test.mjs",
+    "check:desktop-shell": "node tools/desktop_shell_contract.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "rpnBatch": {
+    "label": "m4-c-studio-fast-optimization",
+    "version": "0.17.1",
+    "level": "patch",
+    "startedAt": "2026-07-22T14:17:41.032Z"
+  }
+}

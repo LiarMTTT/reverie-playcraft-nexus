@@ -1,0 +1,2559 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#020617">
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <meta name="description" content="Reverie Playcraft Nexus：连接制卡指南、前端组件预览、一站式制卡工作台与创意工坊。">
+  <title>Reverie Playcraft Nexus</title>
+  <link rel="stylesheet" href="./assets/portal.css?v=0722m4c1">
+  <link rel="stylesheet" href="./assets/component-preview.css?v=0722m4c2">
+  <link rel="stylesheet" href="./assets/card-studio.css?v=0722m4c1">
+  <link rel="stylesheet" href="./assets/workshop-studio.css?v=0722m4c1">
+  <link rel="stylesheet" href="./assets/component-workshop.css?v=0722m4c1">
+</head>
+<body>
+  <a class="skip-link" href="#page-content">跳到主要内容</a>
+
+  <header class="site-header">
+    <a class="brand" href="#guide" aria-label="前往制卡指南">
+      <span class="brand-mark" aria-hidden="true">ST</span>
+      <span><strong>Reverie Playcraft Nexus</strong><small>幻想、游玩与创作的交汇点</small></span>
+    </a>
+    <nav class="top-nav" aria-label="主页面">
+      <a href="#guide" data-route-link="guide">制卡指南</a>
+      <a href="#vibe" data-route-link="vibe">新手避坑</a>
+      <a href="#play" data-route-link="play">前端组件预览</a>
+      <a href="#studio" data-route-link="studio">制卡工作台</a>
+      <a href="#workshop" data-route-link="workshop">创意工坊</a>
+    </nav>
+    <div class="header-actions">
+      <div class="desktop-controls" data-desktop-controls aria-label="桌面程序" hidden>
+        <button type="button" data-desktop-open-st>本机 ST</button>
+        <button type="button" data-desktop-settings-open aria-haspopup="dialog">桌面</button>
+      </div>
+      <span class="version-pill">RPN v0.17.0</span>
+    </div>
+  </header>
+
+  <main id="page-content">
+    <section class="page-shell" data-page="guide" aria-labelledby="guide-title">
+      <div class="hero guide-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">AI 协作制卡入口</p>
+          <h1 id="guide-title" tabindex="-1">用 Claude Code 或 Codex，开始做角色卡</h1>
+          <p class="hero-lead">选好工作台和任务，再告诉 AI 你会什么、哪些地方需要它负责。页面会从 TavernWeave 的制卡入口生成一段可以直接发送的开工指令。</p>
+          <div class="hero-actions">
+            <button class="primary-action" type="button" data-mode-jump="new">从零做一张卡</button>
+            <button class="secondary-action" type="button" data-mode-jump="takeover">接手已有角色卡</button>
+          </div>
+          <p class="hero-guardrail">先同步分工 · 再确认目标 · 最后动工</p>
+        </div>
+
+        <aside class="workflow-map" aria-label="AI 协作关系">
+          <div class="workflow-map-head">
+            <span>一次正确开工</span>
+            <strong>你掌舵，AI 施工</strong>
+          </div>
+          <ol>
+            <li><span>01</span><div><strong>先同步能力</strong><small>AI 先知道你会什么、哪里需要解释</small></div></li>
+            <li><span>02</span><div><strong>再查流程与事实</strong><small>Skill 选路线，DB 核对具体机制</small></div></li>
+            <li><span>03</span><div><strong>由你确认开工</strong><small>目标、边界和验收对齐后再写文件</small></div></li>
+          </ol>
+        </aside>
+      </div>
+
+      <section class="section-block" id="starter" aria-labelledby="starter-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">开工同步与指令生成</p>
+            <h2 id="starter-title">先把你和 AI 的分工说清楚</h2>
+          </div>
+          <p>AI 不应该默认你会写代码，也不应该默认你什么都不懂。先标出能力和知识边界，它才能用合适的方式协作。</p>
+        </div>
+
+        <section class="sync-band" aria-labelledby="sync-title">
+          <div class="sync-heading">
+            <div class="control-heading">
+              <span>01</span>
+              <div><h3 id="sync-title">开工同步卡</h3><p>选择当前最接近的一项，不是能力考试。</p></div>
+            </div>
+            <span class="sync-note">用于调整解释深度与任务分工</span>
+          </div>
+
+          <div class="capability-grid" role="radiogroup" aria-label="选择当前协作能力">
+            <button class="level-card" type="button" role="radio" aria-checked="true" data-capability-choice="novice">
+              <strong>只会描述想法</strong><small>不熟悉代码和角色卡结构</small>
+            </button>
+            <button class="level-card" type="button" role="radio" aria-checked="false" data-capability-choice="player">
+              <strong>会使用酒馆</strong><small>能导入、开聊和反馈问题</small>
+            </button>
+            <button class="level-card" type="button" role="radio" aria-checked="false" data-capability-choice="operator">
+              <strong>会看文件与日志</strong><small>能提供路径、运行命令和复测</small>
+            </button>
+            <button class="level-card" type="button" role="radio" aria-checked="false" data-capability-choice="builder">
+              <strong>能参与开发</strong><small>能看懂少量 HTML、JS 或 JSON</small>
+            </button>
+          </div>
+
+          <div class="role-split" aria-live="polite">
+            <article class="role-column user-role">
+              <span>你负责</span>
+              <p id="user-role-output"></p>
+            </article>
+            <article class="role-column ai-role">
+              <span>AI 负责</span>
+              <p id="ai-role-output"></p>
+            </article>
+          </div>
+
+          <div class="knowledge-grid">
+            <label class="field" for="input-known">
+              <span>我已经懂，或已经决定的</span>
+              <textarea id="input-known" rows="2" maxlength="360" placeholder="例如：角色人设、想要的玩法、必须保留的开场"></textarea>
+            </label>
+            <label class="field" for="input-unknown">
+              <span>我不懂，或希望 AI 先解释的</span>
+              <textarea id="input-unknown" rows="2" maxlength="360" placeholder="例如：MVU、世界书、状态栏、打包方式"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <div class="starter-workspace">
+          <div class="starter-controls">
+            <section class="choice-section" aria-labelledby="platform-title">
+              <div class="control-heading">
+                <span>02</span>
+                <div><h3 id="platform-title">你在哪个工作台？</h3><p>两端都从 TavernWeave 的制卡入口开始，再按职责转交专用 Skill。</p></div>
+              </div>
+              <div class="choice-grid platform-grid" role="radiogroup" aria-label="选择 AI 工作台">
+                <button class="choice-card" type="button" role="radio" aria-checked="true" data-platform-choice="claude">
+                  <span class="choice-copy"><strong>Claude Code</strong><small>兼容入口；安装方式以 TavernWeave 当前说明为准</small></span>
+                  <code>/tavernweave-agent-skills:tavern-card-builder</code>
+                </button>
+                <button class="choice-card" type="button" role="radio" aria-checked="false" data-platform-choice="codex">
+                  <span class="choice-copy"><strong>Codex</strong><small>通过 TavernWeave 插件提供 Skill 阵列</small></span>
+                  <code>$tavern-card-builder</code>
+                </button>
+              </div>
+            </section>
+
+            <section class="choice-section" aria-labelledby="mode-title">
+              <div class="control-heading">
+                <span>03</span>
+                <div><h3 id="mode-title">这次要从哪里开始？</h3><p>先选任务，不用先选技术。</p></div>
+              </div>
+              <div class="choice-grid task-grid" role="radiogroup" aria-label="选择制卡任务">
+                <button class="choice-card task-card" type="button" role="radio" aria-checked="true" data-mode-choice="new">
+                  <span class="task-index">A</span>
+                  <span class="choice-copy"><strong>从零开始</strong><small>只有一个想法，先让 AI 问清楚</small></span>
+                </button>
+                <button class="choice-card task-card" type="button" role="radio" aria-checked="false" data-mode-choice="takeover">
+                  <span class="task-index">B</span>
+                  <span class="choice-copy"><strong>接手已有角色卡</strong><small>先读懂现状，再决定最小改动</small></span>
+                </button>
+              </div>
+            </section>
+
+            <section class="choice-section" aria-labelledby="brief-title">
+              <div class="control-heading">
+                <span>04</span>
+                <div><h3 id="brief-title">补充这次任务</h3><p>可以留空，AI 会继续向你提问。</p></div>
+              </div>
+              <form class="intake-form" id="intake-form">
+                <label class="field wide" for="input-primary">
+                  <span id="primary-label">一句话描述你想做的卡</span>
+                  <textarea id="input-primary" rows="3" maxlength="500" placeholder="例如：一张现代校园群像卡，重点是人物关系和日常事件"></textarea>
+                </label>
+                <div class="field-grid">
+                  <label class="field" for="input-goal">
+                    <span id="goal-label">第一版想先做到什么</span>
+                    <textarea id="input-goal" rows="3" maxlength="360" placeholder="例如：先跑通稳定对话、开局和基础状态"></textarea>
+                  </label>
+                  <label class="field" for="input-boundary">
+                    <span id="boundary-label">哪些内容暂时不做或不能碰</span>
+                    <textarea id="input-boundary" rows="3" maxlength="360" placeholder="例如：第一版不做战斗，不替我决定 NSFW 边界"></textarea>
+                  </label>
+                </div>
+                <label class="field wide" for="input-acceptance">
+                  <span>怎样才算这次真的完成</span>
+                  <input id="input-acceptance" maxlength="240" placeholder="例如：完成一次可复现的真实酒馆测试，并列出仍未验证的部分">
+                </label>
+              </form>
+            </section>
+          </div>
+
+          <aside class="prompt-panel" aria-labelledby="prompt-title">
+            <div class="prompt-head">
+              <div><span>可直接发送</span><h3 id="prompt-title">你的开工指令</h3></div>
+              <span class="prompt-context" id="prompt-context">Claude Code · 从零开始</span>
+            </div>
+            <pre><code id="prompt-output"></code></pre>
+            <div class="prompt-footer">
+              <p>复制后粘贴到对应工作台的项目对话中。它会先同步、访谈或审计，不会立刻写文件。</p>
+              <button class="primary-action copy-action" id="copy-prompt" type="button">复制开工指令</button>
+            </div>
+          </aside>
+        </div>
+
+        <div class="journey-block" aria-live="polite">
+          <div class="journey-heading">
+            <span>接下来会发生什么</span>
+            <strong id="journey-title">从想法走到可确认的制作方案</strong>
+          </div>
+          <div class="journey-grid">
+            <article><span>01</span><h3 id="journey-step-1-title"></h3><p id="journey-step-1-text"></p></article>
+            <article><span>02</span><h3 id="journey-step-2-title"></h3><p id="journey-step-2-text"></p></article>
+            <article><span>03</span><h3 id="journey-step-3-title"></h3><p id="journey-step-3-text"></p></article>
+            <article><span>04</span><h3 id="journey-step-4-title"></h3><p id="journey-step-4-text"></p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block guide-path-section" aria-labelledby="guide-path-title">
+        <div class="section-heading guide-path-heading">
+          <div>
+            <p class="eyebrow">制卡全链路</p>
+            <h2 id="guide-path-title">从看懂结构，到完成一次可验收导出</h2>
+          </div>
+          <p>不需要一次学完所有术语。先确认这一阶段要做什么、留下什么产物，再进入工作台对应模块。</p>
+        </div>
+
+        <ol class="guide-path-grid" aria-label="角色卡制作学习路径">
+          <li class="guide-path-card">
+            <header class="guide-path-card-head">
+              <span>角色卡结构</span>
+              <div><h3>先认清卡里有什么</h3><p>区分可直接编辑的内容、扩展数据和最终导出文件。</p></div>
+            </header>
+            <dl class="guide-path-facts">
+              <div><dt>做什么</dt><dd>梳理名称、人设、开场、世界书、扩展字段与封面，判断纯文字卡还是变量卡。</dd></div>
+              <div><dt>产物</dt><dd>一份卡片结构清单，以及明确的源码真相源和必须保留项。</dd></div>
+              <div><dt>完成条件</dt><dd>能说明每块内容放在哪里，且不会把 PNG、JSON 和工程源码混为一谈。</dd></div>
+            </dl>
+            <nav class="guide-path-links" aria-label="角色卡结构工作台入口">
+              <a href="#studio/card">编辑卡片基础</a>
+              <a href="#studio/worldbook">查看世界书</a>
+            </nav>
+          </li>
+
+          <li class="guide-path-card">
+            <header class="guide-path-card-head">
+              <span>导入与拆卡</span>
+              <div><h3>先盘点，再决定怎么改</h3><p>导入现卡后按职责拆分，不用新表单覆盖未知数据。</p></div>
+            </header>
+            <dl class="guide-path-facts">
+              <div><dt>做什么</dt><dd>识别卡片基础、开场、世界书、变量、脚本、正则、前端资源和未知扩展。</dd></div>
+              <div><dt>产物</dt><dd>一棵标有“可编辑、原样保留、装配生成”的内容树。</dd></div>
+              <div><dt>完成条件</dt><dd>导入前后未知字段可追踪，替换前现场可以恢复。</dd></div>
+            </dl>
+            <nav class="guide-path-links" aria-label="导入与拆卡工作台入口">
+              <a href="#studio/project">导入或恢复工作区</a>
+              <a href="#studio/workflow">查看部件关系</a>
+            </nav>
+          </li>
+
+          <li class="guide-path-card guide-path-card-variable">
+            <header class="guide-path-card-head">
+              <span>变量链</span>
+              <div><h3>让变量有来源、有规则、有去处</h3><p>变量结构不是一段孤立文本，而是一条可检查的运行链。</p></div>
+            </header>
+            <div class="guide-variable-chain" role="group" aria-label="变量系统主链">
+              <span>Schema 与变量根</span><i aria-hidden="true">→</i><span>初始值</span><i aria-hidden="true">→</i><span>更新方言与规则</span><i aria-hidden="true">→</i><span>世界书与前端消费者</span><i aria-hidden="true">→</i><span>Check</span>
+            </div>
+            <details class="guide-variable-details">
+              <summary><span>四步看懂并安全编辑变量</span><small>本地源稿 · 不执行 Zod 或脚本</small></summary>
+              <ol>
+                <li>
+                  <span>01</span>
+                  <div><strong>找来源</strong><p>先到世界书核对 [InitVar]、[mvu_update] 与其他显式来源；存在多份时只列出，不自动合并。</p><a href="#studio/worldbook">核对世界书来源</a></div>
+                </li>
+                <li>
+                  <span>02</span>
+                  <div><strong>看懂树</strong><p>在变量树中对照路径、类型、Schema 默认值和 InitVar 初始值，未识别内容继续保留在源稿。</p><a href="#studio/mvu">查看变量结构</a></div>
+                </li>
+                <li>
+                  <span>03</span>
+                  <div><strong>安全进入可视编辑</strong><p>只有可验证往返的结构才能应用；改动先留在本地草稿，不会自动写回角色卡，也不会执行 Zod 或脚本。</p><a href="#studio/mvu">打开可视编辑</a><a href="#studio/workflow">对照更新规则</a></div>
+                </li>
+                <li>
+                  <span>04</span>
+                  <div><strong>验证下游</strong><p>逐项确认消费者与 Check；静态无法确认的引用保持“未验证”，不把未知冒充为零。</p><a href="#studio/design">检查前端消费者</a><a href="#studio/check">运行 Check</a></div>
+                </li>
+              </ol>
+            </details>
+            <dl class="guide-path-facts">
+              <div><dt>做什么</dt><dd>定义字段、默认值、更新规则和读取者，并确认使用的 MVU 方言。</dd></div>
+              <div><dt>产物</dt><dd>可编辑的变量草稿、单回合变化样例和消费者清单。</dd></div>
+              <div><dt>完成条件</dt><dd>任一变量都能追到定义、写入规则和实际显示位置。</dd></div>
+            </dl>
+            <nav class="guide-path-links" aria-label="变量链工作台入口">
+              <a href="#studio/mvu">编辑变量结构</a>
+              <a href="#studio/workflow">打开变量链画布</a>
+            </nav>
+          </li>
+
+          <li class="guide-path-card">
+            <header class="guide-path-card-head">
+              <span>组件化与前端</span>
+              <div><h3>先选型和对齐变量，再装配界面</h3><p>组件库中的“已选择”不等于已经安全写入角色卡。</p></div>
+            </header>
+            <dl class="guide-path-facts">
+              <div><dt>做什么</dt><dd>按变量路径、变量规则、状态栏与功能适配的顺序处理依赖和冲突。</dd></div>
+              <div><dt>产物</dt><dd>组件选型清单、依赖关系和可交互的前端设计稿。</dd></div>
+              <div><dt>完成条件</dt><dd>界面读取的字段真实存在，组件依赖完整，预览不写入真实 ST 数据。</dd></div>
+            </dl>
+            <nav class="guide-path-links" aria-label="组件化与前端工作台入口">
+              <a href="#studio/frontend">浏览组件树</a>
+              <a href="#studio/design">打开 UI Builder</a>
+            </nav>
+          </li>
+
+          <li class="guide-path-card guide-path-card-final">
+            <header class="guide-path-card-head">
+              <span>验证与导出</span>
+              <div><h3>自动检查通过后，再做真实酒馆验收</h3><p>结构正确、模拟可跑和实际可玩，是三件需要分别确认的事。</p></div>
+            </header>
+            <dl class="guide-path-facts">
+              <div><dt>做什么</dt><dd>依次执行结构检查、变量模拟、JSON/PNG 一致性检查和真实 ST 导入复测。</dd></div>
+              <div><dt>产物</dt><dd>检查报告、工作区备份、角色卡 JSON/PNG 与未验证事项清单。</dd></div>
+              <div><dt>完成条件</dt><dd>导出物可重新导入，核心玩法可复现，离线结果不冒充真机验收。</dd></div>
+            </dl>
+            <nav class="guide-path-links" aria-label="验证与导出工作台入口">
+              <a href="#studio/check">运行检查与导出</a>
+              <a href="#studio/project">保留工作区备份</a>
+            </nav>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section-block reference-section" aria-labelledby="db-title">
+        <div class="reference-callout">
+          <div class="reference-copy">
+            <p class="eyebrow">ST开发指南DB 怎么用</p>
+            <h2 id="db-title">你不需要先读完开发指南</h2>
+            <p>它是 AI 的查证库，不是小白的必读书单。遇到 ST、酒馆助手、MVU、EJS、API 或前端机制时，让 AI 只打开本次任务相关的指南，再根据版本和证据施工。</p>
+            <button class="secondary-action" id="copy-db-request" type="button">复制“先查 DB”要求</button>
+          </div>
+          <ul class="reference-rules">
+            <li><span>01</span><div><strong>只查本次相关内容</strong><small>不把整库一次塞给 AI</small></div></li>
+            <li><span>02</span><div><strong>核对版本与更新时间</strong><small>插件和接口会继续变化</small></div></li>
+            <li><span>03</span><div><strong>不确定项留给真机</strong><small>离线通过不冒充真实环境验收</small></div></li>
+          </ul>
+        </div>
+      </section>
+
+    </section>
+
+    <section class="page-shell vibe-page" data-page="vibe" aria-labelledby="vibe-guide-title" hidden>
+      <section class="vibe-guide-section">
+        <div class="vibe-guide">
+          <header class="vibe-page-header">
+            <div class="vibe-guide-summary-copy">
+              <span class="eyebrow">Vibe Coding 新手避坑</span>
+              <h1 id="vibe-guide-title" tabindex="-1">对话越长不等于信息越完整</h1>
+              <small>什么时候开新对话、怎样交接、如何安装 Skill 与授权开发指南 DB，以及最常见的施工错误。</small>
+            </div>
+            <a class="vibe-guide-summary-action" href="#guide">返回制卡指南</a>
+          </header>
+
+          <div class="vibe-guide-body">
+            <section class="vibe-guide-card vibe-guide-conversation" aria-labelledby="vibe-conversation-title">
+              <header>
+                <span>01 · 对话与上下文</span>
+                <h3 id="vibe-conversation-title">出现这些信号，就开新对话</h3>
+              </header>
+              <ul class="vibe-signal-list">
+                <li>一个大阶段已经完成并验收，下一步变成另一类任务。</li>
+                <li>AI 开始忘记当前版本、工作区、真相源或已经确认的红线。</li>
+                <li>对话混入大量旧日志，关键要求需要反复解释。</li>
+                <li>项目已经换版本、回滚、重新导入或切换了仓库。</li>
+              </ul>
+              <div class="vibe-handoff-card">
+                <strong>新对话先贴一张交接卡</strong>
+                <dl>
+                  <div><dt>当前现场</dt><dd>工作区、版本、真相源</dd></div>
+                  <div><dt>进度</dt><dd>已完成、未完成、已验收</dd></div>
+                  <div><dt>边界</dt><dd>禁止事项、不可覆盖内容</dd></div>
+                  <div><dt>证据</dt><dd>已运行检查、失败项、下一步</dd></div>
+                </dl>
+              </div>
+              <p class="vibe-callout"><strong>一句“继续”通常不够。</strong> 最好同时写明刚刚的验收结论和这次唯一目标；AI 说“完成”也不等于浏览器或真实 ST 已验收。</p>
+            </section>
+
+            <section class="vibe-guide-card" aria-labelledby="vibe-install-title">
+              <header>
+                <span>02 · TavernWeave 与开发指南 DB</span>
+                <h3 id="vibe-install-title">Skill 阵列负责分工，开发指南负责事实</h3>
+              </header>
+              <div class="vibe-tool-compare">
+                <article><strong>TavernWeave</strong><p>由 9 个专用 Skill 分担制卡、组件、构建、API、真实运行时、嵌入 UI、代码质量、React UI 与工坊运维；<code>tavern-card-builder</code> 仍是制卡入口。</p></article>
+                <article><strong>开发指南 DB</strong><p>提供 ST、插件、MVU 与接口的版本事实。它保持外部只读，不复制进 RPN，也不伪装成 Skill。</p></article>
+              </div>
+              <div class="vibe-install-grid">
+                <details>
+                  <summary>安装到 Codex / Claude Code</summary>
+                  <ol>
+                    <li>把 <code>https://github.com/LiarMTTT/TavernWeave</code> 交给 Codex 或 Claude Code，并明确要求“安装并启用这个 Skill 仓库”。</li>
+                    <li>让 Agent 根据当前客户端选择正确的插件安装入口；不要让 RPN 猜测或代替客户端安装。</li>
+                    <li>安装完成后新建任务或会话，确认 9 个 Skill 已出现，再开始制卡。</li>
+                  </ol>
+                </details>
+                <details>
+                  <summary>更新与工作台授权</summary>
+                  <ol>
+                    <li>更新时把同一仓库链接交给 Agent，并要求“把已安装的 TavernWeave 更新到最新版本”。</li>
+                    <li>更新完成后同样新建任务或会话；不要在旧上下文里假设新 Skill 已加载。</li>
+                    <li>如需内置 Agent 读取规范，可在工作台选择 TavernWeave 仓库根或其 <code>skills</code> 目录；RPN 只读 <code>SKILL.md</code>，不会安装或改写仓库。</li>
+                  </ol>
+                </details>
+              </div>
+              <ol class="vibe-install-steps">
+                <li><span>安装</span><p>把 TavernWeave 作为一个插件阵列安装；不要把 9 个 Skill 拆成互相漂移的手工副本。</p></li>
+                <li><span>授权</span><p>工作台可选择 TavernWeave 仓库根、其 <code>skills</code> 目录和开发指南 DB。目录授权只是本机只读访问，不会上传文件。</p></li>
+                <li><span>路由</span><p>每次只加载当前模块对应的一个主 Skill；精确 API、真实 ST、发布与 UI 分别交给专用 Skill，避免把全阵列塞进上下文。</p></li>
+                <li><span>停用</span><p>按 Codex 插件管理或 TavernWeave 当前 README 操作；撤销 RPN 目录授权不会卸载插件或删除磁盘原文件。</p></li>
+              </ol>
+            </section>
+
+            <section class="vibe-guide-card vibe-guide-errors" aria-labelledby="vibe-errors-title">
+              <header>
+                <span>03 · 常见施工错误</span>
+                <h3 id="vibe-errors-title">先定位证据链，再让 AI 写文件</h3>
+              </header>
+              <div class="vibe-error-grid">
+                <article><strong>现场错了</strong><ul><li>在旧版本或错误工作区修改</li><li>直接编辑 dist-pages 等生成物</li><li>没确认原卡版本和真相源</li></ul></article>
+                <article><strong>范围失控</strong><ul><li>一次同时大改卡片、变量、前端和发布链</li><li>不断改变目标却不重新同步边界</li><li>同时启用内置与外置 Agent</li></ul></article>
+                <article><strong>验证不足</strong><ul><li>只看截图，不测交互与控制台</li><li>把离线模拟通过当成真实 ST 验收</li><li>页面改了却没有重新构建或刷新缓存</li></ul></article>
+                <article><strong>数据有风险</strong><ul><li>无备份覆盖旧版本或原始角色卡</li><li>把 API Key、Token、私人路径写进项目</li><li>混淆源码、项目备份、角色卡 JSON 与 PNG</li></ul></article>
+              </div>
+              <div class="vibe-safe-order" aria-label="推荐施工顺序">
+                <span>确认工作区与版本</span><i aria-hidden="true">→</i><span>查询 Skill / DB</span><i aria-hidden="true">→</i><span>先列差异与风险</span><i aria-hidden="true">→</i><span>最小改动</span><i aria-hidden="true">→</i><span>自动检查</span><i aria-hidden="true">→</i><span>浏览器与真实 ST 验收</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="page-shell component-preview-page" data-page="play" data-component-preview aria-labelledby="component-preview-title" hidden>
+      <header class="component-preview-hero">
+        <div class="component-preview-copy">
+          <p class="eyebrow">前端组件库 · 预览入口</p>
+          <h1 id="component-preview-title" tabindex="-1">先看组件，再回工作台组装</h1>
+          <p class="hero-lead">这里逐步展示组件库中的前端部件、状态与布局效果。首版只提供只读视觉样例；选型、依赖校验和实际组装继续统一在制卡工作台完成。</p>
+          <div class="hero-actions">
+            <a class="primary-action" href="#studio/frontend">在工作台选择组件</a>
+            <a class="secondary-action" href="#studio/design">进入 UI Builder</a>
+          </div>
+        </div>
+        <dl class="component-preview-meta" aria-label="组件快照">
+          <div><dt>内置快照</dt><dd>v0.3.0</dd></div>
+          <div><dt>组件数量</dt><dd>94 项</dd></div>
+          <div><dt>当前阶段</dt><dd>只读预览壳</dd></div>
+        </dl>
+      </header>
+
+      <section class="component-preview-priority" aria-labelledby="component-preview-priority-title">
+        <div>
+          <p class="eyebrow">当前开发优先级</p>
+          <h2 id="component-preview-priority-title">制卡工作台优先落地</h2>
+          <p>本页只建立稳定的展示位置，不复制组件工坊的选择器、依赖树或编辑能力。外部 <code>registry.json</code> 仍是真相源，RPN 仅使用经过验证的内置快照。</p>
+        </div>
+        <a class="primary-action" href="#studio">返回制卡工作台</a>
+      </section>
+
+      <section class="component-preview-showcase" aria-labelledby="component-preview-showcase-title">
+        <header class="component-preview-heading">
+          <div>
+            <p class="eyebrow">首批预览位</p>
+            <h2 id="component-preview-showcase-title">三类前端组件样例</h2>
+          </div>
+          <p>先确认展示层级、信息密度和桌面布局。真实组件接线会按工作台进度分批替换这些静态样例。</p>
+        </header>
+
+        <div class="component-preview-grid">
+          <article class="component-preview-card" data-component-preview-card="status-bar">
+            <header><span>状态栏框架</span><h3>分页与状态数据</h3></header>
+            <div class="component-preview-stage" aria-hidden="true">
+              <div class="component-preview-tabs"><span>环境</span><span>自身</span><span>角色档案</span><span>任务</span></div>
+              <div class="component-preview-data">
+                <span>当前位置<strong>杭州市 · 学院区</strong></span>
+                <span>时间<strong>08:40</strong></span>
+                <span>体力<strong>86 / 100</strong></span>
+                <span>近期事件<strong>社团招新</strong></span>
+              </div>
+            </div>
+            <footer>静态示意 · 待接状态栏真实组件</footer>
+          </article>
+
+          <article class="component-preview-card" data-component-preview-card="control-center">
+            <header><span>控制中心</span><h3>设置组与模式开关</h3></header>
+            <div class="component-preview-stage component-preview-controls" aria-hidden="true">
+              <div class="component-preview-control-row"><div><strong>状态栏模式</strong><small>桌面浮窗</small></div><span class="component-preview-switch"></span></div>
+              <div class="component-preview-control-row"><div><strong>气泡头像</strong><small>跟随当前角色</small></div><span class="component-preview-switch"></span></div>
+              <div class="component-preview-control-row"><div><strong>媒体增强</strong><small>按设备能力启用</small></div><span class="component-preview-switch"></span></div>
+            </div>
+            <footer>静态示意 · 待接控制中心真实组件</footer>
+          </article>
+
+          <article class="component-preview-card" data-component-preview-card="content-card">
+            <header><span>内容卡片</span><h3>角色与信息条目</h3></header>
+            <div class="component-preview-stage component-preview-controls" aria-hidden="true">
+              <div class="component-preview-content-row"><span class="component-preview-avatar">A1</span><div><strong>角色档案</strong><small>关系、状态与最近互动</small></div></div>
+              <div class="component-preview-content-row"><span class="component-preview-avatar">EV</span><div><strong>近期事件</strong><small>可折叠的信息摘要</small></div></div>
+              <div class="component-preview-content-row"><span class="component-preview-avatar">WB</span><div><strong>世界设定</strong><small>来自组件声明的数据视图</small></div></div>
+            </div>
+            <footer>静态示意 · 待接内容卡片真实组件</footer>
+          </article>
+        </div>
+      </section>
+
+      <section class="component-preview-roadmap" aria-labelledby="component-preview-roadmap-title">
+        <div>
+          <p class="eyebrow">逐步实装</p>
+          <h2 id="component-preview-roadmap-title">预览区接线顺序</h2>
+          <p>不抢占工作台主线；每一批真实组件都先在独立前端验证，再进入 ST 挂载实测。</p>
+        </div>
+        <ol>
+          <li><span>01</span><div><strong>状态栏框架</strong><small>页签、空状态与布局外壳</small></div><em>下一步</em></li>
+          <li><span>02</span><div><strong>控制中心面板</strong><small>设置分组与状态反馈</small></div><em>排队</em></li>
+          <li><span>03</span><div><strong>变量绑定模拟</strong><small>只读场景与状态切换</small></div><em>稍后</em></li>
+          <li><span>04</span><div><strong>挂载有效性</strong><small>独立前端与真实 ST 验收</small></div><em>验收门</em></li>
+        </ol>
+      </section>
+    </section>
+    <section class="page-shell studio-page" data-page="studio" aria-labelledby="studio-title" hidden>
+      <div class="rcs-root assistant-closed" data-rcs-root data-studio-version="workbench-0.13">
+        <header class="rcs-toolbar">
+          <div class="rcs-project-mark">
+            <span class="rcs-stage-code">WB</span>
+            <div>
+              <h1 id="studio-title" tabindex="-1" data-rcs-project-title>制卡工作台</h1>
+              <p data-rcs-project-meta>自由工作区 · 可从任意模块开始</p>
+            </div>
+          </div>
+          <div class="rcs-toolbar-state">
+            <span class="rcs-save-state" data-rcs-save-state role="status" aria-live="polite">临时草稿 · 本地自动保存</span>
+            <span class="rcs-project-state" data-rcs-project-state>可开始</span>
+          </div>
+          <div class="rcs-toolbar-actions">
+            <button class="rcs-button ghost" type="button" data-rcs-import-card>导入卡片</button>
+            <details class="rcs-export-menu">
+              <summary class="rcs-button ghost">导出</summary>
+              <div>
+                <button type="button" data-rcs-export-card-json>角色卡 JSON</button>
+                <button type="button" data-rcs-export-png>角色卡 PNG</button>
+                <button type="button" data-rcs-quick-export>工作区备份</button>
+              </div>
+            </details>
+            <button class="rcs-button ghost" type="button" data-rcs-run-check>检查</button>
+            <a class="rcs-button ghost" href="#studio/tutorial" data-rcs-route-link="tutorial">使用教程</a>
+            <button class="rcs-button ghost" type="button" data-rcs-wiki-toggle aria-expanded="false" aria-controls="rcs-assistant">知识 Wiki</button>
+            <button class="rcs-button ghost" type="button" data-rcs-ai-toggle aria-expanded="false" aria-controls="rcs-assistant">AI 协作</button>
+          </div>
+          <input type="file" accept=".json,.png,application/json,image/png" data-rcs-rolecard-file hidden>
+          <input type="file" accept=".png,image/png" data-rcs-cover-file hidden>
+        </header>
+
+        <div class="rcs-body">
+          <aside class="rcs-sidebar" id="rcs-studio-sidebar" aria-label="创作模块">
+            <button class="rcs-sidebar-toggle" type="button" data-rcs-sidebar-toggle aria-controls="rcs-studio-sidebar" aria-expanded="true" aria-label="收起创作模块侧栏"><span aria-hidden="true">‹</span><strong>收起侧栏</strong></button>
+            <nav class="rcs-module-nav">
+              <a href="#studio/project" data-rcs-route-link="project" aria-label="总览" title="项目总览"><span>项目</span><div><strong>总览</strong><small>工作区、文件与项目</small></div><i data-rcs-module-state="project">可选</i></a>
+              <a href="#studio/card" data-rcs-route-link="card" aria-label="卡片基础" title="卡片基础"><span>卡片</span><div><strong>卡片基础</strong><small>名称、版本与开场</small></div><i data-rcs-module-state="card">未开始</i></a>
+              <a href="#studio/worldbook" data-rcs-route-link="worldbook" aria-label="世界书" title="世界书"><span>世界</span><div><strong>世界书</strong><small>条目、路由与激活</small></div><i data-rcs-module-state="worldbook">未开始</i></a>
+              <a href="#studio/mvu" data-rcs-route-link="mvu" aria-label="状态机制" title="状态机制"><span>状态</span><div><strong>状态机制</strong><small>变量路线与 MVU 草稿</small></div><i data-rcs-module-state="mvu">可开始</i></a>
+              <a href="#studio/frontend" data-rcs-route-link="frontend" aria-label="组件工坊" title="组件工坊"><span>组件</span><div><strong>组件工坊</strong><small>内置组件树与依赖</small></div><i data-rcs-module-state="frontend">可选择</i></a>
+              <a href="#studio/design" data-rcs-route-link="design" aria-label="前端设计" title="前端设计"><span>界面</span><div><strong>前端设计</strong><small>UI Builder 可视化搭建</small></div><i data-rcs-module-state="design">可开始</i></a>
+              <a href="#studio/workflow" data-rcs-route-link="workflow" aria-label="工作流蓝图" title="工作流蓝图"><span>流程</span><div><strong>工作流蓝图</strong><small>变量链、Check 与消费者</small></div><i data-rcs-module-state="workflow">可开始</i></a>
+              <a href="#studio/check" data-rcs-route-link="check" aria-label="检查与导出" title="检查与导出"><span>检查</span><div><strong>检查与导出</strong><small>角色卡、PNG 与备份</small></div><i data-rcs-module-state="check">未运行</i></a>
+            </nav>
+            <a class="rcs-publish-shortcut" href="#workshop" aria-label="前往创意工坊"><span>社区发布</span><strong>前往创意工坊</strong><small>发现和发布组件，或访问星月二创资源</small></a>
+            <button class="rcs-sidebar-resize" type="button" data-rcs-sidebar-resize role="separator" aria-orientation="vertical" aria-controls="rcs-main" aria-label="调整创作模块侧栏宽度" aria-valuemin="176" aria-valuemax="360" aria-valuenow="228" aria-keyshortcuts="ArrowLeft ArrowRight"></button>
+          </aside>
+
+          <div class="rcs-main" id="rcs-main">
+            <section class="rcs-view rcs-tutorial-view" data-rcs-view="tutorial" aria-labelledby="rcs-tutorial-heading" hidden>
+              <div class="rcs-view-heading compact rcs-tutorial-heading">
+                <div>
+                  <p class="eyebrow">工作台教程 · 第一次使用从这里开始</p>
+                  <h2 id="rcs-tutorial-heading" tabindex="-1">先选起点，再沿一条主线完成</h2>
+                  <p>教程只解释操作与边界，不会替你改动当前工作区。每一步都能直接返回对应模块。</p>
+                </div>
+                <div class="rcs-heading-actions">
+                  <a class="rcs-button ghost" href="#guide">查看完整制卡指南</a>
+                  <a class="rcs-button primary" href="#studio/project" data-rcs-route-link="project">回到工作区</a>
+                </div>
+              </div>
+
+              <nav class="rcs-tutorial-jump" aria-label="教程章节">
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-start">首次上手</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-map">模块地图</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-storage">保存边界</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-import">导入与变量</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-agent">Agent 与知识</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-export">检查与恢复</a>
+              </nav>
+
+              <section class="rcs-tutorial-section" id="rcs-tutorial-start" aria-labelledby="rcs-tutorial-start-title">
+                <header class="rcs-tutorial-section-head">
+                  <span>01</span>
+                  <div><h3 id="rcs-tutorial-start-title">选择你的起点</h3><p>没有必须从总览开始的限制，但一次只推进一条最短路径。</p></div>
+                </header>
+                <div class="rcs-tutorial-start-grid">
+                  <article><span>从零制作</span><h4>先写核心角色与一个开场</h4><p>适合只有想法的新卡。先让角色能对话，再逐步增加世界书、变量和前端。</p><a href="#studio/card" data-rcs-route-link="card">打开卡片基础</a></article>
+                  <article><span>接管现有卡</span><h4>导入后先看拆分报告</h4><p>确认可编辑、原样保留与仅项目内容，避免新表单覆盖未知扩展。</p><a href="#studio/project" data-rcs-route-link="project">前往总览导入</a></article>
+                  <article><span>只改一个部件</span><h4>直接进入目标模块</h4><p>只改世界书、变量或前端时，先确认其上下游，不必重做整张卡。</p><a href="#studio/workflow" data-rcs-route-link="workflow">查看部件关系</a></article>
+                </div>
+                <ol class="rcs-tutorial-quick-steps" aria-label="十分钟首次上手">
+                  <li><span>1</span><div><strong>建立现场</strong><p>新建空白工作区，或导入 JSON / PNG；有本机目录时再设置工作区、缓存与产出目录。</p></div></li>
+                  <li><span>2</span><div><strong>完成最小内容</strong><p>填写角色名、人设与一个可试玩开场；需要路由时再添加世界书。</p></div></li>
+                  <li><span>3</span><div><strong>只接必要系统</strong><p>变量卡先定义 InitVar，再写更新规则，最后让世界书或前端消费变量。</p></div></li>
+                  <li><span>4</span><div><strong>运行 Check</strong><p>先处理阻断，再理解警告和“待真实 ST”；不要用预览替代真机证据。</p></div></li>
+                  <li><span>5</span><div><strong>留下两类产物</strong><p>先下载工作区备份，再导出角色卡 JSON / PNG；两者用途不同。</p></div></li>
+                </ol>
+              </section>
+
+              <section class="rcs-tutorial-section" id="rcs-tutorial-map" aria-labelledby="rcs-tutorial-map-title">
+                <header class="rcs-tutorial-section-head">
+                  <span>02</span>
+                  <div><h3 id="rcs-tutorial-map-title">八个模块，各自只负责一类产物</h3><p>点击模块即可进入；不需要按固定顺序把所有页面填满。</p></div>
+                </header>
+                <div class="rcs-tutorial-module-grid">
+                  <a href="#studio/project" data-rcs-route-link="project"><span>工作区</span><strong>总览</strong><p>导入、目录、恢复点与项目设置</p><small>产物：可继续工作的项目现场</small></a>
+                  <a href="#studio/card" data-rcs-route-link="card"><span>内容</span><strong>卡片基础</strong><p>名称、人设、场景、示例和多开场</p><small>产物：chara_card_v3 基础字段</small></a>
+                  <a href="#studio/worldbook" data-rcs-route-link="worldbook"><span>知识</span><strong>世界书</strong><p>条目、关键词、路由与插入位置</p><small>产物：可检查的世界书条目</small></a>
+                  <a href="#studio/mvu" data-rcs-route-link="mvu"><span>状态</span><strong>状态机制</strong><p>变量结构、初始值与编辑草稿</p><small>产物：变量定义与安全草稿</small></a>
+                  <a href="#studio/frontend" data-rcs-route-link="frontend"><span>资产</span><strong>组件工坊</strong><p>按树选择组件，核对依赖与冲突</p><small>产物：组件选型清单</small></a>
+                  <a href="#studio/design" data-rcs-route-link="design"><span>界面</span><strong>前端设计</strong><p>搭建、交互预览与模拟包注入</p><small>产物：UI Builder 设计源稿</small></a>
+                  <a href="#studio/workflow" data-rcs-route-link="workflow"><span>链路</span><strong>工作流蓝图</strong><p>连接来源、规则、消费者与检查</p><small>产物：可编辑的状态链路图</small></a>
+                  <a href="#studio/check" data-rcs-route-link="check"><span>输出</span><strong>检查与导出</strong><p>处理阻断，生成备份与卡片文件</p><small>产物：报告、JSON / PNG 与备份</small></a>
+                </div>
+              </section>
+
+              <section class="rcs-tutorial-section" id="rcs-tutorial-storage" aria-labelledby="rcs-tutorial-storage-title">
+                <header class="rcs-tutorial-section-head">
+                  <span>03</span>
+                  <div><h3 id="rcs-tutorial-storage-title">先分清保存在哪里</h3><p>自动保存、磁盘检查点、项目备份和角色卡文件不是同一个东西。</p></div>
+                </header>
+                <div class="rcs-tutorial-storage-grid">
+                  <article><span>浏览器现场</span><strong>自动保存当前工作区</strong><p>卡片、世界书、状态草稿、组件选择、工作流和 UI Builder 源稿属于工作区内容。跨页面前留意顶栏保存状态。</p></article>
+                  <article><span>本机目录</span><strong>可选检查点与产出目录</strong><p>浏览器可能记住目录句柄，但重启或权限变化后仍可能要求再次授权。</p></article>
+                  <article><span>下载文件</span><strong>备份与最终卡片分开</strong><p>项目备份用于回到编辑现场；角色卡 JSON / PNG 用于导入 SillyTavern。</p></article>
+                </div>
+                <div class="rcs-tutorial-boundary">
+                  <strong>不会跟项目长期保存</strong>
+                  <ul><li>API Key 与一次性凭证</li><li>未发送的 Agent 临时输入</li><li>临时搜索条件与页面筛选</li><li>真实 ST 的玩家数据与运行结果</li></ul>
+                  <p>自动保存失败、浏览器空间不足或目录失去授权时，先停止继续编辑并下载项目备份。</p>
+                </div>
+              </section>
+
+              <section class="rcs-tutorial-section" id="rcs-tutorial-import" aria-labelledby="rcs-tutorial-import-title">
+                <header class="rcs-tutorial-section-head">
+                  <span>04</span>
+                  <div><h3 id="rcs-tutorial-import-title">导入先拆卡，变量再沿主链核对</h3><p>工作台只解析可验证结构，不执行导入卡中的 Zod、脚本、正则或动态 EJS。</p></div>
+                </header>
+                <div class="rcs-tutorial-chain" role="group" aria-label="导入角色卡与变量核对主链">
+                  <span>导入 JSON / PNG</span><i aria-hidden="true">→</i><span>内容拆分树</span><i aria-hidden="true">→</i><span>InitVar / Schema 来源</span><i aria-hidden="true">→</i><span>更新规则</span><i aria-hidden="true">→</i><span>世界书与 UI 消费者</span><i aria-hidden="true">→</i><span>Check / 真机</span>
+                </div>
+                <div class="rcs-tutorial-explain-grid">
+                  <article><strong>可编辑</strong><p>工作台已有规范编辑器，并能稳定往返的卡片字段与条目。</p></article>
+                  <article><strong>原样保留</strong><p>已证明导入到导出不变、但当前没有专用编辑器的扩展数据。</p></article>
+                  <article><strong>仅项目</strong><p>UI 设计源稿、模拟包、选型与蓝图等创作资料，不会自动装入角色卡。</p></article>
+                  <article><strong>需要确认</strong><p>多份来源、无法静态求值或消费者路径不一致时，只报告差异，不擅自合并。</p></article>
+                </div>
+              </section>
+
+              <section class="rcs-tutorial-section" id="rcs-tutorial-agent" aria-labelledby="rcs-tutorial-agent-title">
+                <header class="rcs-tutorial-section-head">
+                  <span>05</span>
+                  <div><h3 id="rcs-tutorial-agent-title">Agent、Skill 与开发指南 DB 各司其职</h3><p>Agent 负责执行，Skill 规定工作方法，DB 提供版本事实；三者不能互相替代。</p></div>
+                </header>
+                <div class="rcs-tutorial-agent-grid">
+                  <article><span>执行者</span><strong>一次只启用一种 Agent 模式</strong><p>内置 Agent、Codex 或 Claude Code 三选一。切换请求会等待当前操作完成，避免两个 Agent 同时写同一现场。</p></article>
+                  <article><span>工作方法</span><strong>Skill</strong><p>告诉 Agent 应先查什么、改哪些文件、跑什么验证。匹配说明时 Agent 可能自动采用；在任务中点名要用的 Skill 最稳妥。</p></article>
+                  <article><span>事实来源</span><strong>开发指南 DB</strong><p>只读检索 ST 与插件文档，优先打开本次相关章节。DB 不复制进 RPN，也不会自动修改项目。</p></article>
+                </div>
+                <div class="rcs-tutorial-inline-actions">
+                  <a class="rcs-button ghost" href="#studio/project" data-rcs-route-link="project">设置工作区、Skill 与 DB</a>
+                  <button class="rcs-button ghost" type="button" data-rcs-wiki-toggle aria-expanded="false" aria-controls="rcs-assistant">打开知识 Wiki</button>
+                  <button class="rcs-button primary" type="button" data-rcs-ai-toggle aria-expanded="false" aria-controls="rcs-assistant">打开 AI 协作</button>
+                </div>
+              </section>
+
+              <section class="rcs-tutorial-section" id="rcs-tutorial-export" aria-labelledby="rcs-tutorial-export-title">
+                <header class="rcs-tutorial-section-head">
+                  <span>06</span>
+                  <div><h3 id="rcs-tutorial-export-title">检查、导出与恢复</h3><p>先看问题等级，再选择正确产物；出错时优先恢复现场，不要立即重写。</p></div>
+                </header>
+                <div class="rcs-tutorial-export-grid">
+                  <dl>
+                    <div><dt>阻断</dt><dd>会产生错误或不完整角色卡；修复前不能继续导出卡片。</dd></div>
+                    <div><dt>警告</dt><dd>结构可继续，但存在兼容、缺失或设计风险，需要人工判断。</dd></div>
+                    <div><dt>待真实 ST</dt><dd>静态页面无法证明运行行为，必须导入当前目标环境复测。</dd></div>
+                  </dl>
+                  <dl>
+                    <div><dt>项目备份</dt><dd>保存工作台编辑现场，遇到角色卡阻断时仍可下载。</dd></div>
+                    <div><dt>角色卡 JSON</dt><dd>适合检查结构和版本差异，也是 PNG 装配的数据来源。</dd></div>
+                    <div><dt>角色卡 PNG</dt><dd>携带封面与嵌入卡片数据，用于 SillyTavern 导入。</dd></div>
+                    <div><dt>世界书</dt><dd>只导出世界书内容，不等于完整角色卡。</dd></div>
+                  </dl>
+                </div>
+                <div class="rcs-tutorial-troubleshoot">
+                  <details><summary>切换页面或刷新后内容不对</summary><p>先看顶栏是否仍显示“保存中”或“保存失败”；不要继续覆盖，返回总览检查当前工作区并下载备份。</p></details>
+                  <details><summary>UI Builder 没有显示最新设计</summary><p>先返回前端设计确认编辑器同步状态；设计源稿属于项目内容，不会因为角色卡导出而自动装配。</p></details>
+                  <details><summary>目录授权失效</summary><p>在总览重新选择对应工作区、缓存、产出、Skill 或 DB 目录；重新授权不会删除原文件。</p></details>
+                  <details><summary>浏览器仍显示旧页面</summary><p>先确认源码已重新构建，再强制刷新当前预览。不要直接编辑 dist-pages 修表象。</p></details>
+                  <details><summary>导入后出现大量未识别内容</summary><p>保留原文件与替换前恢复点；先核对卡片版本、扩展字段和来源，再决定是否建立专用编辑器。</p></details>
+                  <details><summary>检查通过但酒馆里不能用</summary><p>检查只证明静态结构与已覆盖的模拟路径。重新导入真实 SillyTavern，验证插件、权限、楼层、网络与玩家交互。</p></details>
+                </div>
+                <div class="rcs-tutorial-inline-actions">
+                  <a class="rcs-button ghost" href="#studio/project" data-rcs-route-link="project">管理与恢复工作区</a>
+                  <a class="rcs-button primary" href="#studio/check" data-rcs-route-link="check">前往检查与导出</a>
+                </div>
+              </section>
+            </section>
+
+            <section class="rcs-view" data-rcs-view="project" aria-labelledby="rcs-project-heading">
+              <div class="rcs-view-heading compact rcs-project-heading">
+                <div>
+                  <p class="eyebrow">工作区</p>
+                  <h2 id="rcs-project-heading" tabindex="-1">自由工作区</h2>
+                  <p>不用先起名或建立项目，可以从任意模块开始。</p>
+                </div>
+                <button class="rcs-button ghost" type="button" data-rcs-project-settings>保存为项目</button>
+              </div>
+
+              <section class="rcs-workspace-overview">
+                <div class="rcs-workspace-summary">
+                  <header>
+                    <div><span>当前工作区</span><h3 data-rcs-workspace-title>未命名工作区</h3><p data-rcs-workspace-source>本地自由草稿</p></div>
+                    <button class="rcs-button ghost" type="button" data-rcs-new-workspace>新建空白工作区</button>
+                  </header>
+                  <dl>
+                    <div><dt>世界书</dt><dd data-rcs-workspace-worldbook>0 条</dd></div>
+                    <div><dt>状态路线</dt><dd data-rcs-workspace-state>未选择</dd></div>
+                    <div><dt>组件选型</dt><dd data-rcs-workspace-components>0 个</dd></div>
+                    <div><dt>工作流蓝图</dt><dd data-rcs-workspace-workflow>0 / 2</dd></div>
+                  </dl>
+                  <nav class="rcs-workspace-shortcuts" aria-label="开始编辑">
+                    <a href="#studio/card" data-rcs-route-link="card"><span>卡片基础</span><small>名称可以稍后再填</small></a>
+                    <a href="#studio/worldbook" data-rcs-route-link="worldbook"><span>世界书</span><small>直接新建或导入条目</small></a>
+                    <a href="#studio/mvu" data-rcs-route-link="mvu"><span>状态机制</span><small>先选路线或写 MVU 草稿</small></a>
+                    <a href="#studio/frontend" data-rcs-route-link="frontend"><span>组件工坊</span><small>按树状目录浏览并记录选型</small></a>
+                    <a href="#studio/design" data-rcs-route-link="design"><span>前端设计</span><small>直接打开 UI Builder 搭界面</small></a>
+                    <a href="#studio/workflow" data-rcs-route-link="workflow"><span>工作流蓝图</span><small>把变量、规则、显示与 Check 串起来</small></a>
+                  </nav>
+                  <div class="rcs-workspace-actions">
+                    <button class="rcs-button primary" type="button" data-rcs-import-card>导入 JSON / PNG</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-import-worldbook data-rcs-worldbook-import-mode="append">融合多个世界书</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-export-card-json>导出角色卡 JSON</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-export-png>导出角色卡 PNG</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-restore-recovery hidden>恢复替换前现场</button>
+                  </div>
+                </div>
+                <aside class="rcs-cover-panel">
+                  <div class="rcs-cover-frame">
+                    <img data-rcs-cover-preview alt="当前角色卡封面" hidden>
+                    <span data-rcs-cover-empty>PNG<br>封面</span>
+                  </div>
+                  <strong>角色卡封面</strong>
+                  <p data-rcs-cover-meta>尚未选择封面；导出 PNG 时可再补充。</p>
+                  <button class="rcs-button ghost wide" type="button" data-rcs-select-cover>选择或更换封面</button>
+                </aside>
+              </section>
+
+              <section class="rcs-extension-exchange" aria-labelledby="rcs-extension-exchange-title">
+                <header>
+                  <div>
+                    <p class="eyebrow">ST 扩展素材 · 只作为数据</p>
+                    <h3 id="rcs-extension-exchange-title">正则与酒馆助手脚本</h3>
+                    <p>支持独立 JSON、数组或角色卡内嵌结构；导入时不会运行正则、脚本、命令或 URL，未知字段会随完整对象保留。</p>
+                  </div>
+                  <span class="rcs-state-badge">随角色卡装配</span>
+                </header>
+                <div class="rcs-extension-exchange-grid">
+                  <article aria-label="正则脚本">
+                    <div><span>Regex</span><strong>正则脚本</strong><p>单个对象或数组均可导入；导出保持 ST 可直接读取的对象 / 数组 JSON。</p></div>
+                    <b data-rcs-extension-count="regex">0 项</b>
+                    <div class="rcs-extension-exchange-actions">
+                      <button class="rcs-button primary" type="button" data-rcs-extension-import="regex">导入正则</button>
+                      <button class="rcs-button ghost" type="button" data-rcs-extension-export="regex" disabled>导出正则</button>
+                    </div>
+                  </article>
+                  <article aria-label="酒馆助手 ScriptTree">
+                    <div><span>Tavern Helper</span><strong>酒馆助手 ScriptTree</strong><p>脚本与文件夹保持完整树结构；多项需先设置产出目录，再分别写为独立 JSON。</p></div>
+                    <b data-rcs-extension-count="tavern-helper">0 项</b>
+                    <div class="rcs-extension-exchange-actions">
+                      <button class="rcs-button primary" type="button" data-rcs-extension-import="tavern-helper">导入脚本</button>
+                      <button class="rcs-button ghost" type="button" data-rcs-extension-export="tavern-helper" disabled>导出脚本</button>
+                    </div>
+                  </article>
+                </div>
+                <input type="file" accept=".json,application/json" multiple data-rcs-extension-file="regex" hidden>
+                <input type="file" accept=".json,application/json" multiple data-rcs-extension-file="tavern-helper" hidden>
+                <p class="rcs-extension-status" data-rcs-extension-status role="status" aria-live="polite">角色卡导出时写回原扩展容器；新建工作区使用标准容器。</p>
+              </section>
+
+              <section class="rcs-import-analysis" data-rcs-import-analysis data-state="empty" aria-labelledby="rcs-import-analysis-title">
+                <header>
+                  <div>
+                    <p class="eyebrow">导入解析 · 只读报告</p>
+                    <h3 id="rcs-import-analysis-title">角色卡结构与组件线索</h3>
+                    <p>导入 JSON / PNG 后，区分可编辑内容、变量来源、原样保留扩展与可信组件候选。</p>
+                  </div>
+                  <span class="rcs-state-badge" data-rcs-import-analysis-status data-state="empty" role="status" aria-live="polite">等待导入</span>
+                </header>
+                <div class="rcs-import-analysis-empty" data-rcs-import-analysis-empty>
+                  <div><strong>先导入一张角色卡</strong><p>报告不会执行脚本或 Zod，也不会自动勾选组件；现有工作区内容在确认替换前保持不变。</p></div>
+                  <button class="rcs-button primary" type="button" data-rcs-import-card>导入 JSON / PNG</button>
+                </div>
+                <div class="rcs-import-analysis-content" data-rcs-import-analysis-content hidden>
+                  <div class="rcs-import-analysis-summary" data-rcs-import-analysis-summary aria-label="导入解析摘要"></div>
+                  <div class="rcs-import-analysis-grid">
+                    <section data-rcs-import-analysis-group="editable">
+                      <header><span>可直接编辑</span><strong>工作台已接管</strong></header>
+                      <ul data-rcs-import-analysis-list="editable"></ul>
+                    </section>
+                    <section data-rcs-import-analysis-group="sources">
+                      <header><span>变量与运行来源</span><strong>只读识别</strong></header>
+                      <ul data-rcs-import-analysis-list="sources"></ul>
+                    </section>
+                    <section data-rcs-import-analysis-group="preserved">
+                      <header><span>扩展与未知内容</span><strong>原样保留</strong></header>
+                      <ul data-rcs-import-analysis-list="preserved"></ul>
+                    </section>
+                    <section data-rcs-import-analysis-group="candidates">
+                      <header><span>组件候选</span><strong>需人工确认</strong></header>
+                      <ul data-rcs-import-analysis-list="candidates"></ul>
+                    </section>
+                  </div>
+                  <div class="rcs-import-analysis-boundary">
+                    <span>显式组件 ID 才会列为候选，不做模糊猜测</span>
+                    <span>选型不等于装配，分析结果不进入角色卡</span>
+                    <a href="#studio/frontend" data-rcs-route-link="frontend">前往组件工坊复核</a>
+                  </div>
+                </div>
+              </section>
+
+              <section class="rcs-local-folders" data-rcs-local-folders aria-labelledby="rcs-local-folders-title">
+                <header>
+                  <div>
+                    <p class="eyebrow">本机文件</p>
+                    <h3 id="rcs-local-folders-title">工作区、缓存与产出目录</h3>
+                    <p>目录只在你的浏览器中授权，不会上传。未授权时继续使用浏览器自动保存与下载。</p>
+                  </div>
+                  <div class="rcs-heading-actions">
+                    <button class="rcs-button primary" type="button" data-rcs-folders-checkpoint disabled>写入工作区检查点</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-folders-clear>清除目录授权</button>
+                  </div>
+                </header>
+                <div class="rcs-folder-grid">
+                  <article data-rcs-folder-card="workspace">
+                    <span>01 · 工作区</span>
+                    <strong data-rcs-folder-name="workspace">未指定</strong>
+                    <p>保存可恢复的项目检查点；选定后作为工作现场。</p>
+                    <button class="rcs-button ghost wide" type="button" data-rcs-folder-pick="workspace">选择工作区</button>
+                  </article>
+                  <article data-rcs-folder-card="cache">
+                    <span>02 · 缓存</span>
+                    <strong data-rcs-folder-name="cache">自动：.rpn-cache</strong>
+                    <p>组件下载、预览与中间产物；可以随时清理。</p>
+                    <button class="rcs-button ghost wide" type="button" data-rcs-folder-pick="cache">单独指定缓存</button>
+                  </article>
+                  <article data-rcs-folder-card="output">
+                    <span>03 · 产出</span>
+                    <strong data-rcs-folder-name="output">自动：output</strong>
+                    <p>角色卡 JSON、PNG、世界书与工作区备份。</p>
+                    <button class="rcs-button ghost wide" type="button" data-rcs-folder-pick="output">单独指定产出</button>
+                  </article>
+                </div>
+                <details class="rcs-agent-context-settings" data-rcs-agent-context>
+                  <summary>
+                    <span><strong>Agent 上下文与知识源</strong><small>本机专属，不进入项目备份或云端发布</small></span>
+                    <b data-rcs-agent-context-summary>尚未设置</b>
+                  </summary>
+                  <div class="rcs-agent-context-body">
+                    <div class="rcs-field-grid two rcs-agent-path-grid">
+                      <label><span>外置 Agent 工作区绝对路径</span><input type="text" data-rcs-agent-path="workspaceDirectory" maxlength="4096" autocomplete="off" spellcheck="false" placeholder="C:\path\to\角色卡工作区"></label>
+                      <label><span>ST 开发指南 DB 绝对路径</span><input type="text" data-rcs-agent-path="guideDbDirectory" maxlength="4096" autocomplete="off" spellcheck="false" placeholder="C:\path\to\ST开发指南DB"></label>
+                      <label><span>TavernWeave / Codex Skills 目录</span><input type="text" data-rcs-agent-path="codexSkillsDirectory" maxlength="4096" autocomplete="off" spellcheck="false" placeholder="…\TavernWeave 或 …\TavernWeave\skills"></label>
+                      <label><span>Claude Code Skill / 插件目录</span><input type="text" data-rcs-agent-path="claudeSkillsDirectory" maxlength="4096" autocomplete="off" spellcheck="false" placeholder="TavernWeave 仓库或旧 .claude\skills"></label>
+                    </div>
+                    <div class="rcs-agent-context-actions">
+                      <p>绝对路径只会加入 Codex / Claude Code 的复制任务包；内置 API 不会收到这些路径。</p>
+                      <div>
+                        <button class="rcs-button primary" type="button" data-rcs-agent-path-save>保存本机路径</button>
+                        <button class="rcs-button ghost" type="button" data-rcs-agent-context-clear>清除 Agent 上下文</button>
+                      </div>
+                    </div>
+                    <div class="rcs-knowledge-source-grid">
+                      <article data-rcs-knowledge-source-card="skill">
+                        <span>只读 · TavernWeave / Skill 源</span>
+                        <strong data-rcs-knowledge-source-name="skill">未授权</strong>
+                        <p data-rcs-knowledge-source-detail="skill">可选择 TavernWeave 仓库根、skills 目录或单个旧 Skill；工作台只读取入口 SKILL.md。</p>
+                        <button class="rcs-button ghost wide" type="button" data-rcs-knowledge-source-pick="skill">选择 TavernWeave / Skill</button>
+                      </article>
+                      <article data-rcs-knowledge-source-card="guideDb">
+                        <span>只读 · 开发指南 DB</span>
+                        <strong data-rcs-knowledge-source-name="guideDb">未授权</strong>
+                        <p data-rcs-knowledge-source-detail="guideDb">只索引根目录 Markdown；不会读取脚本、压缩包或本地证据子目录。</p>
+                        <button class="rcs-button ghost wide" type="button" data-rcs-knowledge-source-pick="guideDb">选择开发指南 DB</button>
+                      </article>
+                    </div>
+                    <p class="rcs-folder-status" data-rcs-agent-context-status role="status" aria-live="polite">尚未授权 Skill 或开发指南 DB。</p>
+                  </div>
+                </details>
+                <p class="rcs-folder-status" data-rcs-folder-status role="status" aria-live="polite">当前使用浏览器自动保存与下载。</p>
+              </section>
+
+              <div class="rcs-project-empty" data-rcs-project-empty>
+                <div>
+                  <strong>项目是可选的</strong>
+                  <p>先自由创作；需要版本、分工或阶段验收时，再把当前工作区保存为项目。</p>
+                </div>
+                <div class="rcs-project-entry-actions">
+                  <button class="rcs-entry-action primary" type="button" data-rcs-new-project>
+                    <span>保存为项目</span><small>保留当前所有内容</small>
+                  </button>
+                  <button class="rcs-entry-action" type="button" data-rcs-takeover-project>
+                    <span>导入角色卡</span><small>支持 JSON 与 PNG</small>
+                  </button>
+                  <button class="rcs-entry-action" type="button" data-rcs-import-project>
+                    <span>恢复项目备份</span><small>载入 rolecard-project/v1</small>
+                  </button>
+                </div>
+                <p class="rcs-storage-note">所有文件只在当前浏览器读取，不会自动上传。</p>
+              </div>
+
+              <div class="rcs-project-active" data-rcs-project-active hidden>
+                <section class="rcs-current-project">
+                  <header>
+                    <div><span>当前项目</span><h3 data-rcs-dashboard-title>未命名项目</h3><p data-rcs-dashboard-meta></p></div>
+                    <span class="rcs-state-badge" data-rcs-dashboard-state>待同步</span>
+                  </header>
+                  <dl class="rcs-project-facts">
+                    <div><dt>来源</dt><dd data-rcs-dashboard-source>从零制作</dd></div>
+                    <div><dt>当前基线</dt><dd data-rcs-dashboard-baseline>尚无</dd></div>
+                    <div><dt>世界书</dt><dd data-rcs-dashboard-worldbook>0 条</dd></div>
+                    <div><dt>最近保存</dt><dd data-rcs-dashboard-updated>刚刚</dd></div>
+                  </dl>
+                  <div class="rcs-project-actions">
+                    <button class="rcs-button primary" type="button" data-rcs-project-next>继续制作</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-project-settings>编辑设置</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-quick-export>备份项目</button>
+                  </div>
+                </section>
+
+                <section class="rcs-project-progress" aria-labelledby="rcs-project-progress-title">
+                  <header><div><span>制作进度</span><h3 id="rcs-project-progress-title">继续工作</h3></div><button class="rcs-text-action" type="button" data-rcs-restore-recovery>恢复替换前现场</button></header>
+                  <div>
+                    <a href="#studio/card" data-rcs-route-link="card"><span>卡片基础</span><strong data-rcs-dashboard-card-state>未开始</strong></a>
+                    <a href="#studio/worldbook" data-rcs-route-link="worldbook"><span>世界书</span><strong data-rcs-dashboard-worldbook-state>未开始</strong></a>
+                    <a href="#studio/mvu" data-rcs-route-link="mvu"><span>状态机制</span><strong>继续编辑</strong></a>
+                    <a href="#studio/frontend" data-rcs-route-link="frontend"><span>组件工坊</span><strong>继续选择</strong></a>
+                    <a href="#studio/design" data-rcs-route-link="design"><span>前端设计</span><strong data-rcs-dashboard-design-state>开始搭建</strong></a>
+                    <a href="#studio/workflow" data-rcs-route-link="workflow"><span>工作流蓝图</span><strong data-rcs-dashboard-workflow-state>开始生成</strong></a>
+                    <a href="#studio/check" data-rcs-route-link="check"><span>检查与导出</span><strong data-rcs-dashboard-check-state>未运行</strong></a>
+                  </div>
+                </section>
+              </div>
+            </section>
+
+            <section class="rcs-view" data-rcs-view="card" aria-labelledby="rcs-card-heading" hidden>
+              <div class="rcs-view-heading">
+                <div><p class="eyebrow">卡片</p><h2 id="rcs-card-heading" tabindex="-1">卡片基础</h2><p>编辑 chara_card_v3 的角色、场景、示例与开场字段。</p></div>
+                <span class="rcs-truth-badge">当前浏览器自动保存</span>
+              </div>
+              <form class="rcs-card-form" data-rcs-card-form>
+                <div class="rcs-field-grid three">
+                  <label><span>角色卡名称</span><input data-rcs-card-field="name" placeholder="角色卡名称"></label>
+                  <label><span>作者</span><input data-rcs-card-field="creator" placeholder="作者名"></label>
+                  <label><span>卡片版本</span><input data-rcs-card-field="characterVersion" placeholder="0.1.0"></label>
+                </div>
+                <label><span>给玩家看的简介</span><textarea data-rcs-card-field="description" rows="4" placeholder="玩家在角色卡详情中看到的简介"></textarea></label>
+                <div class="rcs-field-grid two">
+                  <label><span>性格</span><textarea data-rcs-card-field="personality" rows="6" placeholder="角色的性格与行为倾向"></textarea></label>
+                  <label><span>场景</span><textarea data-rcs-card-field="scenario" rows="6" placeholder="对话发生的背景与当前处境"></textarea></label>
+                </div>
+                <div class="rcs-field-grid two">
+                  <label><span>系统提示</span><textarea data-rcs-card-field="systemPrompt" rows="6" placeholder="对应 chara_card_v3 system_prompt"></textarea></label>
+                  <label><span>历史后指令</span><textarea data-rcs-card-field="postHistoryInstructions" rows="6" placeholder="对应 post_history_instructions"></textarea></label>
+                </div>
+                <label><span>标签</span><input data-rcs-card-field="tags" placeholder="校园, 群像, 剧情"></label>
+                <label><span>首条开场消息</span><textarea data-rcs-card-field="firstMes" rows="8" placeholder="玩家进入对话时看到的首条消息"></textarea></label>
+                <section class="rcs-opening-editor" aria-labelledby="rcs-alternate-greetings-title">
+                  <header>
+                    <div><strong id="rcs-alternate-greetings-title">候选开局</strong><small>每个气泡是一条独立开局，按当前顺序写入 SillyTavern。</small></div>
+                    <span data-rcs-alternate-count>0 条</span>
+                  </header>
+                  <div class="rcs-opening-list" data-rcs-alternate-list></div>
+                  <button class="rcs-button ghost" type="button" data-rcs-alternate-add>＋ 新增候选开局</button>
+                </section>
+                <label><span>示例对话</span><textarea data-rcs-card-field="mesExample" rows="8" placeholder="用于示范角色语气与对话方式"></textarea></label>
+                <label><span>创作者备注</span><textarea data-rcs-card-field="creatorNotes" rows="5" placeholder="给使用者看的安装、玩法或兼容说明"></textarea></label>
+              </form>
+            </section>
+
+            <section class="rcs-view rcs-worldbook-view" data-rcs-view="worldbook" aria-labelledby="rcs-worldbook-heading" hidden>
+              <div class="rcs-view-heading compact">
+                <div><p class="eyebrow">世界书</p><h2 id="rcs-worldbook-heading" tabindex="-1">世界书编辑器</h2><p>管理条目、路由、激活条件与插入位置。</p></div>
+                <div class="rcs-heading-actions">
+                  <button class="rcs-button ghost" type="button" data-rcs-import-worldbook>导入 / 融合世界书</button>
+                  <input type="file" accept=".json,application/json" multiple data-rcs-worldbook-file hidden>
+                  <button class="rcs-button primary" type="button" data-rcs-new-entry>新建条目</button>
+                </div>
+              </div>
+
+              <div class="rcs-worldbook-shell">
+                <aside class="rcs-entry-browser" aria-label="世界书条目">
+                  <div class="rcs-browser-tools">
+                    <label><span class="rcs-visually-hidden">搜索条目</span><input type="search" data-rcs-entry-search placeholder="搜索标题、正文或 key"></label>
+                    <select data-rcs-entry-filter aria-label="筛选条目路由">
+                      <option value="">全部路由</option>
+                      <option value="initvar">InitVar</option>
+                      <option value="mvu_update">变量更新</option>
+                      <option value="mvu_plot">剧情</option>
+                      <option value="shared">双发 / 共享</option>
+                      <option value="plain">普通</option>
+                    </select>
+                  </div>
+                  <div class="rcs-entry-list" data-rcs-entry-list></div>
+                  <div class="rcs-entry-empty" data-rcs-entry-empty>
+                    <strong>还没有条目</strong>
+                    <p>新建第一条，或一次导入多份 ST 世界书 JSON。</p>
+                  </div>
+                </aside>
+
+                <form class="rcs-entry-editor" data-rcs-entry-editor hidden>
+                  <header class="rcs-entry-editor-head">
+                    <div><span data-rcs-entry-uid>UID —</span><strong data-rcs-entry-heading>正在编辑</strong></div>
+                    <div>
+                      <button class="rcs-icon-button" type="button" data-rcs-duplicate-entry aria-label="复制当前条目">复制</button>
+                      <button class="rcs-icon-button danger" type="button" data-rcs-delete-entry aria-label="删除当前条目">删除</button>
+                    </div>
+                  </header>
+                  <div class="rcs-entry-grid">
+                    <label class="wide"><span>条目标题</span><input data-rcs-entry-field="name" required></label>
+                    <label><span>发送给谁（路由）</span>
+                      <select data-rcs-entry-field="routing">
+                        <option value="plain">普通条目</option>
+                        <option value="mvu_plot">只给剧情 AI（[mvu_plot]）</option>
+                        <option value="mvu_update">只给变量 AI（[mvu_update]）</option>
+                        <option value="shared">剧情与变量 AI 共用</option>
+                        <option value="initvar">MVU 初始数据（[InitVar]）</option>
+                      </select>
+                    </label>
+                    <label><span>何时生效</span>
+                      <select data-rcs-entry-field="strategyType">
+                        <option value="selective">关键词激活</option>
+                        <option value="constant">常驻</option>
+                        <option value="vectorized">关键词 + 向量</option>
+                      </select>
+                    </label>
+                    <label class="wide"><span>主关键词</span><input data-rcs-entry-field="keys" placeholder="多个关键词用逗号分隔"></label>
+                    <label><span>是否启用</span>
+                      <select data-rcs-entry-field="enabled">
+                        <option value="true">已启用</option>
+                        <option value="false">已禁用</option>
+                      </select>
+                    </label>
+                    <label class="wide"><span>条目正文</span><textarea data-rcs-entry-field="content" rows="18" spellcheck="false"></textarea></label>
+                    <details class="rcs-entry-advanced wide">
+                      <summary>高级设置 <small>位置、优先级、概率与递归</small></summary>
+                      <div class="rcs-entry-grid compact">
+                        <label><span>插入位置</span>
+                          <select data-rcs-entry-field="positionType">
+                            <option value="before_character_definition">角色定义前</option>
+                            <option value="after_character_definition">角色定义后</option>
+                            <option value="before_example_messages">示例对话前</option>
+                            <option value="after_example_messages">示例对话后</option>
+                            <option value="at_depth">指定深度</option>
+                            <option value="before_author_note">作者注释顶部</option>
+                            <option value="after_author_note">作者注释底部</option>
+                            <option value="outlet">Outlet</option>
+                          </select>
+                        </label>
+                        <label><span>加载优先级（Order）</span><input type="number" data-rcs-entry-field="order" value="100"></label>
+                        <label><span>注入深度（Depth）</span><input type="number" min="0" data-rcs-entry-field="depth" value="4"></label>
+                        <label><span>激活概率（Probability）</span><input type="number" min="0" max="100" data-rcs-entry-field="probability" value="100"></label>
+                        <label><span>中文关键词匹配</span>
+                          <select data-rcs-entry-field="matchWholeWords">
+                            <option value="null">继承全局</option>
+                            <option value="false">关闭全词匹配</option>
+                            <option value="true">启用全词匹配</option>
+                          </select>
+                        </label>
+                        <label class="rcs-check-field"><input type="checkbox" data-rcs-entry-field="preventIncoming" checked><span>禁止被其他条目递归激活</span></label>
+                        <label class="rcs-check-field"><input type="checkbox" data-rcs-entry-field="preventOutgoing" checked><span>禁止继续激活其他条目</span></label>
+                      </div>
+                    </details>
+                  </div>
+                  <footer class="rcs-entry-footer">
+                    <p data-rcs-entry-save-state>修改会自动保存到本地工作区。</p>
+                    <button class="rcs-button ghost" type="button" data-rcs-entry-ai>让 AI 协助当前条目</button>
+                  </footer>
+                </form>
+
+                <section class="rcs-entry-editor-empty" data-rcs-entry-editor-empty aria-labelledby="rcs-entry-editor-empty-title">
+                  <div class="rcs-entry-editor-empty-mark" aria-hidden="true">WB</div>
+                  <p class="eyebrow">空世界书</p>
+                  <h3 id="rcs-entry-editor-empty-title">先新建第一条，或融合已有世界书</h3>
+                  <p>多文件会按选择顺序融合条目；完全重复项跳过，UID 冲突自动重排。多本书的书级元数据不会伪装成已合并。</p>
+                  <div>
+                    <button class="rcs-button primary" type="button" data-rcs-new-entry>新建条目</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-import-worldbook data-rcs-worldbook-import-mode="append">选择世界书</button>
+                  </div>
+                </section>
+
+                <aside class="rcs-entry-inspector">
+                  <section>
+                    <p class="eyebrow">即时检查</p>
+                    <div class="rcs-validation-summary" data-rcs-entry-validation>
+                      <strong>等待条目</strong><p>选择条目后显示字段和路由问题。</p>
+                    </div>
+                  </section>
+                  <section>
+                    <p class="eyebrow">激活预览</p>
+                    <label><span>模拟最近消息</span><textarea data-rcs-activation-text rows="5" placeholder="输入一段玩家消息，检查关键词会激活哪些条目"></textarea></label>
+                    <div class="rcs-activation-result" data-rcs-activation-result><p>输入消息后开始预览。</p></div>
+                  </section>
+                  <section class="rcs-help-link">
+                    <a href="#guide">查看相关说明</a>
+                    <small>ST开发指南 DB · A3 世界书优化</small>
+                  </section>
+                </aside>
+              </div>
+
+            </section>
+
+            <section class="rcs-view" data-rcs-view="mvu" aria-labelledby="rcs-mvu-heading" hidden>
+              <div class="rcs-view-heading compact">
+                <div><p class="eyebrow">状态机制</p><h2 id="rcs-mvu-heading" tabindex="-1">选择路线，编辑状态草稿</h2><p>状态方案不依赖项目，也不会被强制绑定到前端。</p></div>
+                <span class="rcs-truth-badge">本地草稿</span>
+              </div>
+              <div class="rcs-state-workbench">
+                <section class="rcs-state-picker" aria-labelledby="rcs-state-kind-title">
+                  <header><div><span>状态路线</span><h3 id="rcs-state-kind-title">当前卡使用什么机制</h3></div></header>
+                  <div class="rcs-state-kind-grid" role="radiogroup" aria-label="状态机制">
+                    <button type="button" role="radio" aria-checked="true" data-rcs-state-kind="none"><strong>暂不选择</strong><small>先处理其他模块</small></button>
+                    <button type="button" role="radio" aria-checked="false" data-rcs-state-kind="mvu"><strong>MVU</strong><small>变量、规则与 Schema</small></button>
+                    <button type="button" role="radio" aria-checked="false" data-rcs-state-kind="database"><strong>数据库变量</strong><small>独立于 MVU 的变量路线</small></button>
+                    <button type="button" role="radio" aria-checked="false" data-rcs-state-kind="other"><strong>其他方案</strong><small>仅记录项目约束</small></button>
+                  </div>
+                  <p class="rcs-state-note" data-rcs-state-note>可以暂时不选状态方案，也可以先编辑其他模块。</p>
+                </section>
+                <section class="rcs-mvu-editor" data-rcs-mvu-editor hidden>
+                  <header><div><span>MVU 变量结构</span><h3>从本地源稿建立可检查的变量树</h3></div><small>不会自动写入角色卡</small></header>
+
+                  <div class="rcs-variable-toolbar" data-rcs-variable-toolbar>
+                    <label class="rcs-variable-source-control"><span>对照来源</span>
+                      <select data-rcs-variable-source-select aria-label="选择变量对照来源">
+                        <option value="draft">本地源稿</option>
+                      </select>
+                    </label>
+                    <span class="rcs-variable-source-status" data-rcs-variable-source-status data-state="empty" role="status">等待分析</span>
+                    <label class="rcs-variable-dialect-control"><span>更新方言</span>
+                      <select data-rcs-state-field="updateDialect">
+                        <option value="rfc6902">RFC 6902 JSONPatch</option>
+                        <option value="official_jsonpatch">官方 JSONPatch 变体</option>
+                        <option value="native">MVU 原生命令</option>
+                      </select>
+                    </label>
+                    <div class="rcs-variable-mode-switch" role="tablist" aria-label="变量编辑模式">
+                      <button id="rcs-variable-mode-visual" type="button" role="tab" aria-selected="true" aria-controls="rcs-variable-visual" data-rcs-variable-mode="visual">可视结构</button>
+                      <button id="rcs-variable-mode-source" type="button" role="tab" aria-selected="false" aria-controls="rcs-variable-source-panel" data-rcs-variable-mode="source" tabindex="-1">源稿</button>
+                    </div>
+                  </div>
+
+                  <div class="rcs-variable-safety" role="note">
+                    <strong>本地安全边界</strong>
+                    <span>只解析并编辑工作区源稿；不执行 Zod 或脚本，不自动合并多来源，也不自动写回角色卡。</span>
+                  </div>
+
+                  <div class="rcs-variable-state-stack" aria-live="polite">
+                    <div class="rcs-variable-state" data-rcs-variable-state="empty">
+                      <strong>还没有可显示的变量结构</strong><span>可新增根变量，或切到“源稿”粘贴 InitVar / Schema。</span>
+                    </div>
+                    <div class="rcs-variable-state" data-rcs-variable-state="error" role="alert" hidden>
+                      <strong>源稿暂时无法安全解析</strong><span>修正下面的问题后再应用；当前源稿不会被覆盖。</span>
+                      <ul data-rcs-variable-error-list></ul>
+                    </div>
+                    <div class="rcs-variable-state" data-rcs-variable-state="multiple" hidden>
+                      <strong>发现多个变量来源</strong><span>请选择一份作为对照；工作台不会自动合并或覆盖任何来源。</span>
+                    </div>
+                    <div class="rcs-variable-state" data-rcs-variable-state="unverified" hidden>
+                      <strong>包含尚未验证的结构</strong><span>未支持的 Zod、动态规则与脚本保持原样，只提供只读对照。</span>
+                    </div>
+                  </div>
+
+                  <div class="rcs-variable-visual" id="rcs-variable-visual" data-rcs-variable-visual role="tabpanel" aria-labelledby="rcs-variable-mode-visual">
+                    <div class="rcs-variable-tree-pane" aria-labelledby="rcs-variable-tree-title">
+                      <header>
+                        <div><span>变量结构</span><h4 id="rcs-variable-tree-title">路径树</h4></div>
+                        <button class="rcs-button ghost" type="button" data-rcs-variable-add-root>新增根变量</button>
+                      </header>
+                      <div class="rcs-variable-tree-tools">
+                        <label><span class="rcs-visually-hidden">搜索变量路径</span><input type="search" data-rcs-variable-search placeholder="搜索名称或路径" autocomplete="off"></label>
+                        <button class="rcs-button ghost" type="button" data-rcs-variable-collapse-all>全部折叠</button>
+                        <button class="rcs-button ghost" type="button" data-rcs-variable-batch-add>批量添加</button>
+                      </div>
+                      <div class="rcs-variable-tree" data-rcs-variable-tree role="tree" aria-label="变量路径树" tabindex="0">
+                        <div class="rcs-variable-tree-empty" data-rcs-variable-tree-empty>
+                          <strong>空变量树</strong><span>新增根变量，或从源稿安全生成结构。</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="rcs-variable-detail-pane" aria-labelledby="rcs-variable-detail-title">
+                      <header>
+                        <div><span>节点详情</span><h4 id="rcs-variable-detail-title">规范编辑</h4></div>
+                        <code data-rcs-variable-path title="当前变量规范路径">尚未选择节点</code>
+                      </header>
+                      <div class="rcs-variable-detail-empty" data-rcs-variable-detail-empty>
+                        <strong>选择一个变量节点</strong>
+                        <span>可编辑路径、实际类型与初始值，并核对只读 Schema 线索和下游影响。</span>
+                      </div>
+                      <div class="rcs-variable-detail" data-rcs-variable-detail hidden>
+                        <div class="rcs-variable-field-grid">
+                          <label><span>键名</span><input type="text" data-rcs-variable-field="key" autocomplete="off" spellcheck="false"></label>
+                          <label><span>类型</span>
+                            <select data-rcs-variable-field="type">
+                              <option value="string">string</option>
+                              <option value="number">number</option>
+                              <option value="boolean">boolean</option>
+                              <option value="object">object</option>
+                              <option value="array">array</option>
+                              <option value="null">null</option>
+                            </select>
+                          </label>
+                          <label><span>可选性（Schema 只读）</span>
+                            <select data-rcs-variable-field="required" disabled aria-describedby="rcs-variable-schema-readonly-note">
+                              <option value="required">必需</option>
+                              <option value="optional">可选</option>
+                            </select>
+                          </label>
+                          <label><span>对象开放性（Schema 只读）</span>
+                            <select data-rcs-variable-field="openness" disabled aria-describedby="rcs-variable-schema-readonly-note">
+                              <option value="unknown">未判定</option>
+                              <option value="passthrough">开放额外字段</option>
+                              <option value="strict">拒绝额外字段</option>
+                            </select>
+                          </label>
+                        </div>
+                        <div class="rcs-variable-value-grid">
+                          <label><span>Schema 默认值（只读）</span><textarea rows="4" data-rcs-variable-field="schemaDefault" spellcheck="false" placeholder="未识别或没有默认值" readonly aria-describedby="rcs-variable-schema-readonly-note"></textarea></label>
+                          <label><span>InitVar 初始值</span><textarea rows="4" data-rcs-variable-field="initialValue" spellcheck="false" placeholder="按当前类型填写"></textarea></label>
+                        </div>
+                        <p class="rcs-variable-readonly-note" id="rcs-variable-schema-readonly-note">首版只编辑可验证的变量路径、实际类型与 InitVar 值；可选性、开放性和 Schema 默认值仅显示显式解析结果，未识别时保持“未判定”。</p>
+                        <div class="rcs-variable-source-compare" data-rcs-variable-source-compare>
+                          <strong>来源对照</strong><p>选择节点后显示 Schema 与 InitVar 的显式定义；未能静态确认的引用不会记为零。</p>
+                        </div>
+                        <div class="rcs-variable-node-actions" aria-label="变量节点操作">
+                          <button class="rcs-button ghost" type="button" data-rcs-variable-add-child>新增子项</button>
+                          <button class="rcs-button ghost" type="button" data-rcs-variable-add-sibling>新增同级</button>
+                          <button class="rcs-button danger" type="button" data-rcs-variable-delete>删除节点</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="rcs-variable-commit-bar">
+                    <span data-rcs-variable-draft-status role="status">尚无待应用改动</span>
+                    <div>
+                      <button class="rcs-button ghost" type="button" data-rcs-variable-discard disabled>放弃改动</button>
+                      <button class="rcs-button primary" type="button" data-rcs-variable-apply disabled>应用到本地源稿</button>
+                    </div>
+                  </div>
+
+                  <ol class="rcs-variable-chain" aria-label="所选变量的完整链路">
+                    <li data-rcs-variable-chain-step="schema" data-state="pending"><span>01</span><div><strong>Schema</strong><small data-rcs-variable-chain-status>未分析</small></div><a href="#studio/mvu">查看</a></li>
+                    <li data-rcs-variable-chain-step="initvar" data-state="pending"><span>02</span><div><strong>InitVar</strong><small data-rcs-variable-chain-status>未分析</small></div><a href="#studio/worldbook">来源</a></li>
+                    <li data-rcs-variable-chain-step="rules" data-state="pending"><span>03</span><div><strong>更新规则</strong><small data-rcs-variable-chain-status>未分析</small></div><a href="#studio/workflow">规则</a></li>
+                    <li data-rcs-variable-chain-step="consumers" data-state="pending"><span>04</span><div><strong>消费者</strong><small data-rcs-variable-chain-status>未验证</small></div><a href="#studio/design">前端</a></li>
+                    <li data-rcs-variable-chain-step="check" data-state="pending"><span>05</span><div><strong>Check</strong><small data-rcs-variable-chain-status>未运行</small></div><a href="#studio/check">检查</a></li>
+                  </ol>
+
+                  <div class="rcs-variable-source-panel" id="rcs-variable-source-panel" data-rcs-variable-source-panel role="tabpanel" aria-labelledby="rcs-variable-mode-source" hidden>
+                    <header><div><span>完整源稿</span><h4>按部件分别编辑</h4></div><small>切回可视结构前会重新进行安全分析</small></header>
+                    <div class="rcs-state-editor-grid">
+                      <label><span>初始变量（YAML / JSON）</span><textarea rows="12" data-rcs-state-field="initialVariables" spellcheck="false" placeholder="可以稍后再写"></textarea></label>
+                      <label><span>Zod Schema</span><textarea rows="12" data-rcs-state-field="schema" spellcheck="false" placeholder="Schema 源稿"></textarea></label>
+                      <label><span>变量更新规则</span><textarea rows="14" data-rcs-state-field="updateRules" spellcheck="false" placeholder="字段写入、联动与清理规则"></textarea></label>
+                      <label><span>输出格式</span><textarea rows="14" data-rcs-state-field="outputFormat" spellcheck="false" placeholder="与所选方言保持一致"></textarea></label>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </section>
+
+            <section class="rcs-view" data-rcs-view="frontend" aria-labelledby="rcs-frontend-heading" hidden>
+              <div class="rcs-view-heading compact">
+                <div><p class="eyebrow">组件工坊</p><h2 id="rcs-frontend-heading" tabindex="-1">从内置组件库选择</h2><p>按树状目录浏览你的既有组件资产；选择会保存到当前工作区，依赖自动补齐，冲突会阻止加入。</p></div>
+                <div class="rcs-component-status"><strong data-rcs-component-count>0 个已选择</strong><span data-rcs-component-version>正在读取组件库</span><a href="#studio/design" data-rcs-route-link="design">打开前端设计</a></div>
+              </div>
+              <div class="rcs-component-tools">
+                <label><span class="rcs-visually-hidden">搜索组件</span><input type="search" data-rcs-component-search placeholder="搜索名称、用途或适用场景"></label>
+              </div>
+              <div class="rcs-component-boundary"><strong>选中不等于已装配</strong><p>这里记录的是 registry 选型清单。实际写入角色卡前仍需按变量路径 → 变量规则 → 状态栏 → 功能适配的顺序验证。</p></div>
+              <div class="rcs-component-list" data-rcs-component-list aria-live="polite"></div>
+            </section>
+
+            <section class="rcs-view rcs-design-view" data-rcs-view="design" aria-labelledby="rcs-design-heading" hidden>
+              <header class="rcs-design-head">
+                <div class="rcs-design-identity">
+                  <p class="eyebrow">前端设计 · UI Builder</p>
+                  <h2 id="rcs-design-heading" tabindex="-1">直接搭建角色卡前端</h2>
+                </div>
+                <div class="rcs-design-status" aria-label="前端设计状态">
+                  <span><small>模拟包</small><strong data-rcs-builder-simulation-summary>未导入</strong></span>
+                  <span><small>同步</small><strong data-rcs-builder-sync>尚未打开</strong></span>
+                  <span data-rcs-builder-revision>尚无保存版本</span>
+                </div>
+                <nav aria-label="前端设计操作">
+                  <a class="rcs-button ghost" href="#studio/project" data-rcs-route-link="project">返回总览</a>
+                  <a class="rcs-button ghost" href="#studio/frontend" data-rcs-route-link="frontend">组件选型</a>
+                  <button class="rcs-button primary" type="button" data-rcs-builder-save>保存</button>
+                  <button class="rcs-button ghost" type="button" data-rcs-builder-preview="html">独立预览</button>
+                  <button class="rcs-button ghost" type="button" data-rcs-builder-preview="st-html">ST 挂载预览</button>
+                  <button class="rcs-button ghost" type="button" data-rcs-simulation-import-trigger>导入模拟包</button>
+                  <details class="rcs-export-menu rcs-design-menu">
+                    <summary class="rcs-button ghost">导出</summary>
+                    <div>
+                      <button type="button" data-rcs-builder-export="design-json">设计源稿</button>
+                      <button type="button" data-rcs-builder-export="html">单页 HTML</button>
+                      <button type="button" data-rcs-builder-export="st-html">ST HTML 候选</button>
+                    </div>
+                  </details>
+                  <details class="rcs-export-menu rcs-design-menu">
+                    <summary class="rcs-button ghost">更多</summary>
+                    <div>
+                      <button type="button" data-rcs-builder-reload>重新载入编辑器</button>
+                      <button type="button" data-rcs-builder-simulation-clear hidden>移除模拟包</button>
+                      <button type="button" class="danger" data-rcs-builder-reset>重置为空白前端</button>
+                    </div>
+                  </details>
+                </nav>
+                <input type="file" accept="application/json,.json" data-rcs-builder-simulation-file hidden>
+              </header>
+
+              <div class="rcs-builder-frame-shell" data-rcs-builder-frame-shell>
+                <div class="rcs-builder-frame-state" data-rcs-builder-frame-state>
+                  <span></span><strong>正在载入 UI Builder</strong><small>首次打开会读取内置组件库。</small>
+                </div>
+                <iframe
+                  data-rcs-builder-frame
+                  title="UI Builder 前端设计编辑器"
+                  sandbox="allow-scripts allow-downloads"
+                  referrerpolicy="no-referrer"
+                ></iframe>
+              </div>
+
+              <footer class="rcs-builder-foot">
+                <span><strong>安全边界：</strong>只读取创作上下文，不改写 MVU、数据库变量或真实玩家数据；ST HTML 仅生成候选。</span>
+                <span>设计源稿进入项目备份；角色卡 JSON / PNG 不会自动携带它。</span>
+              </footer>
+            </section>
+
+            <section class="rcs-view rcs-workflow-view" data-rcs-view="workflow" aria-labelledby="rcs-workflow-heading" data-engine="mvu" hidden>
+              <div class="rcs-view-heading compact rcs-workflow-heading">
+                <div>
+                  <p class="eyebrow">工作流蓝图 · 变量系统实验台</p>
+                  <h2 id="rcs-workflow-heading" tabindex="-1">把状态链路真正串起来</h2>
+                  <p>先查看来源、规则、消费者和下级 Check，再用 P1 单回合模拟验证一次确定性变化。</p>
+                </div>
+                <span class="rcs-state-badge" data-rcs-workflow-status data-state="empty" role="status" aria-live="polite">尚未生成</span>
+              </div>
+
+              <section class="rcs-workflow-toolbar" aria-label="工作流蓝图控制">
+                <div class="rcs-workflow-switch">
+                  <span>变量引擎</span>
+                  <div role="radiogroup" aria-label="变量引擎">
+                    <button type="button" role="radio" aria-checked="true" data-rcs-workflow-engine="mvu">MVU</button>
+                    <button type="button" role="radio" aria-checked="false" data-rcs-workflow-engine="database">数据库</button>
+                  </div>
+                </div>
+                <div class="rcs-workflow-switch">
+                  <span>显示层级</span>
+                  <div role="radiogroup" aria-label="显示层级">
+                    <button type="button" role="radio" aria-checked="true" data-rcs-workflow-view="simple">简明</button>
+                    <button type="button" role="radio" aria-checked="false" data-rcs-workflow-view="advanced">完整</button>
+                  </div>
+                </div>
+                <div class="rcs-workflow-actions">
+                  <button class="rcs-button primary" type="button" data-rcs-workflow-generate>从当前工作台生成</button>
+                  <button class="rcs-button ghost" type="button" data-rcs-workflow-export disabled>导出蓝图 JSON</button>
+                  <button class="rcs-button ghost danger" type="button" data-rcs-workflow-reset disabled>清除当前蓝图</button>
+                </div>
+              </section>
+
+              <div class="rcs-workflow-boundary">
+                <div><strong>一个画布，两套引擎</strong><p>MVU 使用 Schema / stat_data / JSONPatch；数据库使用 mate / sheet / Provider。两者只共享蓝图外壳和诊断格式。</p></div>
+                <div><strong>当前阶段 P1</strong><p>MVU 可在内存克隆上模拟一回合；数据库模拟仍留到 P2，原生命令文本不会被网页执行。</p></div>
+                <div><strong>真实环境仍有阶段门</strong><p>模型输出、插件持久化、消息楼层与 ST iframe 必须另做真实验收；不会由本页自动写入。</p></div>
+              </div>
+
+              <section class="rcs-workflow-empty" data-rcs-workflow-empty>
+                <span>P0 · 只读生成</span>
+                <h3>还没有 <b data-rcs-workflow-empty-engine>MVU</b> 蓝图</h3>
+                <p>即使工作区仍为空，也可以先生成完整拓扑，查看哪些来源缺失；不要求先起卡名、建项目或导入角色卡。</p>
+                <button class="rcs-button primary" type="button" data-rcs-workflow-generate>生成当前路线蓝图</button>
+              </section>
+
+              <div class="rcs-workflow-content" data-rcs-workflow-content hidden>
+                <div class="rcs-workflow-summary" aria-label="蓝图摘要">
+                  <article><span>本视图节点</span><strong data-rcs-workflow-stat="nodes">0</strong></article>
+                  <article><span>本视图连线</span><strong data-rcs-workflow-stat="edges">0</strong></article>
+                  <article><span>缺失 / 复核</span><strong data-rcs-workflow-stat="missing">0</strong></article>
+                  <article><span>待真实环境</span><strong data-rcs-workflow-stat="real">0</strong></article>
+                </div>
+
+                <div class="rcs-workflow-layout" data-rcs-workflow-layout data-inspector-collapsed="false">
+                  <section class="rcs-workflow-canvas-panel" aria-labelledby="rcs-workflow-canvas-title">
+                    <header>
+                      <div><span>拓扑与本次执行态</span><h3 id="rcs-workflow-canvas-title">变量系统主链</h3></div>
+                      <div class="rcs-workflow-canvas-tools"><p data-rcs-workflow-meta>等待生成</p><button class="rcs-button ghost" type="button" data-rcs-workflow-layout-reset disabled>恢复自动排布</button></div>
+                    </header>
+                    <div class="rcs-workflow-canvas-viewport">
+                      <div class="rcs-workflow-scroll" tabindex="0" aria-label="工作流蓝图节点画布；节点可拖动，聚焦后可用方向键移动">
+                        <div class="rcs-workflow-surface" data-rcs-workflow-surface>
+                          <svg class="rcs-workflow-edges" data-rcs-workflow-edges aria-hidden="true" focusable="false"></svg>
+                          <div class="rcs-workflow-grid" data-rcs-workflow-grid data-mode="simple"></div>
+                        </div>
+                      </div>
+
+                      <aside class="rcs-workflow-inspector" data-rcs-workflow-inspector aria-label="节点编辑器">
+                        <button class="rcs-workflow-inspector-toggle" type="button" data-rcs-workflow-inspector-toggle aria-expanded="true" aria-controls="rcs-workflow-inspector-content" aria-label="收起节点编辑器">
+                          <span aria-hidden="true">›</span><strong>收起节点编辑</strong>
+                        </button>
+                        <div class="rcs-workflow-inspector-content" id="rcs-workflow-inspector-content" data-rcs-workflow-inspector-content>
+                          <div class="rcs-workflow-inspector-empty" data-rcs-workflow-inspector-empty>
+                            <strong>选择一个节点</strong><p>这里可以编辑节点显示内容，并查看端口、来源与下级 Check。</p>
+                          </div>
+                          <div data-rcs-workflow-inspector-body hidden>
+                            <header>
+                              <span data-rcs-workflow-inspector-group>节点</span>
+                              <div class="rcs-workflow-node-editor">
+                                <label for="rcs-workflow-node-label"><span>节点标题</span><input id="rcs-workflow-node-label" type="text" maxlength="80" required autocomplete="off" aria-describedby="rcs-workflow-node-edit-status" data-rcs-workflow-node-label></label>
+                                <label for="rcs-workflow-node-description"><span>节点内容</span><textarea id="rcs-workflow-node-description" rows="7" maxlength="1200" data-rcs-workflow-node-description></textarea></label>
+                                <small>编辑的是蓝图显示文字；Schema、规则与世界书源稿仍在对应模块维护。</small>
+                                <div><span id="rcs-workflow-node-edit-status" data-rcs-workflow-node-edit-state role="status" aria-live="polite">生成内容</span><button class="rcs-button ghost" type="button" data-rcs-workflow-node-reset disabled>恢复生成内容</button></div>
+                              </div>
+                              <a class="rcs-button ghost" href="#studio/mvu" data-rcs-workflow-source-link hidden>前往来源模块</a>
+                            </header>
+                            <section class="rcs-workflow-ports">
+                              <div><h4>输入端口</h4><ul data-rcs-workflow-inputs></ul></div>
+                              <div><h4>输出端口</h4><ul data-rcs-workflow-outputs></ul></div>
+                            </section>
+                            <section class="rcs-workflow-node-checks">
+                              <h4>下级 Check</h4>
+                              <ul data-rcs-workflow-checks></ul>
+                            </section>
+                          </div>
+                        </div>
+                      </aside>
+                    </div>
+                    <details class="rcs-workflow-relations">
+                      <summary>用文字查看连线关系</summary>
+                      <ol data-rcs-workflow-relations></ol>
+                    </details>
+                  </section>
+                </div>
+
+                <section class="rcs-mvu-simulator" data-rcs-mvu-simulator aria-labelledby="rcs-mvu-simulator-title">
+                  <header>
+                    <div><span>P1 · 确定性实验</span><h3 id="rcs-mvu-simulator-title">MVU 单回合模拟</h3></div>
+                    <div class="rcs-simulator-head-state">
+                      <small data-rcs-sim-dialect>RFC 6902 安全子集</small>
+                      <strong data-rcs-sim-status data-state="idle">未载入</strong>
+                    </div>
+                  </header>
+                  <div class="rcs-simulator-unavailable" data-rcs-sim-unavailable hidden>
+                    <strong data-rcs-sim-unavailable-title>当前路线不可运行</strong>
+                    <p data-rcs-sim-unavailable-copy>数据库确定性模拟将在 P2 单独实现。</p>
+                    <button class="rcs-button ghost" type="button" data-rcs-sim-switch-mvu>切换到 MVU 蓝图</button>
+                  </div>
+                  <div class="rcs-simulator-workbench" data-rcs-sim-workbench>
+                    <div class="rcs-simulator-boundary">
+                      <strong>只在私有克隆上执行</strong>
+                      <p>不会写回状态源稿、世界书、蓝图、项目备份、角色卡、UI Builder 或 ST。Zod 源稿只记录指纹，不执行任意 JavaScript。</p>
+                      <span data-rcs-sim-source>来源：尚未载入</span>
+                    </div>
+                    <form data-rcs-sim-form novalidate>
+                      <div class="rcs-simulator-inputs">
+                        <label for="rcs-sim-before">
+                          <span>运行前状态 <small>JSON / 安全 YAML 子集</small></span>
+                          <textarea id="rcs-sim-before" rows="11" spellcheck="false" data-rcs-sim-before aria-describedby="rcs-sim-before-error" placeholder="先载入当前源稿，或手动粘贴 stat_data 根对象"></textarea>
+                          <em id="rcs-sim-before-error" data-rcs-sim-before-error></em>
+                        </label>
+                        <label for="rcs-sim-operation">
+                          <span>候选更新操作 <small>数组或单个 JSONPatch 块</small></span>
+                          <textarea id="rcs-sim-operation" rows="11" spellcheck="false" data-rcs-sim-operation aria-describedby="rcs-sim-operation-error" placeholder='[{"op":"replace","path":"/玩家/生命值","value":80}]'>[]</textarea>
+                          <em id="rcs-sim-operation-error" data-rcs-sim-operation-error></em>
+                        </label>
+                      </div>
+                      <details class="rcs-simulator-contract" data-rcs-sim-contract-details>
+                        <summary>安全模拟契约 <small>从初始状态与变量规则生成，可审计</small></summary>
+                        <label for="rcs-sim-contract">
+                          <span class="rcs-visually-hidden">安全模拟契约 JSON</span>
+                          <textarea id="rcs-sim-contract" rows="12" spellcheck="false" data-rcs-sim-contract aria-describedby="rcs-sim-contract-error" placeholder="载入源稿后自动生成"></textarea>
+                          <em id="rcs-sim-contract-error" data-rcs-sim-contract-error></em>
+                        </label>
+                      </details>
+                      <div class="rcs-simulator-actions">
+                        <button class="rcs-button ghost" type="button" data-rcs-sim-load>载入当前源稿</button>
+                        <button class="rcs-button ghost" type="button" data-rcs-sim-rebuild>按当前状态重建契约</button>
+                        <button class="rcs-button primary" type="submit" data-rcs-sim-run>运行一次</button>
+                        <button class="rcs-button ghost" type="button" data-rcs-sim-clear>清空本次结果</button>
+                      </div>
+                      <p class="rcs-simulator-live" data-rcs-sim-live role="status" aria-live="polite">载入源稿或手动填写后开始。</p>
+                    </form>
+
+                    <section class="rcs-simulator-result-shell" aria-labelledby="rcs-sim-result-title">
+                      <header><div><span>本次 Trace</span><h4 id="rcs-sim-result-title">运行证据</h4></div><small data-rcs-sim-trace>尚无结果</small></header>
+                      <div class="rcs-simulator-result-empty" data-rcs-sim-result-empty>
+                        <strong>等待运行</strong><p>成功后会显示操作数、契约检查、结构化 Diff 和运行后状态。</p>
+                      </div>
+                      <div class="rcs-simulator-result" data-rcs-sim-result hidden>
+                        <div class="rcs-simulator-summary" aria-label="单回合结果摘要">
+                          <article><span>操作</span><strong data-rcs-sim-stat="operations">0</strong></article>
+                          <article><span>字段检查</span><strong data-rcs-sim-stat="checks">0</strong></article>
+                          <article><span>状态变化</span><strong data-rcs-sim-stat="diff">0</strong></article>
+                          <article><span>Zod 执行</span><strong data-rcs-sim-stat="zod">否</strong></article>
+                        </div>
+                        <section class="rcs-simulator-diff">
+                          <h5>结构化 Diff</h5>
+                          <ol data-rcs-sim-diff></ol>
+                        </section>
+                        <div class="rcs-simulator-details-grid">
+                          <details open><summary>运行后状态</summary><pre data-rcs-sim-after></pre></details>
+                          <details><summary>Patch 后 / 契约前</summary><pre data-rcs-sim-patched></pre></details>
+                          <details><summary>本次 Check</summary><ul data-rcs-sim-checks></ul></details>
+                          <details><summary>完整可复放 Trace</summary><pre data-rcs-sim-trace-json></pre></details>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </section>
+
+                <section class="rcs-workflow-diagnostic-panel" aria-labelledby="rcs-workflow-diagnostic-title">
+                  <header><div><span>P0 拓扑 + P1 能力</span><h3 id="rcs-workflow-diagnostic-title">完整蓝图诊断</h3></div><p>静态诊断与单回合 Trace 分区呈现；真实 ST 仍需另验。</p></header>
+                  <ul data-rcs-workflow-diagnostics aria-live="polite"></ul>
+                </section>
+              </div>
+            </section>
+
+            <section class="rcs-view" data-rcs-view="check" aria-labelledby="rcs-check-heading" hidden>
+              <div class="rcs-view-heading">
+                <div><p class="eyebrow">工作区输出</p><h2 id="rcs-check-heading" tabindex="-1">检查与导出</h2><p>角色卡文件、世界书和工作区备份彼此独立。</p></div>
+                <button class="rcs-button primary" type="button" data-rcs-run-check>重新检查</button>
+              </div>
+              <div class="rcs-check-layout">
+                <div class="rcs-check-primary">
+                  <section class="rcs-check-results">
+                    <div class="rcs-check-summary" data-rcs-check-summary>
+                      <article><span>错误</span><strong>—</strong></article>
+                      <article><span>警告</span><strong>—</strong></article>
+                      <article><span>待真机</span><strong>—</strong></article>
+                    </div>
+                    <div class="rcs-check-list" data-rcs-check-list>
+                      <p>运行检查后显示具体证据。</p>
+                    </div>
+                  </section>
+
+                  <section class="rcs-assembly-plan" data-rcs-assembly-plan data-state="pending" aria-labelledby="rcs-assembly-plan-title">
+                    <header class="rcs-assembly-plan-head">
+                      <div>
+                        <p class="eyebrow">角色卡装配预检</p>
+                        <h3 id="rcs-assembly-plan-title">确认这次导出会改变什么</h3>
+                      </div>
+                      <div class="rcs-assembly-plan-identity">
+                        <span class="rcs-state-badge" data-rcs-assembly-plan-status data-state="pending" role="status" aria-live="polite">等待检查</span>
+                        <code data-rcs-assembly-plan-fingerprint title="装配计划指纹">尚未生成指纹</code>
+                      </div>
+                    </header>
+
+                    <dl class="rcs-assembly-stats" data-rcs-assembly-plan-stats aria-label="装配计划统计">
+                      <div data-state="write"><dt>将写入</dt><dd data-rcs-assembly-count="write">—</dd></div>
+                      <div data-state="preserve"><dt>原样保留</dt><dd data-rcs-assembly-count="preserve">—</dd></div>
+                      <div data-state="normalize"><dt>规范化</dt><dd data-rcs-assembly-count="normalize">—</dd></div>
+                      <div data-state="project"><dt>仅项目</dt><dd data-rcs-assembly-count="project-only">—</dd></div>
+                      <div data-state="blocker"><dt>阻断</dt><dd data-rcs-assembly-count="blocker">—</dd></div>
+                    </dl>
+
+                    <div class="rcs-assembly-plan-body">
+                      <div class="rcs-assembly-groups" aria-label="装配内容分组">
+                        <section data-rcs-assembly-group="write">
+                          <header><span>将写入角色卡</span><strong data-rcs-assembly-group-count="write">—</strong></header>
+                          <ul data-rcs-assembly-list="write"><li>运行检查后列出目标路径。</li></ul>
+                        </section>
+                        <section data-rcs-assembly-group="preserve">
+                          <header><span>原样保留</span><strong data-rcs-assembly-group-count="preserve">—</strong></header>
+                          <ul data-rcs-assembly-list="preserve"><li>运行检查后列出保留来源。</li></ul>
+                        </section>
+                        <section data-rcs-assembly-group="normalize">
+                          <header><span>规范化或主动改变</span><strong data-rcs-assembly-group-count="normalize">—</strong></header>
+                          <ul data-rcs-assembly-list="normalize"><li>运行检查后列出字段变化。</li></ul>
+                        </section>
+                        <section data-rcs-assembly-group="project-only">
+                          <header><span>仅存在于项目备份</span><strong data-rcs-assembly-group-count="project-only">—</strong></header>
+                          <ul data-rcs-assembly-list="project-only"><li>运行检查后列出尚未装配内容。</li></ul>
+                        </section>
+                      </div>
+
+                      <div class="rcs-assembly-evidence">
+                        <section class="rcs-variable-reference-panel" aria-labelledby="rcs-variable-reference-title">
+                          <header><div><span>变量引用</span><h4 id="rcs-variable-reference-title">定义、规则与消费者</h4></div><strong data-rcs-variable-reference-summary>尚未分析</strong></header>
+                          <ul data-rcs-variable-reference-issues><li>运行检查后显示缺失路径、类型冲突和未使用变量。</li></ul>
+                        </section>
+                        <section class="rcs-assembly-diff" aria-labelledby="rcs-assembly-diff-title">
+                          <header><span>路径差异</span><h4 id="rcs-assembly-diff-title">轻量预览</h4></header>
+                          <ul data-rcs-assembly-diff-list><li>尚无路径变化。</li></ul>
+                        </section>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+                <aside class="rcs-export-panel">
+                  <p class="eyebrow">可导出</p>
+                  <h3>角色卡与工作区文件</h3>
+                  <p>角色卡 JSON / PNG 可导入 ST；项目备份只用于恢复编辑现场。</p>
+                  <div class="rcs-export-actions">
+                    <button class="rcs-button primary" type="button" data-rcs-export-card-json>导出角色卡 JSON</button>
+                    <button class="rcs-button primary" type="button" data-rcs-export-png>导出角色卡 PNG</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-select-cover>选择或更换 PNG 封面</button>
+                    <label class="rcs-check-field rcs-payload-option"><input type="checkbox" data-rcs-dual-payload checked><span>额外写入 V2 chara 兼容副本（主数据始终为 ccv3，文件会更大）</span></label>
+                    <button class="rcs-button ghost" type="button" data-rcs-import-project>导入项目备份</button>
+                    <input type="file" accept=".json,application/json" data-rcs-project-file hidden>
+                    <button class="rcs-button ghost" type="button" data-rcs-restore-recovery>恢复上次替换前现场</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-export-project>导出项目备份</button>
+                    <button class="rcs-button primary" type="button" data-rcs-export-worldbook disabled>导出世界书 JSON</button>
+                    <a class="rcs-button ghost" href="#workshop">前往创意工坊</a>
+                  </div>
+                  <div class="rcs-export-boundary">
+                    <strong>以装配计划为准</strong>
+                    <p>只有预检标记为“原样保留”的未知字段、extensions、脚本和正则会随原卡保留；“将写入”与“规范化”路径会按差异预览改变。尚未装配的 MVU 源稿与组件选型只进入项目备份。</p>
+                  </div>
+                </aside>
+              </div>
+
+              <section class="rcs-review-compare" data-rcs-review data-state="pending" aria-labelledby="rcs-review-title">
+                <header class="rcs-review-head">
+                  <div>
+                    <p class="eyebrow">审查与对照</p>
+                    <h3 id="rcs-review-title">逐项核对导入原文与当前候选</h3>
+                    <p>正文与代码结构分开列出；这里只展示文字，不执行脚本、模板或正则。</p>
+                  </div>
+                  <span class="rcs-state-badge" data-rcs-review-status data-state="pending" role="status" aria-live="polite">等待检查</span>
+                </header>
+                <div class="rcs-review-tabs" role="tablist" aria-label="审查内容分类">
+                  <button id="rcs-review-tab-text" type="button" role="tab" aria-selected="true" aria-controls="rcs-review-workspace" tabindex="0" data-rcs-review-tab="text">文字内容 <strong data-rcs-review-count="text">—</strong></button>
+                  <button id="rcs-review-tab-code" type="button" role="tab" aria-selected="false" aria-controls="rcs-review-workspace" tabindex="-1" data-rcs-review-tab="code">代码结构 <strong data-rcs-review-count="code">—</strong></button>
+                </div>
+                <div class="rcs-review-limitations" data-rcs-review-limitations role="note" hidden></div>
+                <div class="rcs-review-workspace" id="rcs-review-workspace" role="tabpanel" aria-labelledby="rcs-review-tab-text" data-rcs-review-workspace>
+                  <nav class="rcs-review-list" data-rcs-review-list aria-label="可审查条目">
+                    <p>运行检查后列出可审查内容。</p>
+                  </nav>
+                  <section class="rcs-review-detail">
+                    <div class="rcs-review-empty" data-rcs-review-empty>
+                      <strong>等待审查条目</strong>
+                      <p>运行检查并选择左侧条目后，这里会显示完整原文与候选。</p>
+                    </div>
+                    <div data-rcs-review-detail hidden>
+                      <header class="rcs-review-detail-head">
+                        <div><span data-rcs-review-kind>文字内容</span><h4 data-rcs-review-label>未选择</h4><code data-rcs-review-path></code></div>
+                        <div class="rcs-review-detail-actions">
+                          <span data-rcs-review-change>未比较</span>
+                          <button class="rcs-button primary" type="button" data-rcs-review-agent disabled>交给 Agent 审查</button>
+                        </div>
+                      </header>
+                      <div class="rcs-review-panes">
+                        <section>
+                          <header><strong>导入原文</strong><span data-rcs-review-original-status>等待检查</span></header>
+                          <pre data-rcs-review-original tabindex="0"></pre>
+                        </section>
+                        <section>
+                          <header><strong>当前候选</strong><span data-rcs-review-current-status>等待检查</span></header>
+                          <pre data-rcs-review-current tabindex="0"></pre>
+                        </section>
+                      </div>
+                      <footer><span data-rcs-review-language>纯文本</span><p>Agent 只会收到当前选中项；点击按钮只预填任务，不会自动发送或修改项目。</p></footer>
+                    </div>
+                  </section>
+                </div>
+              </section>
+            </section>
+
+            <section class="rcs-view rcs-publish-view" data-rcs-view="remix" aria-labelledby="rcs-publish-heading" hidden>
+              <div class="wsp-root" data-wsp-root data-gateway-base="https://43-132-171-157.sslip.io">
+                <header class="wsp-header">
+                  <div class="wsp-header-copy">
+                    <p class="eyebrow">星月二创 · 独立资源域</p>
+                    <h2 id="rcs-publish-heading" tabindex="-1">发现、校验并调用星月内容包</h2>
+                    <p>这里保留现有星月内容包，供访问与二创调用；它不进入创意工坊的社区组件发布流。公开发现与本地校验无需登录，发布和管理需要 Discord 账户。</p>
+                  </div>
+                  <div class="wsp-phase-card" aria-label="当前阶段">
+                    <span>独立边界</span>
+                    <strong>星月内容包 ≠ Web 组件</strong>
+                    <small>私人草稿、整卡源码和组件投稿不会进入这一内容域</small>
+                  </div>
+                </header>
+
+                <nav class="wsp-view-nav" aria-label="星月二创资源库分区">
+                  <a href="#studio/remix/discover" data-wsp-view-link="discover">发现</a>
+                  <a href="#studio/remix/local" data-wsp-view-link="local">本地包</a>
+                  <a href="#studio/remix/mine" data-wsp-view-link="mine">我的发布</a>
+                  <span class="wsp-future-label">公开浏览 · 登录后发布</span>
+                </nav>
+
+                <section class="wsp-account-panel" aria-labelledby="wsp-account-title">
+                  <div>
+                    <p class="eyebrow">Discord 发布账户</p>
+                    <h3 id="wsp-account-title">登录后发布与管理作品</h3>
+                    <p data-wsp-auth-status role="status" aria-live="polite">正在检查登录状态…</p>
+                    <p class="wsp-inline-error" data-wsp-auth-error role="alert" hidden></p>
+                  </div>
+                  <div class="wsp-account-actions">
+                    <button class="wsp-button primary" type="button" data-wsp-login>使用 Discord 登录</button>
+                    <button class="wsp-button" type="button" data-wsp-logout hidden>退出登录</button>
+                  </div>
+                </section>
+
+        <section class="wsp-view" data-wsp-view="discover" aria-labelledby="wsp-discover-title" aria-busy="false">
+          <div class="wsp-section-head">
+            <div>
+              <h2 id="wsp-discover-title">公开作品</h2>
+              <p>这里只显示审核通过且尚未撤回的公开作品。</p>
+            </div>
+            <p class="wsp-cloud-state" data-wsp-cloud-state role="status" aria-live="polite">正在连接星月公开资源库…</p>
+          </div>
+
+          <form class="wsp-filters" data-wsp-filters aria-label="筛选公开作品">
+            <label class="wsp-field wsp-search-field">
+              <span>搜索</span>
+              <input type="search" data-wsp-filter="q" placeholder="标题、作者、简介或标签" autocomplete="off">
+            </label>
+            <label class="wsp-field">
+              <span>类型</span>
+              <select data-wsp-filter="type">
+                <option value="">全部类型</option>
+                <option value="character">角色范本</option>
+                <option value="user_identity">玩家身份</option>
+                <option value="world_factor">世界因子</option>
+                <option value="shop_item">商店物品</option>
+                <option value="blueprint">制造蓝图</option>
+                <option value="recipe">配方</option>
+                <option value="skill">技能</option>
+                <option value="function">功能</option>
+              </select>
+            </label>
+            <label class="wsp-field">
+              <span>适用范围</span>
+              <select data-wsp-filter="cardScope">
+                <option value="">全部范围</option>
+                <option value="xingyue">星月</option>
+                <option value="shared">通用</option>
+                <option value="xingyue-opening-v1">星月开局</option>
+              </select>
+            </label>
+            <label class="wsp-field">
+              <span>分级</span>
+              <select data-wsp-filter="rating">
+                <option value="">全部分级</option>
+                <option value="general">全年龄</option>
+                <option value="mature">成熟</option>
+                <option value="restricted">受限</option>
+              </select>
+            </label>
+            <label class="wsp-field">
+              <span>语言</span>
+              <select data-wsp-filter="language">
+                <option value="">全部语言</option>
+                <option value="zh-CN">简体中文</option>
+                <option value="zh-TW">繁体中文</option>
+                <option value="ja-JP">日语</option>
+                <option value="en-US">英语</option>
+              </select>
+            </label>
+            <label class="wsp-field">
+              <span>标签</span>
+              <select data-wsp-filter="tag">
+                <option value="">全部标签</option>
+              </select>
+            </label>
+            <button class="wsp-filter-reset" type="button" data-wsp-filter-reset>清空筛选</button>
+          </form>
+
+          <div class="wsp-boundary-note" role="note">
+            <strong>这里不会直接改卡</strong>
+            <span>作品只有在之后由兼容工具导入角色卡时，才会写入对应的世界书内容；本页不会写入 MVU、消息楼层或酒馆草稿。</span>
+          </div>
+
+          <div class="wsp-results-head">
+            <h2>结果</h2>
+            <p class="wsp-result-count" data-wsp-count aria-live="polite">正在读取</p>
+          </div>
+          <div class="wsp-state-panel" data-wsp-loading role="status">
+            <strong>正在读取公开作品</strong>
+            <p>这只会发起公开的只读请求。</p>
+          </div>
+          <ul class="wsp-package-grid" data-wsp-list hidden></ul>
+          <div class="wsp-state-panel" data-wsp-empty hidden>
+            <strong data-wsp-empty-title>当前还没有公开作品</strong>
+            <p data-wsp-empty-text>可以先到本地包检查一个 JSON 文件。</p>
+            <button class="wsp-button" type="button" data-wsp-clear-empty>清空筛选</button>
+            <button class="wsp-button" type="button" data-wsp-go-local>前往本地包</button>
+          </div>
+          <div class="wsp-state-panel" data-wsp-error hidden role="alert">
+            <strong>星月公开资源库暂时不可用</strong>
+            <p data-wsp-error-text>本地包校验仍可使用。</p>
+            <button class="wsp-button" type="button" data-wsp-retry>重新连接</button>
+            <button class="wsp-button" type="button" data-wsp-go-local>前往本地包</button>
+          </div>
+        </section>
+
+        <section class="wsp-view" data-wsp-view="local" aria-labelledby="wsp-local-title" hidden>
+          <div class="wsp-section-head">
+            <div>
+              <h2 id="wsp-local-title" tabindex="-1">本地包检查</h2>
+              <p>文件会先在当前浏览器内读取和校验；只有主动点击发布时才会上传当前内容包。</p>
+            </div>
+          </div>
+
+          <div class="wsp-local-layout">
+            <section class="wsp-local-source" aria-labelledby="wsp-local-source-title">
+              <h3 id="wsp-local-source-title">选择一个 JSON 包</h3>
+              <p>最大 256 KiB；会兼容读取旧格式，再规范化为当前共享契约。</p>
+              <input class="wsp-file-input" id="wsp-package-file" type="file" accept=".json,application/json" data-wsp-file tabindex="-1" aria-hidden="true" hidden>
+              <label class="wsp-dropzone" for="wsp-package-file" data-wsp-drop tabindex="0" role="button" aria-controls="wsp-package-file">
+                <strong>点击选择，或拖入 JSON 文件</strong>
+                <span>选择后不会自动上传</span>
+              </label>
+              <div class="wsp-example-block">
+                <strong>也可以先看仓库里的真实示例</strong>
+                <div class="wsp-example-list">
+                  <button class="wsp-button" type="button" data-wsp-example="./examples/character.example.json">角色范本</button>
+                  <button class="wsp-button" type="button" data-wsp-example="./examples/user_identity.example.json">玩家身份</button>
+                  <button class="wsp-button" type="button" data-wsp-example="./examples/world_factor.example.json">世界因子</button>
+                </div>
+              </div>
+              <p class="wsp-local-status" data-wsp-local-status role="status" aria-live="polite">尚未选择文件。</p>
+            </section>
+
+            <section class="wsp-local-preview" aria-labelledby="wsp-local-preview-title">
+              <h3 class="wsp-visually-hidden" id="wsp-local-preview-title">校验结果</h3>
+              <div class="wsp-state-panel" data-wsp-local-empty>
+                <strong>等待一个作品包</strong>
+                <p>通过校验后，这里会显示元数据、影响范围和折叠的规范化 JSON。</p>
+              </div>
+              <article data-wsp-local-result hidden>
+                <div class="wsp-local-preview-head">
+                  <div>
+                    <h3 data-wsp-local-title>作品标题</h3>
+                    <p data-wsp-local-summary>作品简介</p>
+                  </div>
+                  <span class="wsp-valid-badge">已规范化</span>
+                </div>
+                <dl class="wsp-local-meta">
+                  <div><dt>类型</dt><dd data-wsp-local-type></dd></div>
+                  <div><dt>适用范围</dt><dd data-wsp-local-scope></dd></div>
+                  <div><dt>内容分级</dt><dd data-wsp-local-rating></dd></div>
+                  <div><dt>包版本</dt><dd data-wsp-local-version></dd></div>
+                  <div><dt>作者</dt><dd data-wsp-local-author></dd></div>
+                  <div><dt>语言</dt><dd data-wsp-local-language></dd></div>
+                  <div><dt>标签</dt><dd data-wsp-local-tags></dd></div>
+                </dl>
+                <section class="wsp-impact-section" aria-labelledby="wsp-local-impact-title">
+                  <h3 id="wsp-local-impact-title">导入后会影响什么</h3>
+                  <ul class="wsp-impact-list" data-wsp-local-impact></ul>
+                </section>
+                <details class="wsp-json-details">
+                  <summary>查看规范化 JSON</summary>
+                  <pre data-wsp-local-json tabindex="0"></pre>
+                </details>
+                <div class="wsp-local-actions">
+                  <button class="wsp-button" type="button" data-wsp-local-download>导出规范化 JSON</button>
+                  <button class="wsp-button primary" type="button" data-wsp-local-publish disabled>发布到星月二创资源库</button>
+                  <button class="wsp-button" type="button" data-wsp-local-clear>清除</button>
+                </div>
+                <p class="wsp-action-status" data-wsp-publish-status role="status" aria-live="polite">登录并通过校验后可发布。</p>
+              </article>
+            </section>
+          </div>
+        </section>
+
+        <section class="wsp-view" data-wsp-view="mine" aria-labelledby="wsp-mine-title" aria-busy="false" hidden>
+          <div class="wsp-section-head">
+            <div>
+              <h2 id="wsp-mine-title" tabindex="-1">我的发布</h2>
+              <p>查看审核状态、版本修订号和拒绝原因，也可以撤回已发布的作品。</p>
+            </div>
+            <button class="wsp-button" type="button" data-wsp-mine-retry>刷新</button>
+          </div>
+          <div class="wsp-state-panel" data-wsp-mine-logged-out>
+            <strong>登录后查看你的发布</strong>
+            <p>公开作品浏览和本地包校验仍可继续使用。</p>
+          </div>
+          <div class="wsp-state-panel" data-wsp-mine-loading hidden role="status">
+            <strong>正在读取我的发布</strong>
+          </div>
+          <ul class="wsp-own-package-list" data-wsp-mine-list hidden></ul>
+          <div class="wsp-state-panel" data-wsp-mine-empty hidden>
+            <strong>还没有发布记录</strong>
+            <p>在“本地包”中校验作品后即可发布。</p>
+            <button class="wsp-button" type="button" data-wsp-go-local>前往本地包</button>
+          </div>
+          <div class="wsp-state-panel" data-wsp-mine-error hidden role="alert">
+            <strong>暂时无法读取发布记录</strong>
+            <p data-wsp-mine-error-text>请稍后重试。</p>
+          </div>
+        </section>
+
+        <dialog class="wsp-detail-dialog" id="wsp-detail-dialog" data-wsp-detail aria-labelledby="wsp-detail-title" aria-describedby="wsp-detail-state">
+          <header class="wsp-detail-head">
+            <div>
+              <p class="eyebrow">公开作品详情</p>
+              <h2 id="wsp-detail-title" data-wsp-detail-title tabindex="-1">正在读取…</h2>
+            </div>
+            <button class="wsp-detail-close" type="button" data-wsp-detail-close aria-label="关闭详情">×</button>
+          </header>
+          <div class="wsp-detail-body" tabindex="0" aria-label="作品详情内容">
+            <p class="wsp-detail-error" id="wsp-detail-error" data-wsp-detail-error hidden></p>
+            <div data-wsp-detail-content hidden>
+              <p class="wsp-detail-summary" id="wsp-detail-summary" data-wsp-detail-summary></p>
+              <ul class="wsp-detail-tags" data-wsp-detail-tags></ul>
+              <dl class="wsp-detail-meta">
+                <div><dt>类型</dt><dd data-wsp-detail-type></dd></div>
+                <div><dt>适用范围</dt><dd data-wsp-detail-scope></dd></div>
+                <div><dt>内容分级</dt><dd data-wsp-detail-rating></dd></div>
+                <div><dt>包版本</dt><dd data-wsp-detail-version></dd></div>
+                <div><dt>作者</dt><dd data-wsp-detail-author></dd></div>
+                <div><dt>语言</dt><dd data-wsp-detail-language></dd></div>
+                <div><dt>更新日期</dt><dd data-wsp-detail-updated></dd></div>
+              </dl>
+              <section class="wsp-impact-section" aria-labelledby="wsp-detail-impact-title">
+                <h3 id="wsp-detail-impact-title">导入后会影响什么</h3>
+                <ul class="wsp-impact-list" data-wsp-detail-impact></ul>
+              </section>
+              <p class="wsp-detail-notice">详情页只展示审核元数据和影响说明，不展开作品正文。下载或转到本地包后，仍需由你决定是否继续使用。</p>
+            </div>
+          </div>
+          <footer class="wsp-detail-actions">
+            <p class="wsp-detail-state" id="wsp-detail-state" data-wsp-detail-state aria-live="polite">读取中</p>
+            <div>
+              <button class="wsp-button primary" type="button" data-wsp-detail-download disabled>下载 JSON</button>
+              <button class="wsp-button" type="button" data-wsp-detail-open-local disabled>在本地包中查看</button>
+              <button class="wsp-button" type="button" data-wsp-detail-use-remix disabled>加入当前工作区二创</button>
+              <button class="wsp-button" type="button" data-wsp-detail-close>关闭</button>
+            </div>
+          </footer>
+                </dialog>
+              </div>
+            </section>
+          </div>
+
+          <dialog class="rcs-project-dialog" data-rcs-project-dialog aria-labelledby="rcs-project-dialog-title" aria-describedby="rcs-project-dialog-description">
+            <div class="rcs-project-dialog-panel">
+              <header class="rcs-project-dialog-head">
+                <div>
+                  <span>项目设置</span>
+                  <h2 id="rcs-project-dialog-title" data-rcs-project-dialog-title>保存为项目</h2>
+                  <p id="rcs-project-dialog-description">项目信息和协作检查单都可以留空后补，不影响继续使用工作台。</p>
+                </div>
+                <button class="rcs-icon-button" type="button" data-rcs-project-dialog-close aria-label="取消并关闭项目设置">取消</button>
+              </header>
+
+              <form class="rcs-project-form" data-rcs-project-form novalidate>
+                <div class="rcs-project-dialog-body">
+                  <section class="rcs-dialog-section" aria-labelledby="rcs-project-brief-title">
+                    <div class="rcs-dialog-section-title"><h3 id="rcs-project-brief-title">项目信息</h3><span>可选</span></div>
+                    <div class="rcs-field-grid two">
+                      <label><span>项目名称</span><input name="projectTitle" data-rcs-project-field="title" placeholder="可以留空，稍后再命名"></label>
+                      <label><span>当前基线</span><input name="baseline" data-rcs-project-field="baseline" placeholder="例如：0.1.0 或原文件名"></label>
+                    </div>
+                    <label><span>核心体验</span><textarea name="coreExperience" data-rcs-project-field="coreExperience" rows="3" placeholder="还没想清楚也可以先留空"></textarea></label>
+                  </section>
+
+                  <details class="rcs-dialog-section rcs-dialog-disclosure">
+                    <summary><span><strong>AI 协作分工</strong><small>调整解释深度与双方职责</small></span></summary>
+                    <div class="rcs-dialog-disclosure-body">
+                      <div class="rcs-capability-grid" role="radiogroup" aria-label="当前能力">
+                        <button type="button" role="radio" aria-checked="true" data-rcs-capability="novice"><strong>只会描述想法</strong><small>术语由 AI 解释</small></button>
+                        <button type="button" role="radio" aria-checked="false" data-rcs-capability="player"><strong>会使用酒馆</strong><small>可以试玩和反馈</small></button>
+                        <button type="button" role="radio" aria-checked="false" data-rcs-capability="operator"><strong>能提供文件与日志</strong><small>可以运行明确命令</small></button>
+                        <button type="button" role="radio" aria-checked="false" data-rcs-capability="builder"><strong>能参与开发</strong><small>可以审查结构差异</small></button>
+                      </div>
+                      <div class="rcs-role-summary">
+                        <p><strong>你负责：</strong><span data-rcs-user-role></span></p>
+                        <p><strong>AI 负责：</strong><span data-rcs-ai-role></span></p>
+                      </div>
+                      <div class="rcs-field-grid two">
+                        <label><span>我已经决定（可选）</span><textarea data-rcs-project-field="known" rows="2"></textarea></label>
+                        <label><span>希望 AI 先解释（可选）</span><textarea data-rcs-project-field="unknown" rows="2"></textarea></label>
+                      </div>
+                    </div>
+                  </details>
+
+                  <section class="rcs-dialog-section" aria-labelledby="rcs-gate-title">
+                    <div class="rcs-dialog-section-title"><h3 id="rcs-gate-title">协作检查单</h3><span>可选</span></div>
+                    <label><span>要完成什么</span><textarea data-rcs-project-field="goal" rows="3" placeholder="本次完成到什么程度？"></textarea></label>
+                    <div class="rcs-field-grid two">
+                      <label><span>必须保留 / 不能改</span><textarea data-rcs-project-field="redLines" rows="3" placeholder="不知道时可以先留空"></textarea></label>
+                      <label><span>怎么算完成</span><textarea data-rcs-project-field="acceptance" rows="3" placeholder="用什么结果确认完成？"></textarea></label>
+                    </div>
+                    <label><span>暂时不做（可选）</span><textarea data-rcs-project-field="nonGoals" rows="2"></textarea></label>
+                  </section>
+
+                  <section class="rcs-restatement" aria-labelledby="rcs-restatement-title">
+                    <div><p class="eyebrow">同步</p><h3 id="rcs-restatement-title">协作约定</h3></div>
+                    <ol data-rcs-restatement>
+                      <li><span>目标</span><p>等待填写目标。</p></li>
+                      <li><span>边界</span><p>等待填写边界与红线。</p></li>
+                      <li><span>验收</span><p>等待填写验收方式。</p></li>
+                    </ol>
+                    <p class="rcs-inline-error" data-rcs-project-error role="alert" tabindex="-1" hidden></p>
+                  </section>
+                </div>
+
+                <footer class="rcs-project-dialog-actions">
+                  <span>保存项目不会限制任何模块；取消会恢复弹窗前状态。</span>
+                  <div>
+                    <button class="rcs-button ghost" type="button" data-rcs-project-dialog-close>取消</button>
+                    <button class="rcs-button primary" type="submit" data-rcs-confirm-sync>保存项目</button>
+                  </div>
+                </footer>
+              </form>
+            </div>
+          </dialog>
+
+          <dialog class="rcs-builder-preview-dialog" data-rcs-builder-preview-dialog aria-labelledby="rcs-builder-preview-title">
+            <header>
+              <div><p class="eyebrow">沙盒预览 · 模拟包注入</p><h2 id="rcs-builder-preview-title" data-rcs-builder-preview-title>UI Builder 独立前端测试</h2></div>
+              <div class="rcs-builder-preview-head-actions">
+                <label><span>CSS 测试视口</span><select data-rcs-builder-preview-viewport aria-label="选择前端 CSS 测试视口">
+                  <option value="auto">跟随窗口</option>
+                  <option value="1920x1080">1920 × 1080 · 16:9</option>
+                  <option value="2560x1440">2560 × 1440 · 16:9</option>
+                  <option value="3440x1440">3440 × 1440 · 21:9</option>
+                  <option value="3840x1600">3840 × 1600 · 21:9</option>
+                  <option value="3840x2160">3840 × 2160 · 16:9</option>
+                  <option value="5120x2160">5120 × 2160 · 21:9</option>
+                </select></label>
+                <button class="rcs-icon-button" type="button" data-rcs-builder-preview-close aria-label="关闭预览">关闭</button>
+              </div>
+            </header>
+            <section class="rcs-simulation-player" aria-label="模拟场景播放器">
+              <div class="rcs-simulation-package-title"><strong data-rcs-simulation-package-title>静态 HTML</strong><small data-rcs-simulation-package-meta>尚未导入模拟包</small></div>
+              <label><span>测试场景</span><select data-rcs-simulation-scenario disabled><option value="">无模拟包</option></select></label>
+              <div class="rcs-simulation-player-actions" role="group" aria-label="模拟步骤控制">
+                <button class="rcs-button ghost" type="button" data-rcs-simulation-reset disabled>初始</button>
+                <button class="rcs-button ghost" type="button" data-rcs-simulation-prev disabled>上一步</button>
+                <button class="rcs-button primary" type="button" data-rcs-simulation-next disabled>下一步</button>
+              </div>
+              <button class="rcs-button ghost" type="button" data-rcs-simulation-import-trigger>导入模拟包</button>
+              <span data-rcs-simulation-step-summary>静态预览</span>
+            </section>
+            <div class="rcs-builder-preview-main">
+              <div class="rcs-builder-preview-viewport" data-rcs-builder-preview-viewport-shell data-viewport="auto">
+                <iframe data-rcs-builder-preview-frame title="UI Builder 导出 HTML 模拟预览" sandbox="allow-scripts"></iframe>
+              </div>
+              <aside class="rcs-simulation-inspector" data-rcs-simulation-inspector aria-label="模拟变量与日志">
+                <header><div><span>注入状态</span><strong data-rcs-simulation-state-label>初始快照</strong></div><i data-rcs-simulation-engine>—</i></header>
+                <p data-rcs-simulation-status role="status" aria-live="polite">导入模拟包后可注入变量并回放动作。</p>
+                <details open><summary>本步变化</summary><div class="rcs-simulation-list" data-rcs-simulation-diff><p>当前没有 Diff。</p></div></details>
+                <details><summary>事件</summary><div class="rcs-simulation-list" data-rcs-simulation-events><p>当前没有事件。</p></div></details>
+                <details><summary>当前变量快照</summary><pre data-rcs-simulation-state>{}</pre></details>
+              </aside>
+            </div>
+            <footer><span data-rcs-builder-preview-boundary>独立预览只运行固定沙盒文档；不会写入 SillyTavern 或替代真机验收。</span><button class="rcs-button ghost" type="button" data-rcs-builder-preview-download>下载当前 HTML</button></footer>
+          </dialog>
+
+          <dialog class="rcs-project-dialog rcs-ai-settings-dialog" data-rcs-ai-settings-dialog aria-labelledby="rcs-ai-settings-title" aria-describedby="rcs-ai-settings-description">
+            <div class="rcs-project-dialog-panel rcs-ai-settings-dialog-panel">
+              <header class="rcs-project-dialog-head">
+                <div>
+                  <span>Agent 设置</span>
+                  <h2 id="rcs-ai-settings-title">连接、预设与会话存储</h2>
+                  <p id="rcs-ai-settings-description">连接、AIRP 与本机会话集中管理；API Key 仍仅在本次页面会话中使用。</p>
+                </div>
+                <button class="rcs-icon-button" type="button" data-rcs-ai-settings-close aria-label="关闭 Agent 设置">关闭</button>
+              </header>
+
+              <div class="rcs-ai-settings-body">
+                <div class="rcs-ai-settings-tabs" role="tablist" aria-label="Agent 设置分类">
+                  <button id="rcs-ai-settings-connection-tab" type="button" role="tab" aria-selected="true" aria-controls="rcs-ai-settings-connection" data-rcs-ai-settings-tab="connection">API 接入</button>
+                  <button id="rcs-ai-settings-airp-tab" type="button" role="tab" aria-selected="false" aria-controls="rcs-ai-settings-airp" data-rcs-ai-settings-tab="airp">AIRP 预设</button>
+                  <button id="rcs-ai-settings-storage-tab" type="button" role="tab" aria-selected="false" aria-controls="rcs-ai-settings-storage" data-rcs-ai-settings-tab="storage">会话与存储</button>
+                </div>
+
+                <section class="rcs-ai-settings-panel rcs-ai-connection-panel" id="rcs-ai-settings-connection" role="tabpanel" data-rcs-ai-settings-panel="connection" aria-labelledby="rcs-ai-settings-connection-tab">
+                  <header class="rcs-ai-settings-panel-head">
+                    <div><span>OpenAI 兼容接口</span><h3>API 配置档与模型连接</h3></div>
+                    <p>可保存多个 API 配置档，但同一时间只能启用一个；Key 只在本次页面会话中使用。</p>
+                  </header>
+
+                  <section class="rcs-ai-profile-manager" aria-labelledby="rcs-ai-profile-manager-title">
+                    <header class="rcs-ai-profile-manager-head">
+                      <div><span>API 配置档</span><h4 id="rcs-ai-profile-manager-title">选择、编辑或切换连接</h4></div>
+                      <strong data-rcs-ai-profile-active-state role="status" aria-live="polite">当前未启用 API</strong>
+                    </header>
+                    <div class="rcs-ai-profile-controls">
+                      <label><span>配置档</span><select data-rcs-ai-profile-select><option value="">尚无保存的配置</option></select></label>
+                      <label><span>配置名称</span><input data-rcs-ai-profile-name placeholder="例如：日常写卡" maxlength="80" spellcheck="false" autocomplete="off"></label>
+                      <div class="rcs-ai-profile-actions" aria-label="API 配置档操作">
+                        <button class="rcs-button ghost" type="button" data-rcs-ai-profile-new>新建配置</button>
+                        <button class="rcs-button ghost danger" type="button" data-rcs-ai-profile-delete disabled>删除配置</button>
+                        <button class="rcs-button primary" type="button" data-rcs-ai-profile-activate disabled>设为当前启用</button>
+                        <button class="rcs-button ghost" type="button" data-rcs-ai-profile-disable disabled>停用直连</button>
+                      </div>
+                    </div>
+                  </section>
+
+                  <div class="rcs-ai-connection-grid">
+                    <section class="rcs-ai-settings-card" aria-labelledby="rcs-ai-endpoint-title">
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-ai-endpoint-title">服务与凭证</h4><span data-rcs-ai-credential-state>本次页面未载入 Key</span></div>
+                      <label><span>Base URL</span><input type="url" data-rcs-ai-base-url placeholder="https://api.example.com/v1" spellcheck="false" autocomplete="off"></label>
+                      <div class="rcs-ai-key-field">
+                        <label for="rcs-ai-api-key"><span>API Key</span></label>
+                        <div class="rcs-ai-key-row">
+                          <input id="rcs-ai-api-key" type="password" data-rcs-ai-api-key aria-label="API Key" placeholder="无需鉴权的本地服务可留空" spellcheck="false" autocomplete="off">
+                          <button class="rcs-button ghost" type="button" data-rcs-ai-key-reveal aria-pressed="false">显示</button>
+                          <button class="rcs-button ghost" type="button" data-rcs-ai-key-clear>清除</button>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section class="rcs-ai-settings-card" aria-labelledby="rcs-ai-model-title">
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-ai-model-title">模型选择</h4><span>列表不可用时可手动填写</span></div>
+                      <div class="rcs-ai-model-row">
+                        <label><span>模型</span><select data-rcs-ai-model><option value="">先刷新模型列表</option></select></label>
+                        <label><span>手动模型名</span><input data-rcs-ai-model-manual placeholder="例如：gpt-5" spellcheck="false" autocomplete="off"></label>
+                      </div>
+                      <div class="rcs-ai-inline-actions">
+                        <button class="rcs-button ghost" type="button" data-rcs-ai-refresh-models>刷新模型</button>
+                        <button class="rcs-button ghost" type="button" data-rcs-ai-test>测试连接</button>
+                      </div>
+                    </section>
+                  </div>
+
+                  <footer class="rcs-ai-settings-actions">
+                    <p data-rcs-ai-settings-status role="status" aria-live="polite">修改仅在点击保存后用于直连生成。</p>
+                    <div>
+                      <button class="rcs-button ghost" type="button" data-rcs-ai-settings-reset>撤销未保存修改</button>
+                      <button class="rcs-button primary" type="button" data-rcs-ai-settings-save>保存 API 配置</button>
+                    </div>
+                  </footer>
+                </section>
+
+                <section class="rcs-ai-settings-panel rcs-airp-settings-panel" id="rcs-ai-settings-airp" role="tabpanel" data-rcs-ai-settings-panel="airp" aria-labelledby="rcs-ai-settings-airp-tab" hidden>
+                  <aside class="rcs-airp-library-pane" aria-labelledby="rcs-airp-library-title">
+                    <header>
+                      <span>预设库</span>
+                      <h3 id="rcs-airp-library-title">SillyTavern AIRP</h3>
+                      <p>导入 “AI Response Configuration” JSON；点击列表仅预览，保存后才会切换当前启用的预设。</p>
+                    </header>
+                    <input type="file" accept=".json,application/json" data-rcs-airp-file hidden>
+                    <div class="rcs-ai-inline-actions">
+                      <button class="rcs-button primary" type="button" data-rcs-airp-import>导入 AIRP</button>
+                      <button class="rcs-button ghost" type="button" data-rcs-airp-export disabled>导出</button>
+                      <button class="rcs-button ghost danger" type="button" data-rcs-airp-delete disabled>移除</button>
+                    </div>
+                    <div class="rcs-airp-list" data-rcs-airp-list aria-label="已导入的 AIRP 预设">
+                      <p>尚未导入预设。</p>
+                    </div>
+                  </aside>
+
+                  <section class="rcs-airp-detail-pane" aria-labelledby="rcs-airp-detail-title">
+                    <header class="rcs-ai-settings-panel-head">
+                      <div><span>预设详情</span><h3 id="rcs-airp-detail-title">提示词顺序与条目</h3></div>
+                      <p data-rcs-airp-summary>选择左侧预设后，可查看采样参数和完整提示词条目。</p>
+                    </header>
+                    <div class="rcs-airp-detail-toolbar">
+                      <label><span>顺序组</span><select data-rcs-airp-order-group><option value="">选择预设后载入</option></select></label>
+                      <section data-rcs-airp-parameters aria-label="预设采样参数"><p>尚无参数。</p></section>
+                    </div>
+                    <div class="rcs-airp-unreferenced" data-rcs-airp-unreferenced hidden></div>
+                    <div class="rcs-airp-entry-list" data-rcs-airp-entry-list>
+                      <p>选择预设以查看其中的提示词条目。</p>
+                    </div>
+                    <footer class="rcs-ai-settings-actions rcs-airp-settings-actions">
+                      <p data-rcs-airp-settings-status role="status" aria-live="polite">列表选择与顺序组切换仅供预览；保存后才会替换当前启用的预设。</p>
+                      <div>
+                        <button class="rcs-button ghost" type="button" data-rcs-airp-discard disabled>放弃预览</button>
+                        <button class="rcs-button primary" type="button" data-rcs-airp-save disabled>保存并启用当前预设</button>
+                      </div>
+                    </footer>
+                  </section>
+                </section>
+
+                <section class="rcs-ai-settings-panel rcs-agent-storage-panel" id="rcs-ai-settings-storage" role="tabpanel" data-rcs-ai-settings-panel="storage" aria-labelledby="rcs-ai-settings-storage-tab" hidden>
+                  <header class="rcs-ai-settings-panel-head">
+                    <div><span>本机会话</span><h3>存储、迁移副本与上下文预算</h3></div>
+                    <p>桌面本机库为主，所选目录用于迁移副本。迁出与迁入不会删除原位置的会话、用户配置、工作区或历史缓存。</p>
+                  </header>
+
+                  <div class="rcs-agent-storage-grid">
+                    <article class="rcs-ai-settings-card rcs-agent-storage-card">
+                      <div class="rcs-ai-settings-card-head">
+                        <h4>当前主库</h4>
+                        <span data-rcs-agent-storage-summary>桌面本机库</span>
+                      </div>
+                      <dl class="rcs-agent-storage-facts">
+                        <div><dt>位置</dt><dd data-rcs-agent-storage-location>应用本机存储</dd></div>
+                        <div><dt>会话</dt><dd data-rcs-agent-storage-count>0 个</dd></div>
+                        <div><dt>迁移目录</dt><dd data-rcs-agent-storage-directory>尚未选择</dd></div>
+                      </dl>
+                      <div class="rcs-agent-storage-actions">
+                        <button class="rcs-button ghost" type="button" data-rcs-agent-storage-pick>选择迁移目录</button>
+                        <button class="rcs-button ghost danger" type="button" data-rcs-agent-storage-forget>忘记目录</button>
+                      </div>
+                      <small class="rcs-agent-storage-note">忘记目录只移除本应用的授权句柄，不会删除磁盘上的任何文件。</small>
+                    </article>
+
+                    <article class="rcs-ai-settings-card rcs-agent-storage-card">
+                      <div class="rcs-ai-settings-card-head">
+                        <h4>迁出与迁入</h4>
+                        <span data-rcs-agent-storage-last-export>尚无迁移副本</span>
+                      </div>
+                      <p>迁出会先复制并校验，不会清理本机主库。副本包含你输入的对话正文，但不包含 RPN API Key、连接配置或本机绝对路径；请自行妥善保管。</p>
+                      <input type="file" accept=".json,.jsonl,application/json,application/x-ndjson" data-rcs-agent-storage-file hidden>
+                      <div class="rcs-agent-storage-actions">
+                        <button class="rcs-button primary" type="button" data-rcs-agent-storage-export>迁出副本</button>
+                        <button class="rcs-button ghost" type="button" data-rcs-agent-storage-import>迁入副本</button>
+                      </div>
+                    </article>
+
+                    <article class="rcs-ai-settings-card rcs-agent-token-budget-card">
+                      <div class="rcs-ai-settings-card-head">
+                        <h4>上下文预算</h4>
+                        <span>发送前估算</span>
+                      </div>
+                      <p>用于会话发送前的本地估算和提示，不等于模型官方上下文窗口。</p>
+                      <div class="rcs-agent-token-budget-control">
+                        <label for="rcs-agent-token-budget"><span>Token 预算</span><input id="rcs-agent-token-budget" type="number" min="4000" max="128000" step="1000" inputmode="numeric" data-rcs-agent-token-budget-input></label>
+                        <button class="rcs-button primary" type="button" data-rcs-agent-token-budget-save>保存预算</button>
+                      </div>
+                    </article>
+                  </div>
+
+                  <footer class="rcs-ai-settings-actions rcs-agent-storage-footer">
+                    <p data-rcs-agent-storage-status role="status" aria-live="polite">本机会话库尚未载入。</p>
+                  </footer>
+                </section>
+              </div>
+            </div>
+          </dialog>
+
+        </div>
+
+          <div class="rcs-agent-shell" data-rcs-agent-shell>
+            <aside class="rcs-agent-session-sheet" id="rcs-agent-session-sheet" data-rcs-agent-session-sheet role="dialog" aria-modal="false" aria-labelledby="rcs-agent-session-sheet-title" tabindex="-1" hidden>
+              <header class="rcs-agent-session-sheet-head">
+                <div><span>Agent 会话</span><h3 id="rcs-agent-session-sheet-title">会话记录</h3></div>
+                <button class="rcs-icon-button" type="button" data-rcs-agent-session-close aria-label="关闭会话列表">关闭</button>
+              </header>
+
+              <div class="rcs-agent-session-toolbar">
+                <button class="rcs-button primary" type="button" data-rcs-agent-session-new>新建会话</button>
+                <button class="rcs-button ghost" type="button" data-rcs-agent-session-actions aria-haspopup="menu" aria-controls="rcs-agent-session-menu" aria-expanded="false">当前会话操作</button>
+              </div>
+
+              <div class="rcs-agent-session-menu" id="rcs-agent-session-menu" data-rcs-agent-session-menu role="menu" hidden>
+                <button type="button" role="menuitem" data-rcs-agent-session-rename>重命名</button>
+                <button type="button" role="menuitem" data-rcs-agent-clear data-rcs-agent-session-clear>清空当前记录</button>
+                <button type="button" role="menuitem" data-rcs-agent-session-archive>归档</button>
+                <button type="button" role="menuitem" data-rcs-agent-session-restore hidden>恢复会话</button>
+                <button type="button" role="menuitem" class="danger" data-rcs-agent-session-delete>永久删除</button>
+              </div>
+
+              <div class="rcs-agent-session-scroll">
+                <form class="rcs-agent-session-rename" data-rcs-agent-session-rename-form hidden>
+                  <label>
+                    <span>会话名称</span>
+                    <input type="text" maxlength="120" autocomplete="off" data-rcs-agent-session-rename-input>
+                  </label>
+                  <div>
+                    <button class="rcs-button ghost" type="button" data-rcs-agent-session-rename-cancel>取消</button>
+                    <button class="rcs-button primary" type="button" data-rcs-agent-session-rename-save>保存名称</button>
+                  </div>
+                </form>
+
+                <section class="rcs-agent-session-group" aria-labelledby="rcs-agent-session-active-title">
+                  <header><strong id="rcs-agent-session-active-title">进行中</strong><span data-rcs-agent-session-active-count>0</span></header>
+                  <div class="rcs-agent-session-list" data-rcs-agent-session-list-active aria-label="进行中的 Agent 会话"></div>
+                  <div class="rcs-agent-session-empty" data-rcs-agent-session-empty-active>
+                    <strong>还没有会话</strong>
+                    <p>新建后即可从当前工作区继续对话。</p>
+                  </div>
+                </section>
+
+                <section class="rcs-agent-session-group" aria-labelledby="rcs-agent-session-archived-title">
+                  <header><strong id="rcs-agent-session-archived-title">已归档</strong><span data-rcs-agent-session-archived-count>0</span></header>
+                  <div class="rcs-agent-session-list" data-rcs-agent-session-list-archived aria-label="已归档的 Agent 会话"></div>
+                  <div class="rcs-agent-session-empty" data-rcs-agent-session-empty-archived>
+                    <strong>暂无已归档会话</strong>
+                  </div>
+                </section>
+
+                <section class="rcs-agent-session-summary" aria-labelledby="rcs-agent-session-summary-title">
+                  <header>
+                    <div><span>续聊交接</span><strong id="rcs-agent-session-summary-title">当前会话摘要</strong></div>
+                    <small data-rcs-agent-session-summary-status role="status" aria-live="polite">尚未保存摘要</small>
+                  </header>
+                  <label><span class="rcs-visually-hidden">当前会话摘要</span><textarea rows="4" maxlength="6000" data-rcs-agent-session-summary placeholder="记录已完成、待处理和下一步，可手工修订。"></textarea></label>
+                  <div class="rcs-agent-session-summary-actions">
+                    <button class="rcs-button ghost" type="button" data-rcs-agent-session-summary-save>保存摘要</button>
+                    <button class="rcs-button primary" type="button" data-rcs-agent-session-continue>总结并续聊</button>
+                  </div>
+                </section>
+              </div>
+
+              <footer class="rcs-agent-session-sheet-footer">
+                <span data-rcs-agent-session-storage-state>本机会话库</span>
+                <button type="button" data-rcs-agent-storage-open>存储设置</button>
+              </footer>
+            </aside>
+
+            <section class="rcs-agent-dock" id="rcs-assistant" data-rcs-assistant data-rcs-dock-view="agent" aria-label="创作助手浮窗">
+            <header class="rcs-agent-dock-head">
+              <div class="rcs-agent-identity">
+                <p class="eyebrow">M4-B · 创作助手</p>
+                <h2 data-rcs-dock-title>Agent</h2>
+              </div>
+              <button class="rcs-agent-current rcs-agent-session-toggle" type="button" data-rcs-dock-agent data-rcs-agent-session-toggle aria-haspopup="dialog" aria-controls="rcs-agent-session-sheet" aria-expanded="false" aria-label="打开会话列表，当前会话：新会话">
+                <span>会话</span>
+                <strong data-rcs-agent-session-current-title title="新会话">新会话</strong>
+                <small data-rcs-agent-session-progress>空闲</small>
+              </button>
+              <div class="rcs-wiki-current" data-rcs-dock-wiki aria-label="当前知识源" hidden>
+                <div><span>知识源</span><strong data-rcs-wiki-source-summary>尚未授权</strong></div>
+                <div><span>索引</span><strong data-rcs-wiki-index-summary>0 篇</strong></div>
+                <div><span>解释方式</span><strong data-rcs-wiki-mode-summary>内置 Agent</strong></div>
+              </div>
+              <div class="rcs-agent-head-actions">
+                <div class="rcs-dock-tabs" role="tablist" aria-label="创作助手视图">
+                  <button type="button" role="tab" aria-selected="true" tabindex="0" data-rcs-dock-tab="agent">Agent</button>
+                  <button type="button" role="tab" aria-selected="false" tabindex="-1" data-rcs-dock-tab="wiki">知识 Wiki</button>
+                </div>
+                <button class="rcs-button ghost" type="button" data-rcs-ai-settings-open aria-label="打开 Agent 设置">设置</button>
+                <button type="button" class="rcs-icon-button" data-rcs-ai-close aria-label="展开 Agent 抽屉" aria-expanded="false">展开</button>
+              </div>
+            </header>
+            <div class="rcs-agent-display" data-rcs-agent-expanded data-rcs-dock-agent>
+              <div class="rcs-agent-display-toolbar">
+                <div>
+                  <strong data-rcs-ai-description>任务包会带上当前项目、分工、条目与验收；接手项目仍需另附同一源码文件。</strong>
+                  <span>对话只读；任何项目改动都会先形成提案，等待你批准。</span>
+                </div>
+              </div>
+              <div class="rcs-agent-filterbar" aria-label="Agent 记录筛选">
+                <button type="button" data-rcs-agent-filter="all" aria-pressed="true">全部</button>
+                <button type="button" data-rcs-agent-filter="user" aria-pressed="false">用户</button>
+                <button type="button" data-rcs-agent-filter="assistant" aria-pressed="false">AI</button>
+                <button type="button" data-rcs-agent-filter="operation" aria-pressed="false">操作</button>
+                <button type="button" data-rcs-agent-filter="change" aria-pressed="false">改动</button>
+                <button type="button" data-rcs-agent-filter="system" aria-pressed="false">系统</button>
+              </div>
+              <div class="rcs-agent-timeline" data-rcs-agent-timeline role="log" aria-live="polite" aria-label="Agent 对话、操作与改动记录">
+                <div class="rcs-agent-events" data-rcs-agent-events></div>
+                <section class="rcs-agent-proposal" data-rcs-agent-proposal aria-labelledby="rcs-agent-proposal-title" hidden>
+                  <header>
+                    <div><span>待批准改动</span><h3 id="rcs-agent-proposal-title">当前世界书条目正文</h3></div>
+                    <strong data-rcs-agent-proposal-state>等待驾驶员确认</strong>
+                  </header>
+                  <label><span>候选正文</span><textarea data-rcs-ai-candidate rows="7" readonly placeholder="模型或外部 AI 返回的正文会先停在这里，不会自动写入项目。"></textarea></label>
+                  <div class="rcs-agent-proposal-actions">
+                    <button class="rcs-button primary" type="button" data-rcs-ai-apply-candidate data-rcs-agent-approve disabled>批准应用</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-ai-reject-candidate data-rcs-agent-reject>拒绝提案</button>
+                  </div>
+                </section>
+              </div>
+              <details class="rcs-agent-task-package" data-rcs-agent-mode-panel>
+                <summary><span>Agent 模式</span><strong data-rcs-agent-mode-summary>内置 Agent</strong></summary>
+                <div class="rcs-agent-task-package-body">
+                  <div class="rcs-agent-runtime-meta" aria-label="当前 Agent 上下文">
+                    <div><span>模块</span><strong data-rcs-ai-context>项目同步</strong></div>
+                    <div><span>API</span><strong data-rcs-ai-connection-summary>尚未设置</strong></div>
+                    <div><span>AIRP</span><strong data-rcs-airp-current-summary>尚未导入</strong></div>
+                  </div>
+                  <div class="rcs-agent-mode" role="radiogroup" aria-label="Agent 运行模式" aria-describedby="rcs-agent-mode-state">
+                    <button type="button" role="radio" aria-checked="true" tabindex="0" data-rcs-agent-mode="internal">内置 Agent</button>
+                    <button type="button" role="radio" aria-checked="false" tabindex="-1" data-rcs-agent-mode="codex">Codex</button>
+                    <button type="button" role="radio" aria-checked="false" tabindex="-1" data-rcs-agent-mode="claude">Claude Code</button>
+                  </div>
+                  <p class="rcs-agent-mode-state" id="rcs-agent-mode-state" data-rcs-agent-mode-state role="status" aria-live="polite">使用当前启用的 API 与 AIRP。</p>
+                  <button class="rcs-button ghost" type="button" data-rcs-project-settings data-rcs-project-settings-label="fixed">项目与分工设置</button>
+                  <div class="rcs-agent-external-panel" data-rcs-agent-external-panel hidden>
+                    <label class="rcs-prompt-box">
+                      <span>可直接发送的任务包</span>
+                      <textarea data-rcs-ai-prompt rows="12" readonly spellcheck="false"></textarea>
+                    </label>
+                    <button class="rcs-button ghost" type="button" data-rcs-copy-prompt>复制任务包</button>
+                    <div class="rcs-ai-return" data-rcs-ai-return hidden>
+                      <label><span>外部 AI 返回正文</span><textarea data-rcs-ai-response rows="7"></textarea></label>
+                      <button class="rcs-button ghost" type="button" data-rcs-apply-ai-response>建立变更提案</button>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+            <section class="rcs-wiki-panel" data-rcs-dock-wiki aria-labelledby="rcs-wiki-title" hidden>
+              <header class="rcs-wiki-searchbar">
+                <div>
+                  <strong id="rcs-wiki-title">开发指南知识检索</strong>
+                  <span>本地搜索始终只读；AI 解释会保留文件与章节依据。</span>
+                </div>
+                <form data-rcs-wiki-search-form role="search">
+                  <label><span class="rcs-visually-hidden">检索开发指南</span><input type="search" data-rcs-wiki-query maxlength="240" autocomplete="off" placeholder="例如：MVU JSONPatch 与变量更新有什么区别？"></label>
+                  <button class="rcs-button primary" type="submit" data-rcs-wiki-search>检索</button>
+                  <button class="rcs-button ghost" type="button" data-rcs-wiki-refresh>刷新索引</button>
+                </form>
+              </header>
+              <div class="rcs-wiki-workspace">
+                <aside class="rcs-wiki-results" aria-label="检索结果">
+                  <header><strong>匹配章节</strong><span data-rcs-wiki-result-count>0 条</span></header>
+                  <div data-rcs-wiki-results></div>
+                </aside>
+                <article class="rcs-wiki-reader">
+                  <div class="rcs-wiki-reader-empty" data-rcs-wiki-empty>
+                    <strong>先授权开发指南 DB，再输入问题</strong>
+                    <p>首版检索文件名、Markdown 标题和正文关键词，不需要向量数据库。</p>
+                  </div>
+                  <div data-rcs-wiki-reader hidden>
+                    <header>
+                      <div><span data-rcs-wiki-source-file>来源</span><h3 data-rcs-wiki-source-heading>章节</h3></div>
+                      <strong data-rcs-wiki-source-score>本地命中</strong>
+                    </header>
+                    <section class="rcs-wiki-explanation">
+                      <div class="rcs-wiki-section-head"><strong>白话解释</strong><span>事实、推断与缺口应明确区分</span></div>
+                      <p data-rcs-wiki-explanation>尚未生成解释；可以先查看原文依据。</p>
+                    </section>
+                    <section class="rcs-wiki-original">
+                      <div class="rcs-wiki-section-head"><strong>原文依据</strong><span data-rcs-wiki-source-citation></span></div>
+                      <pre data-rcs-wiki-source-excerpt></pre>
+                    </section>
+                    <details class="rcs-wiki-task-package" data-rcs-wiki-task-package hidden>
+                      <summary>外置 Agent 研究任务包</summary>
+                      <textarea rows="8" data-rcs-wiki-task readonly spellcheck="false"></textarea>
+                    </details>
+                  </div>
+                </article>
+              </div>
+              <footer class="rcs-wiki-actions">
+                <p data-rcs-wiki-status role="status" aria-live="polite">尚未加载本地知识索引。</p>
+                <div>
+                  <button class="rcs-button primary" type="button" data-rcs-wiki-explain disabled>AI 白话解释</button>
+                  <button class="rcs-button ghost" type="button" data-rcs-wiki-copy-task hidden>复制研究任务包</button>
+                  <button class="rcs-button ghost" type="button" data-rcs-wiki-stop hidden>停止</button>
+                </div>
+              </footer>
+            </section>
+            <div class="rcs-agent-composer" data-rcs-dock-agent>
+              <div class="rcs-agent-composer-meta" role="status" aria-live="polite" aria-label="Agent 上下文与 Token 用量">
+                <span data-rcs-agent-context-count>上下文 0 / 24 条</span>
+                <span data-rcs-agent-last-usage>上次用量未返回</span>
+                <span data-rcs-agent-token-budget>预算未设置</span>
+              </div>
+              <label>
+                <span class="rcs-visually-hidden">发送给 Agent</span>
+                <textarea data-rcs-agent-input rows="2" maxlength="12000" placeholder="询问当前工作区；Enter 发送，Shift + Enter 换行。对话不会自动修改项目。"></textarea>
+              </label>
+              <div class="rcs-agent-composer-actions">
+                <button class="rcs-button primary" type="button" data-rcs-agent-send disabled>发送</button>
+                <button class="rcs-button ghost" type="button" data-rcs-ai-cancel data-rcs-agent-stop hidden>停止</button>
+                <button class="rcs-button ghost" type="button" data-rcs-ai-generate disabled>生成条目提案</button>
+              </div>
+            </div>
+            <p class="rcs-ai-status" data-rcs-ai-status data-rcs-dock-agent role="status" aria-live="polite">请先在 AI 设置中启用一个 API 与 AIRP 预设。</p>
+            <button class="rcs-agent-resize" type="button" data-rcs-agent-resize aria-label="调整 Agent 抽屉尺寸" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"></button>
+            </section>
+          </div>
+
+        <nav class="rcs-mobile-nav" aria-label="移动端创作模块">
+          <a href="#studio/project" data-rcs-route-link="project">总览</a>
+          <a href="#studio/workflow" data-rcs-route-link="workflow">蓝图</a>
+          <a href="#studio/card" data-rcs-route-link="card">卡片</a>
+          <a href="#studio/worldbook" data-rcs-route-link="worldbook">世界书</a>
+          <a href="#studio/mvu" data-rcs-route-link="mvu">状态</a>
+          <a href="#studio/frontend" data-rcs-route-link="frontend" data-rcs-route-group="frontend design">组件</a>
+          <a href="#studio/check" data-rcs-route-link="check">检查</a>
+        </nav>
+      </div>
+    </section>
+
+    <section class="page-shell component-workshop-page" data-page="workshop" aria-labelledby="component-workshop-page-title" hidden>
+      <h1 class="rcs-visually-hidden" id="component-workshop-page-title" tabindex="-1">创意工坊</h1>
+      <div data-cws-root data-gateway-base="https://43-132-171-157.sslip.io"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+        <p>Reverie Playcraft Nexus · v0.17.0 · 更新于 2026-07-22</p>
+    <p>制卡指南、前端组件预览、制卡工作台与创意工坊各自分区；组件选择与编辑仍统一在制卡工作台内完成。</p>
+  </footer>
+
+  <dialog class="desktop-dialog" data-desktop-dialog aria-labelledby="desktop-dialog-title" aria-describedby="desktop-dialog-description">
+    <div class="desktop-dialog-panel">
+      <header>
+        <div>
+          <span>桌面程序</span>
+          <h2 id="desktop-dialog-title">本机 ST 与程序更新</h2>
+          <p id="desktop-dialog-description">ST 使用独立本机浏览器资料；程序更新不会清理工作区、配置或历史缓存。</p>
+        </div>
+        <button class="desktop-icon-button" type="button" data-desktop-dialog-close aria-label="关闭桌面设置">关闭</button>
+      </header>
+
+      <div class="desktop-dialog-body">
+        <section class="desktop-dialog-section" aria-labelledby="desktop-st-title">
+          <div class="desktop-section-heading">
+            <div><span>本机预览</span><h3 id="desktop-st-title">SillyTavern 地址</h3></div>
+            <strong data-desktop-st-state>尚未连接</strong>
+          </div>
+          <label class="desktop-field" for="desktop-st-url">
+            <span>仅允许 localhost、127.0.0.1 或 ::1</span>
+            <input id="desktop-st-url" type="url" data-desktop-st-url autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:8000/" required>
+          </label>
+          <p class="desktop-inline-status" data-desktop-st-status role="status" aria-live="polite">桌面程序会在独立窗口中打开本机 ST。</p>
+          <div class="desktop-button-row">
+            <button class="secondary-action" type="button" data-desktop-save-st-url>保存地址</button>
+            <button class="primary-action" type="button" data-desktop-dialog-open-st>打开本机 ST</button>
+            <button class="secondary-action" type="button" data-desktop-open-rpn>显示 RPN</button>
+          </div>
+        </section>
+
+        <section class="desktop-dialog-section" aria-labelledby="desktop-update-title">
+          <div class="desktop-section-heading">
+            <div><span>发布版</span><h3 id="desktop-update-title">程序更新</h3></div>
+            <strong data-desktop-update-version>当前版本</strong>
+          </div>
+          <dl class="desktop-update-meta">
+            <div><dt>已安装</dt><dd data-desktop-current-version>—</dd></div>
+            <div><dt>可用版本</dt><dd data-desktop-available-version>尚未检查</dd></div>
+          </dl>
+          <p class="desktop-update-notes" data-desktop-update-notes hidden></p>
+          <progress class="desktop-update-progress" data-desktop-update-progress max="1" value="0" hidden></progress>
+          <p class="desktop-inline-status" data-desktop-update-status role="status" aria-live="polite">由你手动检查、下载并确认安装。</p>
+          <div class="desktop-button-row">
+            <button class="secondary-action" type="button" data-desktop-check-update>检查更新</button>
+            <button class="secondary-action" type="button" data-desktop-download-update disabled>下载更新</button>
+            <button class="primary-action" type="button" data-desktop-install-update disabled>安装并重启</button>
+          </div>
+        </section>
+      </div>
+
+      <footer>
+        <span>安装前会先等待工作区连续性保存完成；保存失败时不会继续更新。</span>
+        <button class="secondary-action" type="button" data-desktop-dialog-close>关闭</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./assets/portal.js?v=0722m4c1" defer></script>
+  <script type="module" src="./assets/card-studio.js?v=0722m4c2"></script>
+  <script type="module" src="./assets/workshop-studio.js?v=0718m2"></script>
+  <script type="module" src="./assets/component-workshop.js?v=0721m3d1"></script>
+</body>
+</html>
