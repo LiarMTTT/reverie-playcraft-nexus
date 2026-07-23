@@ -1,5 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod ai_transport;
+mod mcp_host;
+
+use ai_transport::{desktop_ai_cancel, desktop_ai_request, AiTransportState};
+use mcp_host::{desktop_mcp_cancel, desktop_mcp_execute, desktop_mcp_prepare, McpHostState};
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
@@ -12,7 +17,7 @@ use std::{
 };
 use tauri::{
     menu::{Menu, MenuBuilder, MenuItemBuilder, SubmenuBuilder},
-    webview::NewWindowResponse,
+    webview::{Color, NewWindowResponse, PageLoadEvent},
     AppHandle, Manager, State, Url, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent,
 };
 
@@ -237,13 +242,23 @@ fn build_rpn_window(app: &AppHandle) -> Result<WebviewWindow, String> {
     let app_for_popup = app.clone();
     let rpn_profile = webview_profile(app, "rpn")?;
     let popup_profile = rpn_profile.clone();
-    WebviewWindowBuilder::new(app, RPN_LABEL, WebviewUrl::App("index.html".into()))
+    WebviewWindowBuilder::new(app, RPN_LABEL, WebviewUrl::App("assets/splash.html".into()))
         .title(format!(
             "Reverie Playcraft Nexus · {}",
             app.package_info().version
         ))
         .inner_size(1440.0, 900.0)
         .min_inner_size(1024.0, 700.0)
+        .visible(false)
+        .background_color(Color(2, 6, 23, 255))
+        .on_page_load(|window, payload| {
+            if matches!(payload.event(), PageLoadEvent::Finished)
+                && payload.url().path().ends_with("/assets/splash.html")
+            {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        })
         .data_directory(rpn_profile)
         .on_navigation(is_rpn_navigation)
         .on_new_window(move |url, features| {
@@ -786,7 +801,7 @@ fn desktop_rpn_flush_complete(
 }
 
 fn main() {
-    let builder = tauri::Builder::default();
+    let builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
 
     #[cfg(feature = "release-updater")]
     let builder = builder.plugin(
@@ -800,6 +815,8 @@ fn main() {
             let config_path = app.path().app_config_dir()?.join("desktop.json");
             let settings = load_settings(&config_path);
             app.manage(DesktopState::new(settings, config_path));
+            app.manage(AiTransportState::new().map_err(std::io::Error::other)?);
+            app.manage(McpHostState::new());
             app.set_menu(build_menu(app.handle())?)?;
             build_rpn_window(app.handle()).map_err(std::io::Error::other)?;
             Ok(())
@@ -844,6 +861,11 @@ fn main() {
             desktop_download_update,
             desktop_install_update,
             desktop_rpn_flush_complete,
+            desktop_ai_request,
+            desktop_ai_cancel,
+            desktop_mcp_prepare,
+            desktop_mcp_execute,
+            desktop_mcp_cancel,
         ])
         .run(tauri::generate_context!())
         .expect("RPN desktop shell failed to run");

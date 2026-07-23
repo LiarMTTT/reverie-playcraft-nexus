@@ -14,6 +14,7 @@ const rolecardExportPlanPath = path.join(root, 'portal', 'assets', 'rolecard-exp
 const workshopPath = path.join(root, 'portal', 'assets', 'workshop-studio.js');
 const localWorkspacePath = path.join(root, 'portal', 'assets', 'studio-local-workspace.js');
 const studioAiPath = path.join(root, 'portal', 'assets', 'studio-ai.js');
+const studioMcpPath = path.join(root, 'portal', 'assets', 'studio-mcp.js');
 const studioKnowledgePath = path.join(root, 'portal', 'assets', 'studio-knowledge.js');
 const componentWorkshopPath = path.join(root, 'portal', 'assets', 'component-workshop.js');
 const portalPath = path.join(root, 'portal', 'index.html');
@@ -28,12 +29,23 @@ const rolecardExportPlanSource = readFileSync(rolecardExportPlanPath, 'utf8');
 const workshopSource = readFileSync(workshopPath, 'utf8');
 const localWorkspaceSource = readFileSync(localWorkspacePath, 'utf8');
 const studioAiSource = readFileSync(studioAiPath, 'utf8');
+const studioMcpSource = readFileSync(studioMcpPath, 'utf8');
 const studioKnowledgeSource = readFileSync(studioKnowledgePath, 'utf8');
 const componentWorkshopSource = readFileSync(componentWorkshopPath, 'utf8');
 const portalSource = readFileSync(portalPath, 'utf8');
 const portalScriptSource = readFileSync(portalScriptPath, 'utf8');
 const componentPreviewCssSource = readFileSync(componentPreviewCssPath, 'utf8');
 const componentCatalog = JSON.parse(readFileSync(componentCatalogPath, 'utf8'));
+
+assert.doesNotMatch(portalSource, /\bdata-route-load-state\b/u, '入口不得保留可能永久占屏的路由加载门');
+const initialPageTags = [...portalSource.matchAll(/<section\b[^>]*\bdata-page="[^"]+"[^>]*>/gu)].map((match) => match[0]);
+assert.ok(initialPageTags.length >= 5, '入口必须识别全部顶层 data-page');
+const initialGuideTag = initialPageTags.find((tag) => /\bdata-page="guide"/u.test(tag)) || '';
+assert.ok(initialGuideTag, '入口必须保留 guide 回退页');
+assert.doesNotMatch(initialGuideTag, /\bhidden\b/u, 'portal.js 接管前 guide 回退页必须可见');
+for (const tag of initialPageTags.filter((candidate) => candidate !== initialGuideTag)) {
+  assert.match(tag, /\bhidden\b/u, `portal.js 接管前所有 data-page 都必须隐藏：${tag}`);
+}
 
 assert.equal(existsSync(removedKernelPath), false, 'Runtime 世界书内核不得进入 RPN Web');
 for (const forbidden of [
@@ -53,10 +65,76 @@ assert.equal(studioSource.includes('worldbook-manager-kernel.js'), false);
 assert.match(studioSource, /parts\[1\] === 'mine'/, '制卡工作台外层路由必须显示“我的发布”');
 assert.match(studioSource, /from '\.\/studio-local-workspace\.js\?v=[^']+';/);
 assert.match(studioSource, /from '\.\/studio-ai\.js\?v=[^']+';/);
+assert.match(studioSource, /from '\.\/studio-mcp\.js\?v=[^']+';/);
+assert.match(studioSource, /from '\.\/studio-api-profiles\.js\?v=[^']+';/);
+assert.match(studioSource, /from '\.\/studio-agent-orchestrator\.js\?v=[^']+';/);
 assert.match(studioSource, /from '\.\/studio-knowledge\.js\?v=[^']+';/);
 assert.match(studioSource, /import \{ analyzeRolecardImport \} from '\.\/rolecard-import-analysis\.js\?v=[^']+';/, '制卡工作台必须通过独立纯分析器生成角色卡导入报告');
 assert.match(studioSource, /import \{ createRolecardExportPlan \} from '\.\/rolecard-export-plan\.js\?v=[^']+';/, '制卡工作台必须通过带版本的纯计划模块生成装配预检');
-assert.match(portalSource, /\.\/assets\/card-studio\.js\?v=[^"']+/, '外层工作台资源必须带缓存版本');
+for (const staticModule of ['card-studio', 'workshop-studio', 'component-workshop']) {
+  assert.match(
+    portalSource,
+    new RegExp(`<script type="module" src="\\.\\/assets\\/${staticModule}\\.js\\?v=[^"]+"><\\/script>`, 'u'),
+    `${staticModule} 必须在入口静态加载，避免 release WebView2 动态导入悬挂`,
+  );
+}
+for (const staticStyle of ['component-preview', 'card-studio', 'workshop-studio', 'component-workshop']) {
+  assert.match(
+    portalSource,
+    new RegExp(`<link rel="stylesheet" href="\\.\\/assets\\/${staticStyle}\\.css\\?v=[^"]+">`, 'u'),
+    `${staticStyle} 必须在入口静态加载，避免运行时样式 Promise 阻塞路由`,
+  );
+}
+assert.match(
+  studioSource,
+  /function startCardStudio\(\)[\s\S]{0,180}if \(!cardStudioInitPromise\) cardStudioInitPromise = init\(\);[\s\S]{0,80}return cardStudioInitPromise;/u,
+  '制卡工作台与设置中心必须共享同一个按需初始化 Promise',
+);
+assert.match(
+  studioSource,
+  /function activateCardStudio\(route = currentPortalRoute\(\)\)[\s\S]{0,220}route !== 'studio' \|\| cardStudioInitPromise[\s\S]{0,120}startCardStudio\(\)\.catch/u,
+  '制卡工作台必须等到首次进入 #studio 后才按需初始化',
+);
+assert.match(
+  studioSource,
+  /window\.addEventListener\('rpn:open-settings',[\s\S]{0,180}startCardStudio\(\)[\s\S]{0,120}openStudioAiSettings/u,
+  '全局设置入口必须复用制卡工作台的单次按需初始化流程',
+);
+assert.match(
+  workshopSource,
+  /function activateWorkshopStudio\(route = currentPortalRoute\(\)\)[\s\S]{0,360}workshopStudioRoutes\.has\(currentStudioRoute\(\)\)[\s\S]{0,180}workshopStudioInitialized = true;[\s\S]{0,80}init\(\);/u,
+  '星月二创工坊只能在 #studio 的资源库子路由首次激活',
+);
+assert.match(
+  componentWorkshopSource,
+  /function activateComponentWorkshop\(\)[\s\S]{0,240}root\.dataset\.cwsInitialized === 'true'[\s\S]{0,180}initComponentWorkshop\(root\);/u,
+  '组件工坊只能在首次进入 #workshop 后渲染并请求发现列表',
+);
+for (const routeAwareSource of [studioSource, workshopSource, componentWorkshopSource]) {
+  assert.match(
+    routeAwareSource,
+    /window\.addEventListener\('portal:routechange', \(event\) =>/u,
+    '静态模块必须通过 portal:routechange 激活，不能在指南页直接执行隐藏工作台',
+  );
+}
+for (const delayedSource of [studioSource, workshopSource]) {
+  assert.match(
+    delayedSource,
+    /return location\.hash\.replace\([^;]+[\s\S]{0,100}\|\| document\.body\.dataset\.route/u,
+    '延迟初始化必须优先识别直达 hash，不能被尚未同步的 body 路由阻断',
+  );
+}
+assert.doesNotMatch(
+  portalScriptSource,
+  /routeModuleLoaders|routeModulePromises|routeStyleUrls|routeStylePromises|loadRouteModule|loadRouteStyle|loadActiveRouteModules|renderRouteGate/u,
+  'portal.js 不得恢复运行时资源加载门',
+);
+assert.doesNotMatch(portalScriptSource, /async function renderRoute\(/u, '顶层路由切换不得等待异步资源');
+assert.match(
+  portalScriptSource,
+  /function renderRoute\(\)[\s\S]{0,420}page\.hidden = page\.dataset\.page !== route;/u,
+  '顶层路由必须同步切换目标页面可见性',
+);
 assert.match(rolecardExportPlanSource, /export function createRolecardExportPlan\(/, '纯计划模块必须导出唯一计划入口');
 
 const componentPreviewStart = portalSource.indexOf('<section class="page-shell component-preview-page"');
@@ -79,7 +157,7 @@ assert.ok(componentPreviewSource.includes(`<dd>v${componentCatalog.libraryVersio
 assert.ok(componentPreviewSource.includes(`<dd>${componentCatalog.modules.length} 项</dd>`), '组件预览数量必须与内置目录一致');
 assert.match(portalScriptSource, /const validRoutes = new Set\(\[[^\]]*'play'/, '#play 兼容路由不得移除');
 assert.match(portalScriptSource, /play:\s*'前端组件预览 · Reverie Playcraft Nexus'/, '#play 文档标题必须使用新语义');
-assert.match(portalSource, /\.\/assets\/component-preview\.css\?v=[^"']+/, '前端组件预览样式必须带缓存版本');
+assert.match(portalSource, /\.\/assets\/component-preview\.css\?v=[^"']+/, '前端组件预览静态样式必须带缓存版本');
 assert.match(componentPreviewCssSource, /\.component-preview-page\s*\{[\s\S]*?width:/, '前端组件预览必须拥有独立宽度布局');
 assert.match(componentPreviewCssSource, /body\[data-route="play"\] \.site-header\s*\{[\s\S]*?--workspace-max/, '组件预览页头必须与宽工作区对齐');
 assert.match(componentPreviewCssSource, /body\[data-route="play"\] \.site-footer\s*\{[\s\S]*?--workspace-max/, '组件预览页脚必须与宽工作区对齐');
@@ -145,10 +223,12 @@ const tavernWeaveRoutingHarness = Function(`
   let activeRoute = 'project';
   let activeReviewKind = 'text';
   let agentMode = 'claude';
+  let aiSettings = { selectedSkillName: '' };
   const currentReviewAgentItem = () => null;
   ${tavernWeaveRoutingSource}
-  const invoke = (skills, skillName, mode = 'claude') => {
+  const invoke = (skills, skillName, mode = 'claude', selectedSkillName = '') => {
     studioSkills = skills;
+    aiSettings = { selectedSkillName };
     return skillInvocation(skillName, mode);
   };
   return {
@@ -159,6 +239,8 @@ const tavernWeaveRoutingHarness = Function(`
     legacyCodexSpecialist: invoke([{ name: 'tavern-card-builder' }], 'code-quality-workflow', 'codex'),
     weaveArray: invoke([{ name: 'tavern-card-builder' }, { name: 'sillytavern-card-components' }], 'sillytavern-card-components'),
     codex: invoke([], 'code-quality-workflow', 'codex'),
+    thirdPartyClaude: invoke([{ name: 'my-card-skill' }], 'tavern-card-builder', 'claude', 'my-card-skill'),
+    thirdPartyCodex: invoke([{ name: 'my-card-skill' }], 'tavern-card-builder', 'codex', 'my-card-skill'),
   };
 `)();
 assert.equal(tavernWeaveRoutingHarness.noSource, '/tavernweave-agent-skills:tavern-card-builder', '未授权本机目录时 Claude 必须默认新版插件命名空间');
@@ -168,12 +250,40 @@ assert.equal(tavernWeaveRoutingHarness.legacyClaudeSpecialist, '/tavern-card-bui
 assert.equal(tavernWeaveRoutingHarness.legacyCodexSpecialist, '请使用 $tavern-card-builder。', '旧 Codex standalone 安装缺少专用 Skill 时必须回退 builder');
 assert.equal(tavernWeaveRoutingHarness.weaveArray, '/tavernweave-agent-skills:sillytavern-card-components', 'TavernWeave 阵列必须使用 Claude 插件命名空间');
 assert.equal(tavernWeaveRoutingHarness.codex, '请使用 $code-quality-workflow。', 'Codex 必须保持 $skill-name 调用');
+assert.equal(tavernWeaveRoutingHarness.thirdPartyClaude, '/my-card-skill', 'Claude 第三方 Skill 必须使用独立 /skill-name 调用');
+assert.equal(tavernWeaveRoutingHarness.thirdPartyCodex, '请使用 $my-card-skill。', 'Codex 第三方 Skill 必须使用 $skill-name 调用');
+const selectedStudioSkillSource = studioSource.slice(
+  studioSource.indexOf('function selectedStudioSkill('),
+  studioSource.indexOf('function skillInvocation'),
+);
+assert.match(selectedStudioSkillSource, /if \(aiSettings\.selectedSkillName\) return studioSkillByName\(selectedName\)/, '用户固定第三方 Skill 时只能精确选择，不得静默回退 TavernWeave');
+const renderStudioSkillSelectionSource = studioSource.slice(
+  studioSource.indexOf('function renderStudioSkillSelection'),
+  studioSource.indexOf('async function selectStudioSkill'),
+);
+assert.match(renderStudioSkillSelectionSource, /const effective = selectedStudioSkill\(\)/, '自动 Skill 状态必须读取实际生效的兼容路由');
+assert.match(renderStudioSkillSelectionSource, /兼容回退/, '目标 Skill 缺失时界面必须披露实际回退而非宣称未加载目标已生效');
+const studioWorkbenchSkillMessagesSource = studioSource.slice(
+  studioSource.indexOf('function studioWorkbenchSkillMessages'),
+  studioSource.indexOf('function directAiTask'),
+);
+assert.match(studioWorkbenchSkillMessagesSource, /const skill = selectedStudioSkill\(skillName\)/, '内置 Agent 必须从用户选择的唯一 Skill 组装提示');
+assert.match(studioWorkbenchSkillMessagesSource, /if \(!skill\?\.text\) return \[\]/, '用户选择的 Skill 不可用时不得注入其他 Skill');
+const skillApiDisclosure = '授权、路径、其他文件与脚本不会上传；只有用户运行内置 Agent / AI 解释时，当前选中 SKILL.md 正文会随该次请求发送到所选 API。';
+assert.match(
+  vibePageSource,
+  /授权、路径、其他文件与脚本不会上传；只有用户运行内置 Agent \/ AI 解释时，当前选中 <code>SKILL\.md<\/code> 正文会随该次请求发送到所选 API。/,
+  '新手 Skill 授权说明必须披露当前 SKILL.md 正文会发送到所选 API',
+);
+assert.ok(studioSource.includes(skillApiDisclosure), '工作台 Skill 就绪状态必须披露当前 SKILL.md 正文会发送到所选 API');
+assert.equal(portalSource.includes('目录内容只驻留本页内存'), false, 'Skill 隐私文案不得继续声称全部目录内容只驻留本页');
+assert.equal(studioSource.includes('目录内容只驻留本页内存'), false, '动态 Skill 状态不得继续声称全部目录内容只驻留本页');
 const refreshKnowledgeSource = studioSource.slice(
   studioSource.indexOf('async function refreshStudioKnowledgeSources'),
   studioSource.indexOf('async function pickStudioKnowledgeSource'),
 );
 assert.match(refreshKnowledgeSource, /roles\.includes\('skill'\)[\s\S]{0,40}studioKnowledgeTask = ''/, 'Skill 源变化必须立即使旧 Wiki 外置任务包失效');
-assert.match(refreshKnowledgeSource, /roles\.includes\('skill'\)[\s\S]{0,40}renderAssistant\(\)/, 'Skill 源切换、失权或扫描失败后必须立即刷新外置任务包');
+assert.match(refreshKnowledgeSource, /roles\.includes\('skill'\)[\s\S]{0,180}renderAssistant\(\)/, 'Skill 源切换、失权或扫描失败后必须立即刷新外置任务包');
 const saveStudioAgentPathsKnowledgeTaskSource = studioSource.slice(
   studioSource.indexOf('async function saveStudioAgentPaths'),
   studioSource.indexOf('function clearStudioKnowledgeDerived'),
@@ -188,6 +298,34 @@ assert.ok(portalSource.includes('<article aria-label="酒馆助手 ScriptTree">'
 assert.ok(studioSource.includes('一次导入一份或多份 ST 世界书 JSON'), '世界书左栏空态不得在渲染后退回单文件文案');
 assert.match(studioSource, /Promise\.all\(files\.map\(parseWorldbookImportFile\)\)/, '多世界书必须先完成整批解析再写入');
 assert.match(studioSource, /type:\s*'worldbook-import'[\s\S]{0,240}files:\s*files\.map/, '多世界书必须只记录一条批次历史并保留文件名');
+const entryTypingPlanStart = studioSource.indexOf('function entryTypingRenderPlan');
+const entryTypingPlanEnd = studioSource.indexOf('\n  function updateEntryNameUi', entryTypingPlanStart);
+assert.ok(entryTypingPlanStart >= 0 && entryTypingPlanEnd > entryTypingPlanStart, '世界书连续输入必须有独立渲染计划');
+const entryTypingRenderPlan = Function(`
+  ${studioSource.slice(entryTypingPlanStart, entryTypingPlanEnd)}
+  return entryTypingRenderPlan;
+`)();
+assert.deepEqual(entryTypingRenderPlan('content', ''), { updateName: false, refreshList: false }, '正文输入不得重建空搜索列表');
+assert.deepEqual(entryTypingRenderPlan('name', ''), { updateName: true, refreshList: false }, '名称输入只应局部更新当前列表项');
+assert.deepEqual(entryTypingRenderPlan('name', 'needle'), { updateName: true, refreshList: true }, '搜索生效时名称输入必须最终重筛');
+assert.equal(entryTypingRenderPlan('keys', ''), null, '非连续输入字段必须保留完整重建路径');
+const entryTypingRefreshSource = studioSource.slice(
+  studioSource.indexOf('function scheduleEntryTypingRefresh'),
+  studioSource.indexOf('\n  function makeTextBlock', entryTypingPlanEnd),
+);
+assert.match(entryTypingRefreshSource, /clearTimeout\(entryTypingRefreshTimer\)[\s\S]*setTimeout\(/, '连续输入派生刷新必须合并');
+assert.match(entryTypingRefreshSource, /if \(refreshList\) renderEntryList\(\)/, '只有必要时才允许连续输入重建列表');
+assert.doesNotMatch(entryTypingRefreshSource, /fillEntryEditor\(\)/, '延迟刷新不得重填编辑器并重置光标');
+for (const call of ['renderEntryValidation', 'renderActivationPreview', 'renderModuleStates', 'renderAssistant']) {
+  assert.ok(entryTypingRefreshSource.includes(`${call}(`), `连续输入结束后必须最终刷新 ${call}`);
+}
+const updateEntryFieldSource = studioSource.slice(
+  studioSource.indexOf('function updateEntryField'),
+  studioSource.indexOf('\n  function duplicateEntry'),
+);
+const entryTypingFastPath = updateEntryFieldSource.slice(0, updateEntryFieldSource.indexOf('\n    renderEntryList();'));
+assert.match(entryTypingFastPath, /markDirty\([\s\S]*if \(typingPlan\)[\s\S]*scheduleEntryTypingRefresh\([\s\S]*return;/, '连续输入必须先进入自动保存再走局部快路径');
+assert.doesNotMatch(entryTypingFastPath, /fillEntryEditor\(\)/, '名称与正文输入不得同步重填编辑器');
 const worldbookFingerprintSource = studioSource.slice(
   studioSource.indexOf('function worldbookFusionFingerprint'),
   studioSource.indexOf('async function parseWorldbookImportFile'),
@@ -432,18 +570,35 @@ assert.doesNotMatch(rolecardImportAnalysisSource, /selectedComponents|project\.s
 assert.match(studioSource, /DB_AI_SETTINGS_KEY = 'studioAi:settings:v1'/);
 assert.match(studioSource, /DB_AIRP_LIBRARY_KEY = 'studioAi:airpLibrary:v1'/);
 const persistedAiSettings = studioSource.slice(
-  studioSource.indexOf('async function persistStudioAiSettings'),
+  studioSource.indexOf('function studioAiSettingsStorageValue'),
   studioSource.indexOf('async function cacheAirpLibraryIfAllowed'),
 );
-assert.match(persistedAiSettings, /version:\s*2/, 'AI 设置必须以 v2 payload 保存多 API 配置');
+assert.match(persistedAiSettings, /version:\s*4/, 'AI 设置必须以 v4 payload 保存服务商预设、多 API、路由与 Skill 选择');
 assert.match(persistedAiSettings, /apiProfiles:/, 'AI 设置必须持久化 API 配置档');
-assert.match(persistedAiSettings, /activeApiId:/, 'AI 设置必须以单一 activeApiId 表示当前启用 API');
+assert.match(persistedAiSettings, /activeApiId:/, 'AI 设置必须保留 activeApiId 兼容镜像');
+assert.match(persistedAiSettings, /routingMode:/, 'AI 设置必须持久化单模型或委派模式');
+assert.match(persistedAiSettings, /enabledApiIds:/, 'AI 设置必须持久化多配置启用范围');
+assert.match(persistedAiSettings, /roleBindings:/, 'AI 设置必须持久化 primary、worker 与 reviewer 绑定');
+assert.match(persistedAiSettings, /selectedSkillName:/, 'AI 设置必须持久化用户选择的第三方 Skill');
 assert.equal(/apiKey|api_key|Authorization/.test(persistedAiSettings), false, 'AI 设置持久化不得包含 API Key');
 assert.equal(/sessionKey/i.test(persistedAiSettings), false, '页面内存 Key Map 不得进入持久化 payload');
 assert.match(studioSource, /const aiApiKey = \$\('\[data-rcs-ai-api-key\]'\)/);
 assert.match(studioSource, /let aiSessionKeys = new Map\(\)/, 'API Key 必须按 API 配置档隔离在页面内存 Map');
-assert.match(studioSource, /aiSessionKeys\.get\([^)]*(?:profile|activeApiId)/, '读取 Key 时必须使用配置档标识');
-assert.match(studioSource, /aiSessionKeys\.set\([^,]*(?:profile|activeApiId)/, '保存 Key 时必须使用配置档标识');
+assert.match(studioSource, /let codingPlanSessionKeys = new Map\(\)/, 'Coding Plan Key 必须使用独立页面内存 Map');
+assert.match(studioSource, /studioAiKeyMap\(profile\)\.get\(profile\.id\)/, '读取 Key 时必须按凭证类别和配置档标识');
+assert.match(studioSource, /studioAiKeyMap\(profile\)\.set\(profile\.id,\s*typedKey\)/, '保存 Key 时必须按凭证类别和配置档标识');
+const activeStudioAiProfileSource = studioSource.slice(
+  studioSource.indexOf('function activeStudioAiProfile'),
+  studioSource.indexOf('function isStudioAiProfileReady'),
+);
+assert.match(activeStudioAiProfileSource, /roleBindings\?\.primary/, '运行时必须只以 primary 绑定选择主模型');
+assert.doesNotMatch(activeStudioAiProfileSource, /activeApiId/, 'activeApiId 只能作为持久化兼容镜像，不得成为静默运行时回退');
+const switchStudioAiCredentialKindSource = studioSource.slice(
+  studioSource.indexOf('function switchStudioAiCredentialKind'),
+  studioSource.indexOf('function switchStudioAiCodingPlanPreset'),
+);
+assert.match(switchStudioAiCredentialKindSource, /codingPlanSessionKeys\.delete\(existing\.id\)/, '从 Coding Plan 切换凭证类型必须销毁旧 Plan Key');
+assert.match(switchStudioAiCredentialKindSource, /aiSessionKeys\.delete\(existing\.id\)/, '从普通 API 切换凭证类型必须销毁旧 API Key');
 assert.match(portalSource, /data-rcs-ai-api-key aria-label="API Key"/, 'API Key 输入框必须拥有独立可访问名称');
 const activateStudioAiProfileSource = studioSource.slice(
   studioSource.indexOf('async function activateStudioAiProfile'),
@@ -453,24 +608,51 @@ assert.match(activateStudioAiProfileSource, /studioAiConnectionFormDirty\(profil
 assert.match(studioSource, /function clearStudioAiSessionKey[\s\S]{0,700}renderStudioAiProfileManager\(\)/, '清除 Key 后必须刷新 API 配置按钮状态');
 assert.match(studioSource, /let aiModelRequestController = null/, '模型列表请求必须受页面生命周期控制');
 assert.match(studioSource, /client\.listModels\(\{ signal: controller\.signal \}\)/);
+const studioAiTransportSource = studioSource.slice(
+  studioSource.indexOf('function studioAiTransportOptions'),
+  studioSource.indexOf('\n  function renderAiModels'),
+);
+assert.match(studioAiTransportSource, /typeof invoke !== 'function'[\s\S]*return \{\}/, 'Web 预览必须保留浏览器 fetch 边界');
+assert.match(studioAiTransportSource, /createDesktopAiFetch\(\{ invoke \}\)/, '正式桌面必须使用受控原生 AI 通道');
+assert.match(studioAiTransportSource, /allowLoopbackHttp:\s*true/, '只有桌面原生 AI 通道可访问回环 HTTP 服务');
+const studioAiConnectionRequestSource = studioSource.slice(
+  studioSource.indexOf('async function runStudioAiConnectionRequest'),
+  studioSource.indexOf('\n  function cancelStudioAiModelRequest'),
+);
+assert.match(studioAiConnectionRequestSource, /kind === 'inference'/);
+assert.match(studioAiConnectionRequestSource, /client\.createChatCompletion\([\s\S]*Reply with OK\./, '测试推理必须发送最小真实生成请求');
+assert.match(studioAiConnectionRequestSource, /client\.listModels\(\{ signal: controller\.signal \}\)/, '刷新模型必须保持独立可选能力');
+assert.doesNotMatch(
+  studioAiConnectionRequestSource.slice(
+    studioAiConnectionRequestSource.indexOf('function testStudioAiInference'),
+  ),
+  /listModels/,
+  '测试推理不得再以模型列表代表连接可用性',
+);
+assert.match(portalSource, /data-rcs-ai-test[^>]*>测试推理连接</, '设置页必须明确测试会执行真实推理');
 assert.match(studioSource, /function closeStudioAiSettings[\s\S]{0,180}cancelStudioAiModelRequest\(\)/);
 assert.match(studioSource, /pagehide[\s\S]{0,360}aiSessionKeys\.clear\(\)[\s\S]{0,120}aiApiKey\.value = ''/, '离页时必须销毁所有配置档的页面内存 Key');
+assert.match(studioSource, /pagehide[\s\S]{0,400}aiSessionKeys\.clear\(\)[\s\S]{0,120}codingPlanSessionKeys\.clear\(\)/, '离页时必须同时销毁普通 Key 与 Coding Plan Key');
 assert.match(studioSource, /pagehide[\s\S]{0,320}cancelStudioAiModelRequest\(\)[\s\S]{0,220}renderStudioAiConnectionSummary\(\)/);
 assert.match(studioSource, /function closeStudioAiSettings[\s\S]{0,420}apiKey\.value = ''/, '关闭设置必须清空 Key 输入节点');
 const loadStudioAiStateSource = studioSource.slice(
   studioSource.indexOf('async function loadStudioAiState'),
-  studioSource.indexOf('async function refreshStudioAiModels'),
+  studioSource.indexOf('function studioAiSettingsErrorDetail'),
 );
 assert.match(loadStudioAiStateSource, /storedSettings\?\.version === 1/, '必须识别旧 v1 AI 设置');
+assert.match(loadStudioAiStateSource, /storedSettings\?\.version === 2/, '必须识别旧 v2 多配置 AI 设置');
+assert.match(loadStudioAiStateSource, /storedSettings\?\.version === 3/, '必须识别当前 v3 路由与 Skill AI 设置');
 assert.match(loadStudioAiStateSource, /storedSettings\.baseUrl/, 'v1 迁移必须保留 Base URL');
 assert.match(loadStudioAiStateSource, /storedSettings\.model/, 'v1 迁移必须保留模型');
-assert.match(loadStudioAiStateSource, /apiProfiles:/, 'v1 连接必须迁移为 API 配置档');
-assert.match(loadStudioAiStateSource, /activeApiId:/, 'v1 连接迁移后必须成为唯一启用 API');
+assert.match(loadStudioAiStateSource, /apiProfiles[:,]/, 'v1 连接必须迁移为 API 配置档');
+assert.match(loadStudioAiStateSource, /activeApiId[:,]/, 'v1 连接迁移后必须成为 primary 兼容启用 API');
+assert.match(loadStudioAiStateSource, /routingMode:\s*'single'/, 'v1/v2 必须迁移为显式单模型路由');
+assert.match(loadStudioAiStateSource, /roleBindings:\s*\{\s*primary:\s*activeApiId,\s*worker:\s*'',\s*reviewer:\s*''\s*\}/, 'v1/v2 必须把 activeApiId 镜像为 primary 且不虚构子角色');
 assert.match(studioSource, /prepareLocalWorkspaceWriteHandle\('cache'\)/, 'AIRP 导入用户手势内必须预授权缓存目录');
 assert.match(studioSource, /unsupportedInChatPrompts/, '直连 AIRP 必须显式报告跳过的 In-Chat 提示');
 assert.match(studioSource, /inspectAirpPreset\(record\.preset/);
 assert.match(studioSource, /content\.textContent = entry\.content/);
-assert.match(studioSource, /assembleAirpPrompt\(record\.preset, \{[\s\S]{0,120}orderCharacterId:/, '直连生成必须使用当前 AIRP 顺序组');
+assert.match(studioSource, /assembleAirpPrompt\(record\?\.preset, \{[\s\S]{0,120}orderCharacterId:/, '启用 AIRP 时直连生成必须使用当前顺序组，未启用时允许基础调用');
 assert.match(studioSource, /let airpSettingsDraft = \{/, 'AIRP 设置必须使用独立草稿，切换预览不能直接改动当前启用预设');
 const saveAirpSettingsSource = studioSource.slice(
   studioSource.indexOf('async function saveAirpSettings'),
@@ -478,6 +660,7 @@ const saveAirpSettingsSource = studioSource.slice(
 );
 assert.match(saveAirpSettingsSource, /persistStudioAiSettings\(\{[\s\S]*selectedAirpId:\s*airpSettingsDraft\.selectedAirpId[\s\S]*airpOrderCharacterId:\s*airpSettingsDraft\.airpOrderCharacterId/, '保存操作必须把 AIRP 草稿作为下一持久化状态');
 assert.match(saveAirpSettingsSource, /await persistStudioAiSettings[\s\S]*aiSettings\s*=\s*persisted/, 'AIRP 必须持久化成功后才提交运行态');
+assert.match(studioSource, /async function disableAirpSettings\(\)[\s\S]{0,500}selectedAirpId:\s*''[\s\S]{0,120}airpOrderCharacterId:\s*''/, 'AIRP 必须可独立停用且不删除预设库');
 assert.match(studioSource, /function discardAirpSettings[\s\S]{0,500}airpSettingsDraft[\s\S]{0,240}aiSettings\.selectedAirpId/, '放弃操作必须从当前启用 AIRP 恢复草稿');
 const generateStudioAiSource = studioSource.slice(
   studioSource.indexOf('async function generateStudioAiCandidate'),
@@ -485,9 +668,10 @@ const generateStudioAiSource = studioSource.slice(
 );
 assert.match(generateStudioAiSource, /activeStudioAiProfile\(\)/, '直连生成必须读取唯一启用的 API 配置档');
 assert.match(generateStudioAiSource, /selectedAirpRecord\(\)/, '直连生成必须读取已提交的 AIRP');
+assert.doesNotMatch(generateStudioAiSource, /!profile\s*\|\|\s*!record\s*\|\|\s*!model/, '未启用 AIRP 不得阻止 API 生成');
 assert.match(generateStudioAiSource, /aiSettings\.airpOrderCharacterId/, '直连生成必须读取已提交的 AIRP 顺序组');
 assert.doesNotMatch(generateStudioAiSource, /airpSettingsDraft/, 'AIRP 草稿不得直接进入生成链路');
-assert.match(generateStudioAiSource, /parseAgentTurnResponse\(completion\.text\)/, '条目生成必须解析白名单 JSON 提案');
+assert.match(generateStudioAiSource, /parseAgentTurnResponse\(completion\.text,\s*\{\s*allowProposal:\s*true\s*\}\)/, '条目生成必须显式开启白名单 JSON 提案解析');
 assert.match(generateStudioAiSource, /text:\s*result\.proposal\.content/, '只有提案 content 可以进入待批准正文');
 assert.doesNotMatch(generateStudioAiSource, /text:\s*completion\.text/, '模型整段回答不得直接成为世界书正文提案');
 assert.match(generateStudioAiSource, /updateAgentEvent\(operationEvent\.id/, '提案生成必须结算进行中的操作记录');
@@ -519,6 +703,31 @@ assert.match(sendStudioAgentSource, /baseEstimate = estimateAgentTokens\(baseAss
 assert.match(sendStudioAgentSource, /if \(contextSelection\.blocked\)[\s\S]{0,500}本次内容没有发送/, '超过上下文预算时必须在 API 调用前明确拒绝');
 assert.match(sendStudioAgentSource, /substitutions: reviewOnly[\s\S]{0,100}\{ char: '待审条目', user: '审查者' \}[\s\S]{0,100}project\.card\.name/, '审查回合必须使用固定 substitutions，普通回合才可读取卡名');
 assert.match(sendStudioAgentSource, /if \(reviewOnly\) resetReviewAgentHandoff\(\)/, '审查回合启动后必须消费并清空一次性交接');
+assert.match(sendStudioAgentSource, /if \(aiSettings\.routingMode === 'delegated'\)[\s\S]{0,1500}prepareDelegatedStudioAgentTurn\(/, '委派发送必须只进入 primary 规划阶段');
+
+const prepareDelegatedSource = studioSource.slice(
+  studioSource.indexOf('async function prepareDelegatedStudioAgentTurn'),
+  studioSource.indexOf('async function approveStudioAgentPlan'),
+);
+assert.match(prepareDelegatedSource, /prepareStudioAgentTaskPlan\(/, '第一阶段必须调用纯规划入口');
+assert.doesNotMatch(prepareDelegatedSource, /runApprovedStudioAgentPlan\(/, '批准前不得调用 worker、reviewer 或汇总入口');
+assert.match(prepareDelegatedSource, /status[\s\S]{0,80}pending|state:\s*'pending'/, '规划完成后必须停在待批准状态');
+
+const approveDelegatedSource = studioSource.slice(
+  studioSource.indexOf('async function approveStudioAgentPlan'),
+  studioSource.indexOf('function rejectStudioAgentPlan'),
+);
+assert.match(approveDelegatedSource, /studioAgentPlanIsCurrent\(\)[\s\S]{0,500}return;/, '批准前必须重新核对会话与完整上下文指纹');
+assert.match(approveDelegatedSource, /runApprovedStudioAgentPlan\(/, '只有批准处理器可以进入 worker/reviewer 执行与 primary 汇总');
+assert.match(approveDelegatedSource, /onReceipt:\s*appendStudioAgentReceipt/, '委派执行收据必须进入 Agent 时间线');
+
+const orchestrationBoundarySource = studioSource.slice(
+  studioSource.indexOf('function studioAgentOrchestrationBoundary'),
+  studioSource.indexOf('function createStudioAgentOrchestrationTurn'),
+);
+for (const boundedCapability of ['MCP', 'Shell', 'Git', '文件', 'SillyTavern', '递归']) {
+  assert.ok(orchestrationBoundarySource.includes(boundedCapability), `委派提示缺少安全边界：${boundedCapability}`);
+}
 
 const directAiMarkerValuesSource = studioSource.slice(
   studioSource.indexOf('function directAiMarkerValues'),
@@ -812,7 +1021,7 @@ const requestAgentModeSource = agentModeSource.slice(
 );
 assert.match(requestAgentModeSource, /if \(aiRequestController\)[\s\S]*pendingAgentMode = mode[\s\S]*已排队/, '忙碌时必须只登记待切换模式');
 assert.doesNotMatch(requestAgentModeSource, /\.abort\(|cancelStudioAiRequest/, '选择 Agent 模式不得强制停止当前操作');
-assert.equal((studioSource.match(/settleStudioAiRequest\(controller\);/g) || []).length, 5, '对话、提案、知识解释与摘要续聊必须统一进入结算路径');
+assert.equal((studioSource.match(/settleStudioAiRequest\(controller\);/g) || []).length, 7, '对话、Plan、委派、提案、知识解释与摘要续聊必须统一进入结算路径');
 const settleStudioAiRequestSource = studioSource.slice(
   studioSource.indexOf('function settleStudioAiRequest'),
   studioSource.indexOf('function cancelStudioAiRequest'),
@@ -1491,6 +1700,7 @@ for (const hook of [
   'data-rcs-airp-unreferenced',
   'data-rcs-airp-current-summary',
   'data-rcs-airp-settings-status',
+  'data-rcs-airp-disable',
   'data-rcs-airp-discard',
   'data-rcs-airp-save',
   'class="rcs-agent-dock"',
@@ -1614,7 +1824,11 @@ const reviewAgentContractSource = studioSource.slice(
   studioSource.indexOf('function studioAgentTurnContract'),
   studioSource.indexOf('async function sendStudioAgentMessage'),
 );
-assert.match(reviewAgentContractSource, /snapshot\.route === 'worldbook'[\s\S]*当前模块只允许只读回答，proposal 必须为 null/, '检查页 Agent 回合必须继续保持 proposal:null');
+assert.match(reviewAgentContractSource, /snapshot\.route === 'worldbook'[\s\S]*当前模块只允许只读回答。直接返回给用户的正文，不要使用 JSON/, '非世界书 Agent 回合必须使用纯文本回复');
+assert.match(reviewAgentContractSource, /如确实需要替换当前世界书条目正文[\s\S]*只返回一个 JSON 对象/, '只有世界书提案回合可以要求结构化 JSON');
+assert.match(studioAiSource, /function parseAgentTurnResponse\(value,\s*\{\s*allowProposal\s*=\s*false\s*\}/, 'Agent 解析器必须默认禁止提案');
+assert.match(sendStudioAgentSource, /const proposalAllowed = snapshot\.route === 'worldbook' && snapshot\.entryUid !== null;[\s\S]{0,160}parseAgentTurnResponse\(completion\.text,\s*\{\s*allowProposal:\s*proposalAllowed\s*\}\)/, '普通对话解析器必须由本地世界书现场决定是否接受提案');
+assert.match(studioSource, /const parsed = parseAgentTurnResponse\(completion\.text,\s*\{\s*allowProposal:\s*false\s*\}\);[\s\S]{0,120}studioKnowledgeExplanation = parsed\.reply/, '知识 Wiki 必须按只读模式清理模型格式包裹');
 assert.match(studioSource, /data-rcs-review-tab[\s\S]{0,1400}ArrowLeft[\s\S]{0,100}ArrowRight[\s\S]{0,100}Home[\s\S]{0,100}End/, '审查分类页签必须提供完整键盘导航');
 assert.match(studioSource, /data-rcs-review-list[\s\S]{0,220}closest\('\[data-rcs-review-item\]'\)[\s\S]{0,120}selectReviewItem/, '审查条目列表必须通过事件委托选择条目');
 assert.match(studioSource, /data-rcs-review-agent[^\n]*addEventListener\('click', handoffSelectedReviewItem\)/, 'Agent 审查按钮必须显式接线');
@@ -1746,15 +1960,187 @@ const aiSettingsDialogSource = portalSource.slice(
   portalSource.indexOf('<dialog class="rcs-project-dialog rcs-ai-settings-dialog"'),
   portalSource.indexOf('</dialog>', portalSource.indexOf('<dialog class="rcs-project-dialog rcs-ai-settings-dialog"')),
 );
+const aiSettingsDialogCss = studioCssSource.match(/\.rcs-project-dialog\.rcs-ai-settings-dialog\s*\{([^}]*)\}/u)?.[1] || '';
+assert.match(aiSettingsDialogCss, /width:\s*1240px/u, '设置窗口桌面宽度必须固定，切换 Tab 不得改变外框');
+assert.match(aiSettingsDialogCss, /height:\s*780px/u, '设置窗口桌面高度必须固定，切换 Tab 不得改变外框');
+assert.match(aiSettingsDialogCss, /max-width:\s*calc\(100vw - 40px\)/u, '设置窗口必须按可用视口简单收缩');
+assert.match(aiSettingsDialogCss, /max-height:\s*calc\(100dvh - 40px\)/u, '设置窗口必须按可用视口高度简单收缩');
 const assistantPanelSource = portalSource.slice(
   portalSource.indexOf('<section class="rcs-agent-dock"'),
   portalSource.indexOf('<nav class="rcs-mobile-nav"', portalSource.indexOf('<section class="rcs-agent-dock"')),
 );
+assert.match(aiSettingsDialogSource, /服务商预设（可选）/u, '设置页必须明确服务商预设不是必选项');
+assert.match(aiSettingsDialogSource, /AIRP 是可选项/u, '设置页必须明确 AIRP 不是必选项');
 for (const settingsOnlyHook of ['data-rcs-ai-base-url', 'data-rcs-ai-api-key', 'data-rcs-ai-model', 'data-rcs-airp-file']) {
   assert.ok(aiSettingsDialogSource.includes(settingsOnlyHook), `AI 设置弹窗缺少 ${settingsOnlyHook}`);
   assert.equal(assistantPanelSource.includes(settingsOnlyHook), false, `常驻 Agent Dock 不得暴露 ${settingsOnlyHook}`);
   assert.equal(portalSource.match(new RegExp(`${settingsOnlyHook}(?=[\\s>])`, 'g'))?.length, 1, `${settingsOnlyHook} 必须保持唯一`);
 }
+for (const format of [
+  'openai-compatible',
+  'openai-responses',
+  'anthropic-messages',
+  'google-gemini',
+  'cohere-v2',
+  'dashscope-native',
+  'ollama-native',
+]) {
+  assert.match(aiSettingsDialogSource, new RegExp(`<option value="${format}">`), `原生 API 格式下拉缺少 ${format}`);
+}
+assert.match(aiSettingsDialogSource, /<span>原生 API 格式<\/span><select data-rcs-ai-api-format>/, '原生 API 格式下拉必须使用清晰可见的标签');
+for (const routingHook of [
+  'data-rcs-ai-settings-tab="routing"',
+  'data-rcs-ai-settings-panel="routing"',
+  'data-rcs-ai-routing-mode',
+  'data-rcs-ai-routing-profiles',
+  'data-rcs-ai-role-binding="primary"',
+  'data-rcs-ai-role-binding="worker"',
+  'data-rcs-ai-role-binding="reviewer"',
+]) assert.ok(aiSettingsDialogSource.includes(routingHook), `路由与 Plan 设置缺少 ${routingHook}`);
+for (const credentialHook of [
+  'data-rcs-ai-credential-kind',
+  'value="sessionApiKey"',
+  'value="sessionCodingPlanKey"',
+  'data-rcs-ai-coding-plan-preset',
+  'value="aliyun"',
+  'value="minimax"',
+  'value="glm"',
+  'value="kimi"',
+]) assert.ok(aiSettingsDialogSource.includes(credentialHook), `Coding Plan 接入缺少 ${credentialHook}`);
+for (const mcpHook of [
+  'data-rcs-ai-settings-tab="mcp"',
+  'data-rcs-ai-settings-panel="mcp"',
+  'data-rcs-mcp-native-state',
+  'data-rcs-mcp-server-select',
+  'data-rcs-mcp-executable',
+  'data-rcs-mcp-args',
+  'data-rcs-mcp-cwd',
+  'data-rcs-mcp-env-names',
+  'data-rcs-mcp-env-values',
+  'data-rcs-mcp-operation',
+  'data-rcs-mcp-prepare',
+  'data-rcs-mcp-execute',
+  'data-rcs-mcp-cancel',
+  'data-rcs-mcp-summary-text',
+  'data-rcs-mcp-result-text',
+  'data-rcs-mcp-attach',
+]) assert.ok(aiSettingsDialogSource.includes(mcpHook), `MCP 设置缺少 ${mcpHook}`);
+assert.ok(
+  aiSettingsDialogSource.includes('当前仅支持手动 <code>tools/list</code> 与 <code>tools/call</code> 的 stdio 流程。HTTP / SSE 与模型自动工具循环留待后续版本；Web 预览不能执行本机进程。'),
+  'MCP 设置必须明确当前仅支持手动 stdio，且 Web 预览不可执行',
+);
+assert.ok(
+  aiSettingsDialogSource.includes('启动参数仅本页会话，不会写入 IndexedDB；参数与环境值都需每次会话载入。'),
+  'MCP 设置必须明确启动参数与环境值都只在本页会话载入',
+);
+assert.match(studioMcpSource, /invoke\('desktop_mcp_prepare', \{ request \}\)/, 'MCP prepare 必须使用受限 camelCase 桥参数');
+assert.match(studioMcpSource, /invoke\('desktop_mcp_execute', \{ intentId: id \}\)/, 'MCP execute 必须使用 camelCase intentId');
+assert.match(studioMcpSource, /invoke\('desktop_mcp_cancel', \{ intentId: id \}\)/, 'MCP cancel 必须使用 camelCase intentId');
+assert.match(studioMcpSource, /receipt\.approvedAt[\s\S]*receipt\.immutableDigest/, '原生批准回执必须按 Rust camelCase 字段校验');
+assert.match(studioMcpSource, /Number\.isSafeInteger\(receipt\.approvedAt\)/, '批准时间必须按 Rust u64 毫秒值校验');
+const normalizeMcpServerConfigSource = studioMcpSource.slice(
+  studioMcpSource.indexOf('function normalizeMcpServerConfig'),
+  studioMcpSource.indexOf('function normalizeMcpServerRegistry'),
+);
+assert.doesNotMatch(normalizeMcpServerConfigSource, /\bargs\s*:/, 'MCP 规范化配置不得接纳启动参数');
+const mcpServerStorageSource = studioMcpSource.slice(
+  studioMcpSource.indexOf('function mcpServerStorageValue'),
+  studioMcpSource.indexOf('function normalizeToolArguments'),
+);
+assert.doesNotMatch(mcpServerStorageSource, /\bargs\s*:/, 'MCP IndexedDB 值不得包含启动参数');
+const createMcpPrepareRequestSource = studioMcpSource.slice(
+  studioMcpSource.indexOf('function createMcpPrepareRequest'),
+  studioMcpSource.indexOf('function createDesktopMcpBridge'),
+);
+assert.match(createMcpPrepareRequestSource, /args:\s*normalizeMcpArgs\(args\)/, 'MCP prepare 必须从独立页内参数构造请求');
+
+const renderStudioMcpSource = studioSource.slice(
+  studioSource.indexOf('function renderStudioMcpSettings'),
+  studioSource.indexOf('async function runStudioMcpMutation'),
+);
+assert.match(renderStudioMcpSource, /prepare\.disabled = !desktop/, 'Web 预览必须硬禁用 MCP prepare');
+assert.match(renderStudioMcpSource, /execute\.disabled = !desktop/, 'Web 预览必须硬禁用 MCP execute');
+assert.match(renderStudioMcpSource, /summaryText\.textContent = studioMcpSummaryText/, 'MCP 原生摘要必须只以 textContent 渲染');
+assert.match(renderStudioMcpSource, /resultText\.textContent = studioMcpLastResult/, 'MCP 结果必须只以 textContent 渲染');
+assert.doesNotMatch(renderStudioMcpSource, /innerHTML|insertAdjacentHTML/, 'MCP 摘要与结果不得进入 HTML 解释器');
+
+const prepareStudioMcpSource = studioSource.slice(
+  studioSource.indexOf('async function prepareStudioMcpOperation'),
+  studioSource.indexOf('async function executePreparedStudioMcpOperation'),
+);
+assert.match(prepareStudioMcpSource, /bridge\.prepare\(request\)/, 'MCP 必须先 prepare 并展示原生摘要');
+assert.doesNotMatch(prepareStudioMcpSource, /bridge\.execute/, 'prepare 阶段不得自动执行 MCP');
+const executeStudioMcpSource = studioSource.slice(
+  studioSource.indexOf('async function executePreparedStudioMcpOperation'),
+  studioSource.indexOf('async function cancelStudioMcpOperation'),
+);
+assert.match(executeStudioMcpSource, /bridge\.execute\(intent\.summary\.intentId\)/, '只有显式执行按钮才能提交已准备 intent');
+assert.match(executeStudioMcpSource, /hasNativeApprovalReceipt\(result/, 'MCP 执行结果必须校验原生批准回执');
+
+const mcpSummarySource = studioSource.slice(
+  studioSource.indexOf('function studioMcpSummaryText'),
+  studioSource.indexOf('function renderStudioMcpSettings'),
+);
+for (const summaryField of ['executable', 'args', 'cwd', 'envNames', 'operation', 'tool', 'arguments']) {
+  assert.match(mcpSummarySource, new RegExp(`\\b${summaryField}:`), `MCP 摘要缺少 ${summaryField}`);
+}
+assert.doesNotMatch(mcpSummarySource, /request\.env\b/, 'MCP 摘要不得显示环境值');
+
+const mcpAttachmentSource = studioSource.slice(
+  studioSource.indexOf('function studioMcpAttachmentMessages'),
+  studioSource.indexOf('function clearStudioMcpEphemeralState'),
+);
+assert.match(mcpAttachmentSource, /role: 'user'/, 'MCP 结果附件只能作为 user 上下文');
+assert.doesNotMatch(mcpAttachmentSource, /role: 'system'/, 'MCP 结果附件不得升级为 system 上下文');
+assert.match(studioSource, /if \(mcpAttachmentMessages\.length\) consumeStudioMcpAttachment\(\)/, 'MCP 结果附件必须在下一次已发送请求中一次性消费');
+assert.match(studioSource, /formatMcpResultForContext\(record\.result, \{ maxCharacters: 24_000 \}\)/, 'MCP Agent 附件必须限制为 24k 字符');
+assert.match(studioSource, /window\.addEventListener\('pagehide'[\s\S]{0,420}clearStudioMcpEphemeralState\(\)/, '页面离开必须清除 MCP 环境、intent、结果与附件');
+assert.match(studioSource, /(?:const|let) studioMcpSessionArgs = new Map\(\)/, 'MCP 启动参数必须使用独立的本页 Map');
+assert.match(studioSource, /(?:const|let) studioMcpSessionEnvironments = new Map\(\)/, 'MCP 环境值必须使用独立的本页 Map');
+assert.match(studioSource, /const DB_MCP_SERVERS_KEY = 'studioMcp:servers:v1'/, 'MCP 无密钥配置必须使用独立持久化键');
+const fillStudioMcpServerFormSource = studioSource.slice(
+  studioSource.indexOf('function fillStudioMcpServerForm'),
+  studioSource.indexOf('function studioMcpSummaryText'),
+);
+assert.match(fillStudioMcpServerFormSource, /studioMcpArgs\(server\)/, '选择 MCP 服务时必须从本页 Map 恢复启动参数');
+const loadStudioMcpStateSource = studioSource.slice(
+  studioSource.indexOf('async function loadStudioMcpState'),
+  studioSource.indexOf('async function saveStudioMcpServer'),
+);
+assert.match(loadStudioMcpStateSource, /mcpServerStorageValue\(studioMcpServers\)[\s\S]*idbPut\(normalized, DB_MCP_SERVERS_KEY\)/, '载入旧 MCP 配置时必须回写并移除旧 args');
+const saveStudioMcpServerSource = studioSource.slice(
+  studioSource.indexOf('async function saveStudioMcpServer'),
+  studioSource.indexOf('function startNewStudioMcpServer'),
+);
+assert.match(saveStudioMcpServerSource, /studioMcpSessionArgs\.set\(draft\.id, args\)/, '保存 MCP 服务时参数只能写入本页 Map');
+const deleteStudioMcpServerSource = studioSource.slice(
+  studioSource.indexOf('async function deleteStudioMcpServer'),
+  studioSource.indexOf('function loadStudioMcpSessionEnvironment'),
+);
+assert.match(deleteStudioMcpServerSource, /studioMcpSessionArgs\.delete\(server\.id\)/, '删除 MCP 服务时必须同步清除本页参数');
+const clearStudioMcpEphemeralStateSource = studioSource.slice(
+  studioSource.indexOf('function clearStudioMcpEphemeralState'),
+  studioSource.indexOf('const airpMarkerLabels'),
+);
+assert.match(clearStudioMcpEphemeralStateSource, /studioMcpSessionArgs\.clear\(\)/, '页面离开必须清空 MCP 启动参数');
+const invalidateStudioMcpSource = studioSource.slice(
+  studioSource.indexOf('function invalidateStudioMcpPreparedIntent'),
+  studioSource.indexOf('async function prepareStudioMcpOperation'),
+);
+assert.match(invalidateStudioMcpSource, /clearEnvironment = false/, 'MCP 配置失效必须显式区分是否清除页内环境');
+assert.match(invalidateStudioMcpSource, /studioMcpSessionEnvironments\.delete\(server\.id\)/, 'MCP 配置失效时必须可清除对应页内环境值');
+const closeStudioAiSettingsSource = studioSource.slice(
+  studioSource.indexOf('function closeStudioAiSettings'),
+  studioSource.indexOf('async function runStudioAiSettingsMutation'),
+);
+assert.doesNotMatch(closeStudioAiSettingsSource, /clearStudioMcpEphemeralState|cancelStudioMcpOperation/, '关闭设置弹窗不得暗中取消 MCP intent');
+for (const planHook of [
+  'data-rcs-agent-plan',
+  'data-rcs-agent-plan-tasks',
+  'data-rcs-agent-plan-approve',
+  'data-rcs-agent-plan-reject',
+]) assert.ok(assistantPanelSource.includes(planHook), `Agent 两阶段批准面板缺少 ${planHook}`);
+assert.match(portalSource, /data-rcs-agent-skill-select/, 'Agent 上下文必须提供第三方主 Skill 下拉选择');
 assert.equal(portalSource.includes('data-rcs-airp-select'), false, '旧 AIRP 下拉框不得残留');
 
 for (const cardFieldMapping of [

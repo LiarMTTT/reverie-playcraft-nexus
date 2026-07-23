@@ -3,6 +3,8 @@
 
   const STORAGE_KEY = 'rolecard-portal-v0.3';
   const validRoutes = new Set(['guide', 'vibe', 'play', 'studio', 'workshop']);
+  const startPages = new Set(['last', 'guide', 'studio', 'play', 'workshop']);
+  const uiScales = new Set([0.9, 1, 1.1]);
   const routeTitles = {
     guide: '制卡指南 · Reverie Playcraft Nexus',
     vibe: 'Vibe Coding 新手避坑 · Reverie Playcraft Nexus',
@@ -10,7 +12,6 @@
     studio: '制卡工作台 · Reverie Playcraft Nexus',
     workshop: '创意工坊 · Reverie Playcraft Nexus',
   };
-
   const platformLabels = {
     claude: 'Claude Code',
     codex: 'Codex',
@@ -108,9 +109,21 @@
         platform: ['claude', 'codex'].includes(saved.platform) ? saved.platform : 'claude',
         mode: ['new', 'takeover'].includes(saved.mode) ? saved.mode : 'new',
         capability: Object.hasOwn(capabilityProfiles, saved.capability) ? saved.capability : 'novice',
+        startPage: startPages.has(saved.startPage) ? saved.startPage : 'last',
+        lastRoute: validRoutes.has(saved.lastRoute) ? saved.lastRoute : 'guide',
+        uiScale: uiScales.has(Number(saved.uiScale)) ? Number(saved.uiScale) : 1,
+        reduceMotion: Boolean(saved.reduceMotion),
       };
     } catch {
-      return { platform: 'claude', mode: 'new', capability: 'novice' };
+      return {
+        platform: 'claude',
+        mode: 'new',
+        capability: 'novice',
+        startPage: 'last',
+        lastRoute: 'guide',
+        uiScale: 1,
+        reduceMotion: false,
+      };
     }
   }
 
@@ -129,6 +142,26 @@
     toast.classList.add('show');
     window.clearTimeout(toastTimer);
     toastTimer = window.setTimeout(() => toast.classList.remove('show'), 3600);
+  }
+
+  function setPreferenceStatus(message) {
+    const status = $('[data-rpn-preferences-status]');
+    if (status) status.textContent = message;
+  }
+
+  function applyPreferences() {
+    document.documentElement.style.setProperty('--rpn-ui-scale', String(state.uiScale));
+    document.documentElement.dataset.rpnReduceMotion = String(state.reduceMotion);
+    const startPage = $('[data-rpn-start-page]');
+    const uiScale = $('[data-rpn-ui-scale]');
+    const reduceMotion = $('[data-rpn-reduce-motion]');
+    if (startPage) startPage.value = state.startPage;
+    if (uiScale) uiScale.value = String(state.uiScale);
+    if (reduceMotion) reduceMotion.checked = state.reduceMotion;
+  }
+
+  function requestUnifiedSettings(tab = 'general', trigger = document.activeElement) {
+    window.dispatchEvent(new CustomEvent('rpn:open-settings', { detail: { tab, trigger } }));
   }
 
   function desktopInvoke(command, args) {
@@ -190,12 +223,15 @@
     const controls = $('[data-desktop-controls]');
     controls.hidden = false;
     controls.querySelectorAll('button').forEach((button) => { button.disabled = installing; });
+    $$('[data-desktop-only]').forEach((element) => { element.hidden = false; });
 
     const stUrl = $('[data-desktop-st-url]');
     if (document.activeElement !== stUrl) stUrl.value = desktopState.stUrl;
     stUrl.disabled = installing;
     $('[data-desktop-st-state]').textContent = desktopState.stUrl ? '已配置' : '尚未配置';
     $('[data-desktop-current-version]').textContent = update.currentVersion || desktopState.appVersion || '—';
+    $('[data-desktop-installed-version]').textContent = update.currentVersion || desktopState.appVersion || '—';
+    $('[data-desktop-data-root]').textContent = desktopState.dataRoot || '应用永久数据区';
     $('[data-desktop-available-version]').textContent = update.version || (['up-to-date', 'up_to_date', 'upToDate'].includes(update.phase) ? '已是最新' : '尚未检查');
     $('[data-desktop-update-version]').textContent = update.version ? `v${update.version}` : '当前版本';
     const notes = $('[data-desktop-update-notes]');
@@ -249,20 +285,8 @@
   }
 
   function openDesktopDialog() {
-    const dialog = $('[data-desktop-dialog]');
-    if (!dialog.open) {
-      if (typeof dialog.showModal === 'function') dialog.showModal();
-      else dialog.setAttribute('open', '');
-    }
     renderDesktopState();
-    requestAnimationFrame(() => $('[data-desktop-st-url]')?.focus());
-  }
-
-  function closeDesktopDialog() {
-    const dialog = $('[data-desktop-dialog]');
-    if (!dialog.open) return;
-    if (typeof dialog.close === 'function') dialog.close();
-    else dialog.removeAttribute('open');
+    requestUnifiedSettings('desktop');
   }
 
   async function saveDesktopStUrl() {
@@ -287,13 +311,8 @@
     renderDesktopState();
     window.addEventListener('rpn:desktop-state', (event) => applyDesktopState(event.detail));
     window.addEventListener('rpn:desktop-open-settings', openDesktopDialog);
-    $('[data-desktop-settings-open]').addEventListener('click', openDesktopDialog);
     $('[data-desktop-open-st]').addEventListener('click', () => {
       runDesktopCommand('desktop_open_st', undefined, '[data-desktop-st-status]');
-    });
-    $$('[data-desktop-dialog-close]').forEach((button) => button.addEventListener('click', closeDesktopDialog));
-    $('[data-desktop-dialog]').addEventListener('click', (event) => {
-      if (event.target === event.currentTarget) closeDesktopDialog();
     });
     $('[data-desktop-save-st-url]').addEventListener('click', () => { saveDesktopStUrl(); });
     $('[data-desktop-dialog-open-st]').addEventListener('click', () => { openDesktopStFromDialog(); });
@@ -314,13 +333,18 @@
 
   function getRoute() {
     const route = location.hash.replace(/^#/, '').split(/[?&/]/)[0];
-    return validRoutes.has(route) ? route : 'guide';
+    if (validRoutes.has(route)) return route;
+    return state.startPage === 'last' ? state.lastRoute : state.startPage;
   }
 
   function renderRoute() {
     const route = getRoute();
     const routeChanged = activeRoute !== null && activeRoute !== route;
     activeRoute = route;
+    if (state.lastRoute !== route) {
+      state.lastRoute = route;
+      saveState();
+    }
 
     $$('[data-page]').forEach((page) => {
       page.hidden = page.dataset.page !== route;
@@ -553,6 +577,34 @@
 
   function bindEvents() {
     window.addEventListener('hashchange', renderRoute);
+    $$('[data-app-settings-open]').forEach((button) => button.addEventListener('click', () => {
+      requestUnifiedSettings(button.dataset.appSettingsOpen || 'general', button);
+    }));
+
+    $('[data-rpn-start-page]')?.addEventListener('change', (event) => {
+      state.startPage = startPages.has(event.currentTarget.value) ? event.currentTarget.value : 'last';
+      saveState();
+      setPreferenceStatus('启动页面偏好已保存。');
+    });
+    $('[data-rpn-ui-scale]')?.addEventListener('change', (event) => {
+      const next = Number(event.currentTarget.value);
+      state.uiScale = uiScales.has(next) ? next : 1;
+      saveState();
+      applyPreferences();
+      setPreferenceStatus(`界面缩放已设为 ${Math.round(state.uiScale * 100)}%。`);
+    });
+    $('[data-rpn-reduce-motion]')?.addEventListener('change', (event) => {
+      state.reduceMotion = event.currentTarget.checked;
+      saveState();
+      applyPreferences();
+      setPreferenceStatus(state.reduceMotion ? '已减少非必要动画。' : '已恢复标准动画。');
+    });
+    $('[data-rpn-preferences-reset]')?.addEventListener('click', () => {
+      state = { ...state, startPage: 'last', uiScale: 1, reduceMotion: false };
+      saveState();
+      applyPreferences();
+      setPreferenceStatus('通用偏好已恢复默认。');
+    });
 
     $('.skip-link')?.addEventListener('click', (event) => {
       event.preventDefault();
@@ -573,7 +625,7 @@
       button.addEventListener('click', () => {
         setMode(button.dataset.modeJump);
         $('#starter').scrollIntoView({
-          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          behavior: state.reduceMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
           block: 'start',
         });
       });
@@ -588,12 +640,13 @@
   }
 
   function init() {
+    applyPreferences();
     setCapability(state.capability, false);
     setPlatform(state.platform, false);
     setMode(state.mode, false);
     bindEvents();
     bindDesktopBridge();
-    renderRoute();
+    void renderRoute();
   }
 
   init();

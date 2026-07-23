@@ -1368,5 +1368,28 @@ if (root) {
     maybeLoadCloud();
   }
 
-  init();
+  const workshopStudioRoutes = new Set(['remix', 'discover', 'local', 'mine', 'publish']);
+  let workshopStudioInitialized = false;
+
+  function currentPortalRoute() {
+    return location.hash.replace(/^#/, '').split(/[/?&]/)[0]
+      || document.body.dataset.route
+      || 'guide';
+  }
+
+  function currentStudioRoute() {
+    return location.hash.replace(/^#/, '').split(/[/?&]/)[1] || '';
+  }
+
+  function activateWorkshopStudio(route = currentPortalRoute()) {
+    if (route !== 'studio' || !workshopStudioRoutes.has(currentStudioRoute()) || workshopStudioInitialized) return;
+    workshopStudioInitialized = true;
+    init();
+  }
+
+  window.addEventListener('portal:routechange', (event) => {
+    activateWorkshopStudio(event.detail?.route);
+  });
+
+  activateWorkshopStudio();
 }

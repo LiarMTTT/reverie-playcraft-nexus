@@ -14,6 +14,11 @@
     "allow-desktop-check-update",
     "allow-desktop-download-update",
     "allow-desktop-install-update",
-    "allow-desktop-rpn-flush-complete"
+    "allow-desktop-rpn-flush-complete",
+    "allow-desktop-ai-request",
+    "allow-desktop-ai-cancel",
+    "allow-desktop-mcp-prepare",
+    "allow-desktop-mcp-execute",
+    "allow-desktop-mcp-cancel"
   ]
 }

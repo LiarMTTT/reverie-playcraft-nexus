@@ -1,5 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ST">
-  <rect width="64" height="64" rx="15" fill="#0f172a"/>
-  <rect x="3" y="3" width="58" height="58" rx="12" fill="none" stroke="#4ade80" stroke-width="3"/>
-  <path d="M15 21h16v6H21v5h9v6h-9v5h10v6H15V21Zm20 0h18v6h-6v22h-6V27h-6v-6Z" fill="#f8fafc"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="RPN">
+  <title id="rpn-logo-title">Reverie Playcraft Nexus</title>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="#08111f"/>
+  <path
+    fill="#f8fafc"
+    d="M88 388V153h95c64 0 99 32 99 82 0 38-21 65-54 77l75 76h-66l-67-67h-22v67H88Zm60-181v61h37c25 0 38-10 38-31 0-20-13-30-38-30h-37Z"
+  />
+  <path
+    fill="#f8fafc"
+    d="M299 388V215h57l63 96V153h56v235h-56l-64-98v98h-56Z"
+  />
+  <path
+    fill="#4ade80"
+    d="M189 126h121c68 0 106 36 106 93s-39 93-106 93h-35v98l-56-56V254h87c32 0 50-13 50-35 0-23-18-35-50-35h-59l-58-58Z"
+  />
 </svg>

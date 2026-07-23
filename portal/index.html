@@ -7,11 +7,11 @@
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
   <meta name="description" content="Reverie Playcraft Nexus：连接制卡指南、前端组件预览、一站式制卡工作台与创意工坊。">
   <title>Reverie Playcraft Nexus</title>
-  <link rel="stylesheet" href="./assets/portal.css?v=0722m4c1">
-  <link rel="stylesheet" href="./assets/component-preview.css?v=0722m4c2">
-  <link rel="stylesheet" href="./assets/card-studio.css?v=0722m4c1">
-  <link rel="stylesheet" href="./assets/workshop-studio.css?v=0722m4c1">
-  <link rel="stylesheet" href="./assets/component-workshop.css?v=0722m4c1">
+  <link rel="stylesheet" href="./assets/portal.css?v=0723m7a1">
+  <link rel="stylesheet" href="./assets/component-preview.css?v=0723m6p1">
+  <link rel="stylesheet" href="./assets/card-studio.css?v=0723m8a1">
+  <link rel="stylesheet" href="./assets/workshop-studio.css?v=0723m6p1">
+  <link rel="stylesheet" href="./assets/component-workshop.css?v=0723m6p1">
 </head>
 <body>
   <a class="skip-link" href="#page-content">跳到主要内容</a>
@@ -31,9 +31,12 @@
     <div class="header-actions">
       <div class="desktop-controls" data-desktop-controls aria-label="桌面程序" hidden>
         <button type="button" data-desktop-open-st>本机 ST</button>
-        <button type="button" data-desktop-settings-open aria-haspopup="dialog">桌面</button>
       </div>
-      <span class="version-pill">RPN v0.17.0</span>
+      <button class="app-settings-button" type="button" data-app-settings-open="general" aria-haspopup="dialog" aria-controls="rcs-settings-dialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19.1 13.5a7.6 7.6 0 0 0 0-3l2-1.55-2-3.46-2.48 1a8.5 8.5 0 0 0-2.6-1.5L13.68 2h-4l-.34 2.99a8.5 8.5 0 0 0-2.6 1.5l-2.48-1-2 3.46 2 1.55a7.6 7.6 0 0 0 0 3l-2 1.55 2 3.46 2.48-1a8.5 8.5 0 0 0 2.6 1.5L9.68 22h4l.34-2.99a8.5 8.5 0 0 0 2.6-1.5l2.48 1 2-3.46-2-1.55Z"/></svg>
+        <span>设置</span>
+      </button>
+      <span class="version-pill">RPN v0.19.2</span>
     </div>
   </header>
 
@@ -404,13 +407,13 @@
                   <ol>
                     <li>更新时把同一仓库链接交给 Agent，并要求“把已安装的 TavernWeave 更新到最新版本”。</li>
                     <li>更新完成后同样新建任务或会话；不要在旧上下文里假设新 Skill 已加载。</li>
-                    <li>如需内置 Agent 读取规范，可在工作台选择 TavernWeave 仓库根或其 <code>skills</code> 目录；RPN 只读 <code>SKILL.md</code>，不会安装或改写仓库。</li>
+                    <li>如需内置 Agent 读取规范，可在工作台选择 TavernWeave 仓库根或其 <code>skills</code> 目录；RPN 不会安装或改写仓库，但运行内置 Agent / AI 解释时会把当前选中的 <code>SKILL.md</code> 正文发送到所选 API。</li>
                   </ol>
                 </details>
               </div>
               <ol class="vibe-install-steps">
                 <li><span>安装</span><p>把 TavernWeave 作为一个插件阵列安装；不要把 9 个 Skill 拆成互相漂移的手工副本。</p></li>
-                <li><span>授权</span><p>工作台可选择 TavernWeave 仓库根、其 <code>skills</code> 目录和开发指南 DB。目录授权只是本机只读访问，不会上传文件。</p></li>
+                <li><span>授权</span><p>工作台可选择 TavernWeave 仓库根、其 <code>skills</code> 目录和开发指南 DB。授权、路径、其他文件与脚本不会上传；只有用户运行内置 Agent / AI 解释时，当前选中 <code>SKILL.md</code> 正文会随该次请求发送到所选 API。</p></li>
                 <li><span>路由</span><p>每次只加载当前模块对应的一个主 Skill；精确 API、真实 ST、发布与 UI 分别交给专用 Skill，避免把全阵列塞进上下文。</p></li>
                 <li><span>停用</span><p>按 Codex 插件管理或 TavernWeave 当前 README 操作；撤销 RPN 目录授权不会卸载插件或删除磁盘原文件。</p></li>
               </ol>
@@ -842,7 +845,7 @@
                   <div>
                     <p class="eyebrow">本机文件</p>
                     <h3 id="rcs-local-folders-title">工作区、缓存与产出目录</h3>
-                    <p>目录只在你的浏览器中授权，不会上传。未授权时继续使用浏览器自动保存与下载。</p>
+                    <p>目录授权与路径不会上传；未授权时继续使用浏览器自动保存与下载。只有运行内置 Agent / AI 解释时，当前选中 <code>SKILL.md</code> 正文会随该次请求发送到所选 API。</p>
                   </div>
                   <div class="rcs-heading-actions">
                     <button class="rcs-button primary" type="button" data-rcs-folders-checkpoint disabled>写入工作区检查点</button>
@@ -892,7 +895,7 @@
                       <article data-rcs-knowledge-source-card="skill">
                         <span>只读 · TavernWeave / Skill 源</span>
                         <strong data-rcs-knowledge-source-name="skill">未授权</strong>
-                        <p data-rcs-knowledge-source-detail="skill">可选择 TavernWeave 仓库根、skills 目录或单个旧 Skill；工作台只读取入口 SKILL.md。</p>
+                        <p data-rcs-knowledge-source-detail="skill">可选择 TavernWeave 仓库根、skills 目录或单个旧 Skill；运行内置 Agent / AI 解释时，当前选中 SKILL.md 正文会发送到所选 API。</p>
                         <button class="rcs-button ghost wide" type="button" data-rcs-knowledge-source-pick="skill">选择 TavernWeave / Skill</button>
                       </article>
                       <article data-rcs-knowledge-source-card="guideDb">
@@ -901,6 +904,12 @@
                         <p data-rcs-knowledge-source-detail="guideDb">只索引根目录 Markdown；不会读取脚本、压缩包或本地证据子目录。</p>
                         <button class="rcs-button ghost wide" type="button" data-rcs-knowledge-source-pick="guideDb">选择开发指南 DB</button>
                       </article>
+                    </div>
+                    <div class="rcs-agent-skill-selection">
+                      <label><span>本轮主 Skill</span><select data-rcs-agent-skill-select>
+                        <option value="">自动：按当前模块选择 TavernWeave Skill</option>
+                      </select></label>
+                      <p data-rcs-agent-skill-selection-detail>未固定 Skill；当前模块会使用兼容路由。</p>
                     </div>
                     <p class="rcs-folder-status" data-rcs-agent-context-status role="status" aria-live="polite">尚未授权 Skill 或开发指南 DB。</p>
                   </div>
@@ -2070,28 +2079,72 @@
             <footer><span data-rcs-builder-preview-boundary>独立预览只运行固定沙盒文档；不会写入 SillyTavern 或替代真机验收。</span><button class="rcs-button ghost" type="button" data-rcs-builder-preview-download>下载当前 HTML</button></footer>
           </dialog>
 
-          <dialog class="rcs-project-dialog rcs-ai-settings-dialog" data-rcs-ai-settings-dialog aria-labelledby="rcs-ai-settings-title" aria-describedby="rcs-ai-settings-description">
+          <dialog class="rcs-project-dialog rcs-ai-settings-dialog" id="rcs-settings-dialog" data-rcs-ai-settings-dialog aria-labelledby="rcs-ai-settings-title" aria-describedby="rcs-ai-settings-description">
             <div class="rcs-project-dialog-panel rcs-ai-settings-dialog-panel">
               <header class="rcs-project-dialog-head">
                 <div>
-                  <span>Agent 设置</span>
-                  <h2 id="rcs-ai-settings-title">连接、预设与会话存储</h2>
-                  <p id="rcs-ai-settings-description">连接、AIRP 与本机会话集中管理；API Key 仍仅在本次页面会话中使用。</p>
+                  <span>RPN 设置中心</span>
+                  <h2 id="rcs-ai-settings-title">应用、模型、Agent、存储与桌面集成</h2>
+                  <p id="rcs-ai-settings-description">常用偏好和模型服务统一分类管理；API Key、Coding Plan Key、MCP 启动参数与环境值仍仅在本次页面会话中使用。</p>
                 </div>
-                <button class="rcs-icon-button" type="button" data-rcs-ai-settings-close aria-label="关闭 Agent 设置">关闭</button>
+                <button class="rcs-icon-button" type="button" data-rcs-ai-settings-close aria-label="关闭设置">关闭</button>
               </header>
 
               <div class="rcs-ai-settings-body">
-                <div class="rcs-ai-settings-tabs" role="tablist" aria-label="Agent 设置分类">
-                  <button id="rcs-ai-settings-connection-tab" type="button" role="tab" aria-selected="true" aria-controls="rcs-ai-settings-connection" data-rcs-ai-settings-tab="connection">API 接入</button>
+                <div class="rcs-ai-settings-tabs" role="tablist" aria-label="设置分类" aria-orientation="vertical">
+                  <span class="rcs-settings-tab-group">应用</span>
+                  <button id="rcs-ai-settings-general-tab" type="button" role="tab" aria-selected="true" aria-controls="rcs-ai-settings-general" data-rcs-ai-settings-tab="general">通用</button>
+                  <span class="rcs-settings-tab-group">模型与 Agent</span>
+                  <button id="rcs-ai-settings-connection-tab" type="button" role="tab" aria-selected="false" aria-controls="rcs-ai-settings-connection" data-rcs-ai-settings-tab="connection">模型服务</button>
+                  <button id="rcs-ai-settings-routing-tab" type="button" role="tab" aria-selected="false" aria-controls="rcs-ai-settings-routing" data-rcs-ai-settings-tab="routing">路由与 Plan</button>
+                  <button id="rcs-ai-settings-mcp-tab" type="button" role="tab" aria-selected="false" aria-controls="rcs-ai-settings-mcp" data-rcs-ai-settings-tab="mcp">MCP 服务</button>
                   <button id="rcs-ai-settings-airp-tab" type="button" role="tab" aria-selected="false" aria-controls="rcs-ai-settings-airp" data-rcs-ai-settings-tab="airp">AIRP 预设</button>
+                  <span class="rcs-settings-tab-group">数据与程序</span>
                   <button id="rcs-ai-settings-storage-tab" type="button" role="tab" aria-selected="false" aria-controls="rcs-ai-settings-storage" data-rcs-ai-settings-tab="storage">会话与存储</button>
+                  <button id="rcs-ai-settings-desktop-tab" type="button" role="tab" aria-selected="false" aria-controls="rcs-ai-settings-desktop" data-rcs-ai-settings-tab="desktop" data-desktop-only hidden>桌面程序</button>
+                  <button id="rcs-ai-settings-about-tab" type="button" role="tab" aria-selected="false" aria-controls="rcs-ai-settings-about" data-rcs-ai-settings-tab="about">关于</button>
                 </div>
 
-                <section class="rcs-ai-settings-panel rcs-ai-connection-panel" id="rcs-ai-settings-connection" role="tabpanel" data-rcs-ai-settings-panel="connection" aria-labelledby="rcs-ai-settings-connection-tab">
+                <section class="rcs-ai-settings-panel rcs-general-settings-panel" id="rcs-ai-settings-general" role="tabpanel" data-rcs-ai-settings-panel="general" aria-labelledby="rcs-ai-settings-general-tab">
                   <header class="rcs-ai-settings-panel-head">
-                    <div><span>OpenAI 兼容接口</span><h3>API 配置档与模型连接</h3></div>
-                    <p>可保存多个 API 配置档，但同一时间只能启用一个；Key 只在本次页面会话中使用。</p>
+                    <div><span>常用偏好</span><h3>启动、界面与交互</h3></div>
+                    <p>这些设置保存在当前浏览器或桌面程序的本地数据中，可随时恢复默认。</p>
+                  </header>
+                  <div class="rcs-settings-overview-grid">
+                    <section class="rcs-ai-settings-card">
+                      <div class="rcs-ai-settings-card-head"><h4>启动与显示</h4><span>立即生效</span></div>
+                      <label><span>启动页面</span><select data-rpn-start-page>
+                        <option value="last">上次使用的页面</option>
+                        <option value="guide">制卡指南</option>
+                        <option value="studio">制卡工作台</option>
+                        <option value="play">前端组件预览</option>
+                        <option value="workshop">创意工坊</option>
+                      </select></label>
+                      <label><span>界面缩放</span><select data-rpn-ui-scale>
+                        <option value="0.9">紧凑 · 90%</option>
+                        <option value="1">标准 · 100%</option>
+                        <option value="1.1">宽松 · 110%</option>
+                      </select></label>
+                      <label class="rcs-settings-check"><input type="checkbox" data-rpn-reduce-motion><span><strong>减少动画</strong><small>关闭非必要过渡和滚动动画。</small></span></label>
+                      <button class="rcs-button ghost" type="button" data-rpn-preferences-reset>恢复通用默认值</button>
+                    </section>
+                    <section class="rcs-ai-settings-card">
+                      <div class="rcs-ai-settings-card-head"><h4>数据与安全</h4><span>默认保护</span></div>
+                      <dl class="rcs-settings-facts">
+                        <div><dt>工作区</dt><dd>自动保存到本机</dd></div>
+                        <div><dt>API Key</dt><dd>仅当前页面会话</dd></div>
+                        <div><dt>Agent 执行</dt><dd>计划批准后才执行</dd></div>
+                        <div><dt>ST 写入</dt><dd>内置预览始终禁止</dd></div>
+                      </dl>
+                    </section>
+                  </div>
+                  <footer class="rcs-ai-settings-actions"><p data-rpn-preferences-status role="status" aria-live="polite">通用偏好已载入。</p></footer>
+                </section>
+
+                <section class="rcs-ai-settings-panel rcs-ai-connection-panel" id="rcs-ai-settings-connection" role="tabpanel" data-rcs-ai-settings-panel="connection" aria-labelledby="rcs-ai-settings-connection-tab" hidden>
+                  <header class="rcs-ai-settings-panel-head">
+                    <div><span>原生多协议 API</span><h3>API 配置档与模型连接</h3></div>
+                    <p>可保存多个原生 API 配置档，并在“路由与 Plan”中启用和分配角色；Key 只在本次页面会话中使用。</p>
                   </header>
 
                   <section class="rcs-ai-profile-manager" aria-labelledby="rcs-ai-profile-manager-title">
@@ -2105,7 +2158,7 @@
                       <div class="rcs-ai-profile-actions" aria-label="API 配置档操作">
                         <button class="rcs-button ghost" type="button" data-rcs-ai-profile-new>新建配置</button>
                         <button class="rcs-button ghost danger" type="button" data-rcs-ai-profile-delete disabled>删除配置</button>
-                        <button class="rcs-button primary" type="button" data-rcs-ai-profile-activate disabled>设为当前启用</button>
+                        <button class="rcs-button primary" type="button" data-rcs-ai-profile-activate disabled>设为 primary</button>
                         <button class="rcs-button ghost" type="button" data-rcs-ai-profile-disable disabled>停用直连</button>
                       </div>
                     </div>
@@ -2113,15 +2166,45 @@
 
                   <div class="rcs-ai-connection-grid">
                     <section class="rcs-ai-settings-card" aria-labelledby="rcs-ai-endpoint-title">
-                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-ai-endpoint-title">服务与凭证</h4><span data-rcs-ai-credential-state>本次页面未载入 Key</span></div>
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-ai-endpoint-title">服务与凭证</h4><span data-rcs-ai-format-state>OpenAI Compatible</span></div>
+                      <label><span>服务商预设（可选）</span><select data-rcs-ai-provider-preset></select></label>
+                      <div class="rcs-ai-model-row">
+                        <label><span>原生 API 格式</span><select data-rcs-ai-api-format>
+                          <option value="openai-compatible">OpenAI Compatible</option>
+                          <option value="openai-responses">OpenAI Responses</option>
+                          <option value="anthropic-messages">Anthropic Messages</option>
+                          <option value="google-gemini">Google Gemini</option>
+                          <option value="cohere-v2">Cohere v2</option>
+                          <option value="dashscope-native">DashScope 原生</option>
+                          <option value="ollama-native">Ollama Native</option>
+                        </select></label>
+                        <label><span>网络路径</span><select data-rcs-ai-network-mode>
+                          <option value="direct">直连</option>
+                          <option value="systemProxy">使用系统代理</option>
+                        </select></label>
+                      </div>
+                      <div class="rcs-ai-model-row">
+                        <label><span>凭证类型</span><select data-rcs-ai-credential-kind>
+                          <option value="sessionApiKey">按量 API Key</option>
+                          <option value="sessionCodingPlanKey">Coding Plan Key</option>
+                        </select></label>
+                        <label data-rcs-ai-coding-plan-field hidden><span>Coding Plan 预设</span><select data-rcs-ai-coding-plan-preset>
+                          <option value="">自定义 / 手动配置</option>
+                          <option value="aliyun">阿里云百炼 Coding Plan</option>
+                          <option value="minimax">MiniMax Token Plan</option>
+                          <option value="glm">智谱 GLM Coding Plan</option>
+                          <option value="kimi">Kimi Code</option>
+                        </select></label>
+                      </div>
                       <label><span>Base URL</span><input type="url" data-rcs-ai-base-url placeholder="https://api.example.com/v1" spellcheck="false" autocomplete="off"></label>
                       <div class="rcs-ai-key-field">
-                        <label for="rcs-ai-api-key"><span>API Key</span></label>
+                        <label for="rcs-ai-api-key"><span data-rcs-ai-key-label>API Key</span><small data-rcs-ai-credential-state>本次页面未载入 Key</small></label>
                         <div class="rcs-ai-key-row">
                           <input id="rcs-ai-api-key" type="password" data-rcs-ai-api-key aria-label="API Key" placeholder="无需鉴权的本地服务可留空" spellcheck="false" autocomplete="off">
                           <button class="rcs-button ghost" type="button" data-rcs-ai-key-reveal aria-pressed="false">显示</button>
                           <button class="rcs-button ghost" type="button" data-rcs-ai-key-clear>清除</button>
                         </div>
+                        <p class="rcs-ai-provider-help" data-rcs-ai-auth-help>使用 Authorization: Bearer &lt;API Key&gt;；本地免鉴权服务可留空。</p>
                       </div>
                     </section>
 
@@ -2133,7 +2216,7 @@
                       </div>
                       <div class="rcs-ai-inline-actions">
                         <button class="rcs-button ghost" type="button" data-rcs-ai-refresh-models>刷新模型</button>
-                        <button class="rcs-button ghost" type="button" data-rcs-ai-test>测试连接</button>
+                        <button class="rcs-button ghost" type="button" data-rcs-ai-test title="发送一条极小的真实推理请求，可能产生少量用量">测试推理连接</button>
                       </div>
                     </section>
                   </div>
@@ -2147,12 +2230,135 @@
                   </footer>
                 </section>
 
+                <section class="rcs-ai-settings-panel rcs-ai-routing-panel" id="rcs-ai-settings-routing" role="tabpanel" data-rcs-ai-settings-panel="routing" aria-labelledby="rcs-ai-settings-routing-tab" hidden>
+                  <header class="rcs-ai-settings-panel-head">
+                    <div><span>多 API 路由</span><h3>主模型规划与一级 Sub Agent</h3></div>
+                    <p>委派模式严格分两阶段：primary 先产出计划，只有你批准后才会调用 worker / reviewer。</p>
+                  </header>
+
+                  <div class="rcs-ai-routing-layout">
+                    <section class="rcs-ai-settings-card" aria-labelledby="rcs-ai-routing-mode-title">
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-ai-routing-mode-title">执行模式与启用配置</h4><span>可启用多个配置</span></div>
+                      <label><span>路由模式</span><select data-rcs-ai-routing-mode>
+                        <option value="single">单模型 · 仅 primary</option>
+                        <option value="delegated">委派 · 先 Plan 后执行</option>
+                      </select></label>
+                      <div class="rcs-ai-routing-profiles" data-rcs-ai-routing-profiles aria-label="参与路由的 API 配置">
+                        <p>先在“API 接入”中保存至少一个配置档。</p>
+                      </div>
+                    </section>
+
+                    <section class="rcs-ai-settings-card" aria-labelledby="rcs-ai-routing-roles-title">
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-ai-routing-roles-title">角色绑定</h4><span>无静默回退</span></div>
+                      <label><span>primary · 规划与汇总</span><select data-rcs-ai-role-binding="primary"><option value="">选择 primary</option></select></label>
+                      <label><span>worker · 一级执行</span><select data-rcs-ai-role-binding="worker" disabled><option value="">选择 worker</option></select></label>
+                      <label><span>reviewer · 一级复核</span><select data-rcs-ai-role-binding="reviewer" disabled><option value="">选择 reviewer</option></select></label>
+                      <p class="rcs-ai-routing-warning">Coding Plan 配置可作为 primary，但不能绑定 worker 或 reviewer；CLI OAuth 不会导入、保存或复用。</p>
+                    </section>
+                  </div>
+
+                  <p class="rcs-ai-routing-bounds" data-rcs-ai-routing-bounds role="note">单模型：只调用 primary，保持现有对话与提案批准行为。</p>
+                  <footer class="rcs-ai-settings-actions">
+                    <p data-rcs-ai-routing-status role="status" aria-live="polite">角色绑定只会在点击保存后生效。</p>
+                    <div>
+                      <button class="rcs-button ghost" type="button" data-rcs-ai-routing-reset>撤销未保存修改</button>
+                      <button class="rcs-button primary" type="button" data-rcs-ai-routing-save>保存路由</button>
+                    </div>
+                  </footer>
+                </section>
+
+                <section class="rcs-ai-settings-panel rcs-mcp-settings-panel" id="rcs-ai-settings-mcp" role="tabpanel" data-rcs-ai-settings-panel="mcp" aria-labelledby="rcs-ai-settings-mcp-tab" hidden>
+                  <header class="rcs-ai-settings-panel-head">
+                    <div><span>手动 stdio</span><h3>自定义 MCP 服务与一次性原生批准</h3></div>
+                    <strong class="rcs-mcp-native-state" data-rcs-mcp-native-state data-state="unavailable">Web 预览 · 仅桌面可执行</strong>
+                  </header>
+
+                  <p class="rcs-mcp-boundary" role="note">当前仅支持手动 <code>tools/list</code> 与 <code>tools/call</code> 的 stdio 流程。HTTP / SSE 与模型自动工具循环留待后续版本；Web 预览不能执行本机进程。</p>
+
+                  <section class="rcs-ai-profile-manager" aria-labelledby="rcs-mcp-server-title">
+                    <header class="rcs-ai-profile-manager-head">
+                      <div><span>MCP 服务</span><h4 id="rcs-mcp-server-title">保存无密钥配置，最多 24 个</h4></div>
+                      <strong>参数与环境值不持久化</strong>
+                    </header>
+                    <div class="rcs-mcp-server-controls">
+                      <label><span>服务</span><select data-rcs-mcp-server-select><option value="">尚无 MCP 服务</option></select></label>
+                      <label><span>服务名称</span><input data-rcs-mcp-name maxlength="120" placeholder="例如：本地检索 MCP" spellcheck="false" autocomplete="off"></label>
+                      <div class="rcs-ai-profile-actions" aria-label="MCP 服务配置操作">
+                        <button class="rcs-button ghost" type="button" data-rcs-mcp-new>新建服务</button>
+                        <button class="rcs-button ghost danger" type="button" data-rcs-mcp-delete disabled>删除服务</button>
+                        <button class="rcs-button primary" type="button" data-rcs-mcp-save>保存配置</button>
+                      </div>
+                    </div>
+                  </section>
+
+                  <div class="rcs-mcp-layout">
+                    <section class="rcs-ai-settings-card" aria-labelledby="rcs-mcp-launch-title">
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-mcp-launch-title">启动配置</h4><span>必须使用本机绝对路径</span></div>
+                      <label><span>可执行程序</span><input data-rcs-mcp-executable placeholder="C:\Program Files\nodejs\node.exe" spellcheck="false" autocomplete="off"></label>
+                      <label><span>工作目录</span><input data-rcs-mcp-cwd placeholder="D:\MCP\my-server" spellcheck="false" autocomplete="off"></label>
+                      <label><span>启动参数 · 本页 JSON 字符串数组</span><textarea class="rcs-mcp-code-field" data-rcs-mcp-args rows="4" spellcheck="false">[]</textarea></label>
+                      <p class="rcs-mcp-card-copy">启动参数仅本页会话，不会写入 IndexedDB；参数与环境值都需每次会话载入。秘密应优先放入右侧本页环境值。</p>
+                      <label><span>秘密环境变量名 · JSON 字符串数组</span><textarea class="rcs-mcp-code-field" data-rcs-mcp-env-names rows="3" spellcheck="false">[]</textarea></label>
+                    </section>
+
+                    <section class="rcs-ai-settings-card" aria-labelledby="rcs-mcp-env-title">
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-mcp-env-title">本页环境值</h4><span data-rcs-mcp-env-state data-state="empty">先选择已保存服务</span></div>
+                      <p class="rcs-mcp-card-copy">只在当前页面内存中加载；不会写入 IndexedDB、项目、会话或日志。原生摘要只显示名称与值指纹，名称必须明显属于 Key / Token / Secret / Password / Auth / Credential / Connection / DSN / URL。</p>
+                      <label><span>环境值 · JSON 对象</span><textarea class="rcs-mcp-code-field rcs-mcp-secret-field" data-rcs-mcp-env-values rows="8" placeholder="{&#10;  &quot;MCP_API_KEY&quot;: &quot;仅本页使用&quot;&#10;}" spellcheck="false" autocomplete="off"></textarea></label>
+                      <div class="rcs-ai-inline-actions">
+                        <button class="rcs-button primary" type="button" data-rcs-mcp-env-load disabled>载入本页内存</button>
+                        <button class="rcs-button ghost" type="button" data-rcs-mcp-env-clear disabled>清除本页环境值</button>
+                      </div>
+                    </section>
+                  </div>
+
+                  <div class="rcs-mcp-layout">
+                    <section class="rcs-ai-settings-card" aria-labelledby="rcs-mcp-operation-title">
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-mcp-operation-title">手动操作</h4><span>不会由模型自动触发</span></div>
+                      <label><span>操作</span><select data-rcs-mcp-operation>
+                        <option value="listTools">tools/list · 列出工具</option>
+                        <option value="callTool">tools/call · 调用工具</option>
+                      </select></label>
+                      <div class="rcs-mcp-call-fields" data-rcs-mcp-call-fields hidden>
+                        <label><span>工具名</span><input data-rcs-mcp-tool maxlength="256" placeholder="例如：search" spellcheck="false" autocomplete="off"></label>
+                        <label><span>工具参数 · JSON 对象</span><textarea class="rcs-mcp-code-field" data-rcs-mcp-tool-arguments rows="7" spellcheck="false">{}</textarea></label>
+                      </div>
+                      <div class="rcs-ai-inline-actions">
+                        <button class="rcs-button primary" type="button" data-rcs-mcp-prepare disabled>生成原生执行摘要</button>
+                        <button class="rcs-button ghost danger" type="button" data-rcs-mcp-cancel disabled>取消当前 intent</button>
+                      </div>
+                    </section>
+
+                    <section class="rcs-ai-settings-card rcs-mcp-output-card" aria-labelledby="rcs-mcp-summary-title" data-rcs-mcp-summary hidden>
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-mcp-summary-title">原生执行摘要</h4><span>核对后才可执行</span></div>
+                      <pre data-rcs-mcp-summary-text></pre>
+                      <p class="rcs-mcp-card-copy">摘要包含可执行程序、完整启动参数、工作目录、环境变量名、操作、工具名和受限工具参数，不显示环境值。</p>
+                      <div class="rcs-ai-inline-actions">
+                        <button class="rcs-button primary" type="button" data-rcs-mcp-execute disabled>原生确认并执行</button>
+                      </div>
+                    </section>
+                  </div>
+
+                  <section class="rcs-ai-settings-card rcs-mcp-output-card" aria-labelledby="rcs-mcp-result-title" data-rcs-mcp-result hidden>
+                    <div class="rcs-ai-settings-card-head"><h4 id="rcs-mcp-result-title">MCP 结果 · 不可信数据</h4><span data-rcs-mcp-attachment-state>尚未附加 MCP 结果。</span></div>
+                    <pre data-rcs-mcp-result-text></pre>
+                    <div class="rcs-ai-inline-actions">
+                      <button class="rcs-button primary" type="button" data-rcs-mcp-attach disabled>附加到下一轮 Agent</button>
+                      <button class="rcs-button ghost" type="button" data-rcs-mcp-detach disabled>移除附件</button>
+                    </div>
+                  </section>
+
+                  <footer class="rcs-ai-settings-actions">
+                    <p data-rcs-mcp-status role="status" aria-live="polite">保存服务后，另行载入本页环境值并手动建立一次性 intent。</p>
+                  </footer>
+                </section>
+
                 <section class="rcs-ai-settings-panel rcs-airp-settings-panel" id="rcs-ai-settings-airp" role="tabpanel" data-rcs-ai-settings-panel="airp" aria-labelledby="rcs-ai-settings-airp-tab" hidden>
                   <aside class="rcs-airp-library-pane" aria-labelledby="rcs-airp-library-title">
                     <header>
                       <span>预设库</span>
                       <h3 id="rcs-airp-library-title">SillyTavern AIRP</h3>
-                      <p>导入 “AI Response Configuration” JSON；点击列表仅预览，保存后才会切换当前启用的预设。</p>
+                      <p>AIRP 是可选项。导入 “AI Response Configuration” JSON 后，点击列表仅预览，保存才会启用。</p>
                     </header>
                     <input type="file" accept=".json,application/json" data-rcs-airp-file hidden>
                     <div class="rcs-ai-inline-actions">
@@ -2181,6 +2387,7 @@
                     <footer class="rcs-ai-settings-actions rcs-airp-settings-actions">
                       <p data-rcs-airp-settings-status role="status" aria-live="polite">列表选择与顺序组切换仅供预览；保存后才会替换当前启用的预设。</p>
                       <div>
+                        <button class="rcs-button ghost" type="button" data-rcs-airp-disable disabled>停用 AIRP</button>
                         <button class="rcs-button ghost" type="button" data-rcs-airp-discard disabled>放弃预览</button>
                         <button class="rcs-button primary" type="button" data-rcs-airp-save disabled>保存并启用当前预设</button>
                       </div>
@@ -2241,6 +2448,57 @@
                   <footer class="rcs-ai-settings-actions rcs-agent-storage-footer">
                     <p data-rcs-agent-storage-status role="status" aria-live="polite">本机会话库尚未载入。</p>
                   </footer>
+                </section>
+
+                <section class="rcs-ai-settings-panel rcs-desktop-settings-panel" id="rcs-ai-settings-desktop" role="tabpanel" data-rcs-ai-settings-panel="desktop" aria-labelledby="rcs-ai-settings-desktop-tab" data-desktop-only hidden>
+                  <header class="rcs-ai-settings-panel-head">
+                    <div><span>桌面集成</span><h3>本机 ST 与程序更新</h3></div>
+                    <p>ST 使用独立本机浏览器资料；程序更新不会清理工作区、配置或历史缓存。</p>
+                  </header>
+                  <div class="rcs-settings-overview-grid">
+                    <section class="rcs-ai-settings-card" aria-labelledby="desktop-st-title">
+                      <div class="rcs-ai-settings-card-head"><h4 id="desktop-st-title">SillyTavern 地址</h4><span data-desktop-st-state>尚未连接</span></div>
+                      <label for="desktop-st-url"><span>仅允许 localhost、127.0.0.1 或 ::1</span><input id="desktop-st-url" type="url" data-desktop-st-url autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:8000/" required></label>
+                      <p class="desktop-inline-status" data-desktop-st-status role="status" aria-live="polite">桌面程序会在独立窗口中打开本机 ST。</p>
+                      <div class="rcs-ai-inline-actions">
+                        <button class="rcs-button ghost" type="button" data-desktop-save-st-url>保存地址</button>
+                        <button class="rcs-button primary" type="button" data-desktop-dialog-open-st>打开本机 ST</button>
+                        <button class="rcs-button ghost" type="button" data-desktop-open-rpn>显示 RPN</button>
+                      </div>
+                    </section>
+                    <section class="rcs-ai-settings-card" aria-labelledby="desktop-update-title">
+                      <div class="rcs-ai-settings-card-head"><h4 id="desktop-update-title">程序更新</h4><span data-desktop-update-version>当前版本</span></div>
+                      <dl class="desktop-update-meta">
+                        <div><dt>已安装</dt><dd data-desktop-installed-version>—</dd></div>
+                        <div><dt>可用版本</dt><dd data-desktop-available-version>尚未检查</dd></div>
+                      </dl>
+                      <p class="desktop-update-notes" data-desktop-update-notes hidden></p>
+                      <progress class="desktop-update-progress" data-desktop-update-progress max="1" value="0" hidden></progress>
+                      <p class="desktop-inline-status" data-desktop-update-status role="status" aria-live="polite">由你手动检查、下载并确认安装。</p>
+                      <div class="rcs-ai-inline-actions">
+                        <button class="rcs-button ghost" type="button" data-desktop-check-update>检查更新</button>
+                        <button class="rcs-button ghost" type="button" data-desktop-download-update disabled>下载更新</button>
+                        <button class="rcs-button primary" type="button" data-desktop-install-update disabled>安装并重启</button>
+                      </div>
+                    </section>
+                  </div>
+                  <footer class="rcs-ai-settings-actions"><p>安装前会先等待工作区连续性保存完成；保存失败时不会继续更新。</p></footer>
+                </section>
+
+                <section class="rcs-ai-settings-panel rcs-about-settings-panel" id="rcs-ai-settings-about" role="tabpanel" data-rcs-ai-settings-panel="about" aria-labelledby="rcs-ai-settings-about-tab" hidden>
+                  <header class="rcs-ai-settings-panel-head">
+                    <div><span>关于 RPN</span><h3>Reverie Playcraft Nexus</h3></div>
+                    <p>幻想、游玩与创作的交汇点。</p>
+                  </header>
+                  <article class="rcs-about-brand-card">
+                    <div class="rcs-about-brand-mark" aria-hidden="true">R</div>
+                    <div><strong>Reverie Playcraft Nexus</strong><span>版本 <b data-desktop-current-version>0.19.2</b></span></div>
+                  </article>
+                  <dl class="rcs-settings-facts rcs-about-facts">
+                    <div><dt>产品形态</dt><dd>桌面薄壳与内置 Web 前端</dd></div>
+                    <div><dt>本机数据</dt><dd data-desktop-data-root>浏览器或应用本机存储</dd></div>
+                    <div><dt>项目边界</dt><dd>预览不会执行 ST 写入或任意命令</dd></div>
+                  </dl>
                 </section>
               </div>
             </div>
@@ -2358,6 +2616,18 @@
               </div>
               <div class="rcs-agent-timeline" data-rcs-agent-timeline role="log" aria-live="polite" aria-label="Agent 对话、操作与改动记录">
                 <div class="rcs-agent-events" data-rcs-agent-events></div>
+                <section class="rcs-agent-plan" data-rcs-agent-plan aria-labelledby="rcs-agent-plan-title" hidden>
+                  <header>
+                    <div><span>待批准执行计划</span><h3 id="rcs-agent-plan-title">一级 Sub Agent 任务</h3></div>
+                    <strong data-rcs-agent-plan-state>等待你批准</strong>
+                  </header>
+                  <p>批准前不会调用 worker / reviewer；批准后最多 4 个一级任务、并发 2、深度 1，且不会使用 MCP、Shell、Git、文件写入或真实 ST。</p>
+                  <div class="rcs-agent-plan-tasks" data-rcs-agent-plan-tasks></div>
+                  <div class="rcs-agent-proposal-actions">
+                    <button class="rcs-button primary" type="button" data-rcs-agent-plan-approve>批准并执行</button>
+                    <button class="rcs-button ghost" type="button" data-rcs-agent-plan-reject>拒绝计划</button>
+                  </div>
+                </section>
                 <section class="rcs-agent-proposal" data-rcs-agent-proposal aria-labelledby="rcs-agent-proposal-title" hidden>
                   <header>
                     <div><span>待批准改动</span><h3 id="rcs-agent-proposal-title">当前世界书条目正文</h3></div>
@@ -2383,7 +2653,7 @@
                     <button type="button" role="radio" aria-checked="false" tabindex="-1" data-rcs-agent-mode="codex">Codex</button>
                     <button type="button" role="radio" aria-checked="false" tabindex="-1" data-rcs-agent-mode="claude">Claude Code</button>
                   </div>
-                  <p class="rcs-agent-mode-state" id="rcs-agent-mode-state" data-rcs-agent-mode-state role="status" aria-live="polite">使用当前启用的 API 与 AIRP。</p>
+                  <p class="rcs-agent-mode-state" id="rcs-agent-mode-state" data-rcs-agent-mode-state role="status" aria-live="polite">使用当前 API 路由与 AIRP。</p>
                   <button class="rcs-button ghost" type="button" data-rcs-project-settings data-rcs-project-settings-label="fixed">项目与分工设置</button>
                   <div class="rcs-agent-external-panel" data-rcs-agent-external-panel hidden>
                     <label class="rcs-prompt-box">
@@ -2466,7 +2736,7 @@
                 <button class="rcs-button ghost" type="button" data-rcs-ai-generate disabled>生成条目提案</button>
               </div>
             </div>
-            <p class="rcs-ai-status" data-rcs-ai-status data-rcs-dock-agent role="status" aria-live="polite">请先在 AI 设置中启用一个 API 与 AIRP 预设。</p>
+            <p class="rcs-ai-status" data-rcs-ai-status data-rcs-dock-agent role="status" aria-live="polite">请先在 AI 设置中启用一个完整的 API 配置；AIRP 预设可选。</p>
             <button class="rcs-agent-resize" type="button" data-rcs-agent-resize aria-label="调整 Agent 抽屉尺寸" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"></button>
             </section>
           </div>
@@ -2490,70 +2760,14 @@
   </main>
 
   <footer class="site-footer">
-        <p>Reverie Playcraft Nexus · v0.17.0 · 更新于 2026-07-22</p>
+        <p>Reverie Playcraft Nexus · v0.19.2 · 更新于 2026-07-23</p>
     <p>制卡指南、前端组件预览、制卡工作台与创意工坊各自分区；组件选择与编辑仍统一在制卡工作台内完成。</p>
   </footer>
 
-  <dialog class="desktop-dialog" data-desktop-dialog aria-labelledby="desktop-dialog-title" aria-describedby="desktop-dialog-description">
-    <div class="desktop-dialog-panel">
-      <header>
-        <div>
-          <span>桌面程序</span>
-          <h2 id="desktop-dialog-title">本机 ST 与程序更新</h2>
-          <p id="desktop-dialog-description">ST 使用独立本机浏览器资料；程序更新不会清理工作区、配置或历史缓存。</p>
-        </div>
-        <button class="desktop-icon-button" type="button" data-desktop-dialog-close aria-label="关闭桌面设置">关闭</button>
-      </header>
-
-      <div class="desktop-dialog-body">
-        <section class="desktop-dialog-section" aria-labelledby="desktop-st-title">
-          <div class="desktop-section-heading">
-            <div><span>本机预览</span><h3 id="desktop-st-title">SillyTavern 地址</h3></div>
-            <strong data-desktop-st-state>尚未连接</strong>
-          </div>
-          <label class="desktop-field" for="desktop-st-url">
-            <span>仅允许 localhost、127.0.0.1 或 ::1</span>
-            <input id="desktop-st-url" type="url" data-desktop-st-url autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:8000/" required>
-          </label>
-          <p class="desktop-inline-status" data-desktop-st-status role="status" aria-live="polite">桌面程序会在独立窗口中打开本机 ST。</p>
-          <div class="desktop-button-row">
-            <button class="secondary-action" type="button" data-desktop-save-st-url>保存地址</button>
-            <button class="primary-action" type="button" data-desktop-dialog-open-st>打开本机 ST</button>
-            <button class="secondary-action" type="button" data-desktop-open-rpn>显示 RPN</button>
-          </div>
-        </section>
-
-        <section class="desktop-dialog-section" aria-labelledby="desktop-update-title">
-          <div class="desktop-section-heading">
-            <div><span>发布版</span><h3 id="desktop-update-title">程序更新</h3></div>
-            <strong data-desktop-update-version>当前版本</strong>
-          </div>
-          <dl class="desktop-update-meta">
-            <div><dt>已安装</dt><dd data-desktop-current-version>—</dd></div>
-            <div><dt>可用版本</dt><dd data-desktop-available-version>尚未检查</dd></div>
-          </dl>
-          <p class="desktop-update-notes" data-desktop-update-notes hidden></p>
-          <progress class="desktop-update-progress" data-desktop-update-progress max="1" value="0" hidden></progress>
-          <p class="desktop-inline-status" data-desktop-update-status role="status" aria-live="polite">由你手动检查、下载并确认安装。</p>
-          <div class="desktop-button-row">
-            <button class="secondary-action" type="button" data-desktop-check-update>检查更新</button>
-            <button class="secondary-action" type="button" data-desktop-download-update disabled>下载更新</button>
-            <button class="primary-action" type="button" data-desktop-install-update disabled>安装并重启</button>
-          </div>
-        </section>
-      </div>
-
-      <footer>
-        <span>安装前会先等待工作区连续性保存完成；保存失败时不会继续更新。</span>
-        <button class="secondary-action" type="button" data-desktop-dialog-close>关闭</button>
-      </footer>
-    </div>
-  </dialog>
-
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="./assets/portal.js?v=0722m4c1" defer></script>
-  <script type="module" src="./assets/card-studio.js?v=0722m4c2"></script>
-  <script type="module" src="./assets/workshop-studio.js?v=0718m2"></script>
-  <script type="module" src="./assets/component-workshop.js?v=0721m3d1"></script>
+  <script src="./assets/portal.js?v=0723m7a1" defer></script>
+  <script type="module" src="./assets/card-studio.js?v=0723m8c1"></script>
+  <script type="module" src="./assets/workshop-studio.js?v=0723m5a1"></script>
+  <script type="module" src="./assets/component-workshop.js?v=0723m5a1"></script>
 </body>
 </html>

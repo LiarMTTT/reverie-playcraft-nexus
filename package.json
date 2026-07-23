@@ -1,15 +1,16 @@
 {
   "name": "reverie-playcraft-nexus",
-  "version": "0.17.1",
+  "version": "0.19.2",
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run check:batch-version && npm run check:rolecard-io && npm run check:rolecard-analysis && npm run check:rolecard-export-plan && npm run check:workflow-blueprint && npm run check:mvu-simulator && npm run check:mvu-variable-structure && npm run check:ui-simulation-package && npm run check:ui-builder-embed && npm run check:web-boundary && npm run check:workspace-persistence && npm run check:local-workspace && npm run check:studio-ai && npm run check:studio-knowledge && npm run check:component-workshop && npm run check:desktop-shell",
+    "check": "npm run check:batch-version && npm run check:rolecard-io && npm run check:rolecard-analysis && npm run check:rolecard-export-plan && npm run check:workflow-blueprint && npm run check:mvu-simulator && npm run check:mvu-variable-structure && npm run check:ui-simulation-package && npm run check:ui-builder-embed && npm run check:web-boundary && npm run check:workspace-persistence && npm run check:local-workspace && npm run check:studio-ai && npm run check:agent-routing && npm run check:studio-knowledge && npm run check:component-workshop && npm run check:mcp && npm run check:performance && npm run check:desktop-shell",
     "build:pages": "node tools/build_pages.mjs",
     "desktop:prepare": "npm run check && npm run build:pages",
     "desktop:check": "npm run desktop:prepare && cargo test --manifest-path src-tauri/Cargo.toml",
     "desktop:dev": "cargo tauri dev",
-    "desktop:build:rc": "cargo tauri build --bundles nsis",
+    "desktop:build:rc": "npm run check && cargo tauri build --bundles nsis",
+    "desktop:build:rc:unchecked": "cargo tauri build --bundles nsis",
     "desktop:build:release": "node tools/build_desktop_release.mjs",
     "batch:next": "node tools/next_batch_version.mjs",
     "sync:ui-builder": "node tools/sync_ui_builder_embed.mjs",
@@ -26,18 +27,21 @@
     "check:web-boundary": "node tools/rpn_web_boundary.test.mjs",
     "check:workspace-persistence": "node tools/studio_workspace_persistence.test.mjs",
     "check:local-workspace": "node tools/studio_local_workspace.test.mjs",
-    "check:studio-ai": "node tools/studio_ai.test.mjs",
+    "check:studio-ai": "node tools/studio_ai.test.mjs && node tools/studio_api_profiles.test.mjs",
+    "check:agent-routing": "node tools/studio_agent_orchestrator.test.mjs",
     "check:studio-knowledge": "node tools/studio_knowledge.test.mjs",
     "check:component-workshop": "node tools/component_workshop_contract.test.mjs && node tools/component_workshop_frontend.test.mjs",
+    "check:mcp": "node tools/studio_mcp.test.mjs",
+    "check:performance": "node tools/performance_budget.test.mjs",
     "check:desktop-shell": "node tools/desktop_shell_contract.test.mjs"
   },
   "engines": {
     "node": ">=20"
   },
   "rpnBatch": {
-    "label": "m4-c-studio-fast-optimization",
-    "version": "0.17.1",
+    "label": "m8-agent-reply-cleanup",
+    "version": "0.19.2",
     "level": "patch",
-    "startedAt": "2026-07-22T14:17:41.032Z"
+    "startedAt": "2026-07-23T14:13:17.523Z"
   }
 }

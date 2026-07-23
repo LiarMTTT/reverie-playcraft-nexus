@@ -1,7 +1,9 @@
 /**
  * RPN 制卡工作台的独立 AI 边界。
  *
- * - OpenAI-compatible 客户端只做 GET /models 与非流式 POST /chat/completions。
+ * - 统一适配 OpenAI Chat / Responses、Anthropic Messages、Google Gemini、
+ *   Cohere v2、DashScope Native 与 Ollama Native。
+ * - 各格式只开放模型列表与非流式聊天端点，并把响应归一为 OpenAI choices/model/usage。
  * - API Key 只存在函数参数或实例私有字段中，不提供任何持久化能力。
  * - AIRP 按 SillyTavern OpenAI Settings / Prompt Manager 的真实导出结构读取，
  *   未知字段原样保留；提示词中的宏、EJS 或 JavaScript 永远不会在这里执行。
@@ -22,6 +24,66 @@ const MAX_AIRP_CONTENT_CHARS = 8 * 1024 * 1024;
 const MAX_JSON_DEPTH = 64;
 const MAX_JSON_NODES = 100_000;
 
+const DEFAULT_API_FORMAT = 'openai-compatible';
+const DEFAULT_NETWORK_MODE = 'direct';
+const LEGACY_NETWORK_MODE = 'systemProxy';
+const STUDIO_AI_API_FORMATS = Object.freeze({
+  'openai-compatible': Object.freeze({
+    label: 'OpenAI Compatible',
+    defaultBaseUrl: 'https://api.openai.com/v1',
+    baseUrlPlaceholder: 'https://api.example.com/v1',
+    credentialHelp: '使用 Authorization: Bearer <API Key>；本地免鉴权服务可留空。',
+    supportsModelList: true,
+  }),
+  'openai-responses': Object.freeze({
+    label: 'OpenAI Responses',
+    defaultBaseUrl: 'https://api.openai.com/v1',
+    baseUrlPlaceholder: 'https://api.openai.com/v1',
+    credentialHelp: '使用 Authorization: Bearer <API Key>，请求发送到 /responses。',
+    supportsModelList: true,
+  }),
+  'anthropic-messages': Object.freeze({
+    label: 'Anthropic Messages',
+    defaultBaseUrl: 'https://api.anthropic.com/v1',
+    baseUrlPlaceholder: 'https://api.anthropic.com/v1',
+    credentialHelp: '使用 x-api-key，并固定发送 anthropic-version: 2023-06-01。',
+    supportsModelList: true,
+  }),
+  'google-gemini': Object.freeze({
+    label: 'Google Gemini',
+    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    baseUrlPlaceholder: 'https://generativelanguage.googleapis.com/v1beta',
+    credentialHelp: '使用 x-goog-api-key；Key 不会写入 URL、配置档或持久化存储。',
+    supportsModelList: true,
+  }),
+  'cohere-v2': Object.freeze({
+    label: 'Cohere v2 Chat',
+    defaultBaseUrl: 'https://api.cohere.com',
+    baseUrlPlaceholder: 'https://api.cohere.com',
+    credentialHelp: '使用 Authorization: Bearer <API Key>；聊天与模型列表分别使用 v2 / v1。',
+    supportsModelList: true,
+  }),
+  'dashscope-native': Object.freeze({
+    label: 'DashScope Native',
+    defaultBaseUrl: 'https://dashscope.aliyuncs.com/api/v1',
+    baseUrlPlaceholder: 'https://dashscope.aliyuncs.com/api/v1',
+    credentialHelp: '使用 Authorization: Bearer <API Key>；原生文本端点不提供统一模型列表。',
+    supportsModelList: false,
+  }),
+  'ollama-native': Object.freeze({
+    label: 'Ollama Native',
+    defaultBaseUrl: 'http://127.0.0.1:11434',
+    baseUrlPlaceholder: 'http://127.0.0.1:11434',
+    credentialHelp: 'Ollama 本机服务通常无需 API Key；填写的 Key 不会发送。',
+    supportsModelList: true,
+  }),
+});
+const STUDIO_AI_NETWORK_MODES = Object.freeze({
+  direct: '直连',
+  systemProxy: '使用系统代理',
+});
+const VALID_API_FORMATS = new Set(Object.keys(STUDIO_AI_API_FORMATS));
+const VALID_NETWORK_MODES = new Set(Object.keys(STUDIO_AI_NETWORK_MODES));
 const VALID_MESSAGE_ROLES = new Set(['system', 'user', 'assistant']);
 const AIRP_SENSITIVE_FIELDS = Object.freeze([
   'reverse_proxy',
@@ -712,13 +774,24 @@ function assembleAirpPrompt(presetInput, {
   extraMessages = [],
   task = '',
 } = {}) {
-  const preset = safeJsonClone(presetInput);
-  const validation = validateAirpClone(preset);
-  if (!validation.valid) {
-    throw new AirpPresetError('airp-invalid', 'AIRP 预设校验失败。', { issues: validation.errors });
+  const hasPreset = presetInput !== undefined && presetInput !== null;
+  const preset = hasPreset ? safeJsonClone(presetInput) : null;
+  if (hasPreset) {
+    const validation = validateAirpClone(preset);
+    if (!validation.valid) {
+      throw new AirpPresetError('airp-invalid', 'AIRP 预设校验失败。', { issues: validation.errors });
+    }
   }
 
-  const document = detectAirpDocument(preset);
+  const document = hasPreset
+    ? detectAirpDocument(preset)
+    : {
+      kind: 'plain',
+      root: {},
+      prompts: [],
+      promptOrder: [],
+      orderShape: 'flat',
+    };
   const selection = selectAirpOrder(document, orderCharacterId);
   const { map: promptMap, duplicates } = firstPromptMap(document.prompts);
   const diagnostics = {
@@ -823,7 +896,7 @@ function assembleAirpPrompt(presetInput, {
   };
 }
 
-function parseAgentTurnResponse(value) {
+function parseAgentTurnResponse(value, { allowProposal = false } = {}) {
   const raw = typeof value === 'string' ? value.trim() : '';
   if (!raw) return { reply: '', proposal: null, format: 'text' };
   const fenced = raw.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
@@ -832,13 +905,31 @@ function parseAgentTurnResponse(value) {
   try {
     document = JSON.parse(candidate);
   } catch {
+    if (!allowProposal) {
+      const wrappedReply = candidate.match(/^\s*\{\s*"reply"\s*:\s*"([\s\S]*)"\s*,\s*"proposal"\s*:\s*null\s*\}\s*$/);
+      if (wrappedReply) {
+        const escapedControls = wrappedReply[1].replace(
+          /[\u0000-\u001f]/g,
+          (character) => JSON.stringify(character).slice(1, -1),
+        );
+        try {
+          const reply = JSON.parse(`"${escapedControls}"`).trim();
+          if (reply) {
+            return { reply: reply.slice(0, MAX_MESSAGE_CONTENT_CHARS), proposal: null, format: 'text' };
+          }
+        } catch {
+          // Keep malformed or ambiguous wrappers as inert text.
+        }
+      }
+    }
     return { reply: raw.slice(0, MAX_MESSAGE_CONTENT_CHARS), proposal: null, format: 'text' };
   }
   if (!isPlainRecord(document)) {
     return { reply: raw.slice(0, MAX_MESSAGE_CONTENT_CHARS), proposal: null, format: 'text' };
   }
   const sourceProposal = isPlainRecord(document.proposal) ? document.proposal : null;
-  const proposal = sourceProposal?.type === 'replace-worldbook-entry-content'
+  const proposal = allowProposal
+    && sourceProposal?.type === 'replace-worldbook-entry-content'
     && typeof sourceProposal.content === 'string'
     && sourceProposal.content.trim()
     ? {
@@ -916,7 +1007,33 @@ function defaultPageUrl() {
   }
 }
 
-function normalizeOpenAiBaseUrl(value, { pageUrl = defaultPageUrl() } = {}) {
+function normalizeApiFormat(value) {
+  return VALID_API_FORMATS.has(value) ? value : DEFAULT_API_FORMAT;
+}
+
+function normalizeNetworkMode(value, { legacy = false } = {}) {
+  if (VALID_NETWORK_MODES.has(value)) return value;
+  return legacy ? LEGACY_NETWORK_MODE : DEFAULT_NETWORK_MODE;
+}
+
+function normalizeApiProfileTransport(profile) {
+  return {
+    apiFormat: normalizeApiFormat(profile?.apiFormat),
+    networkMode: normalizeNetworkMode(profile?.networkMode, { legacy: true }),
+  };
+}
+
+function apiFormatSwitchBaseUrl(currentValue, previousFormat, nextFormat) {
+  const current = String(currentValue || '').trim();
+  const previous = STUDIO_AI_API_FORMATS[normalizeApiFormat(previousFormat)];
+  const next = STUDIO_AI_API_FORMATS[normalizeApiFormat(nextFormat)];
+  return !current || current === previous.defaultBaseUrl ? next.defaultBaseUrl : current;
+}
+
+function normalizeOpenAiBaseUrl(value, {
+  pageUrl = defaultPageUrl(),
+  allowLoopbackHttp = false,
+} = {}) {
   if (typeof value !== 'string') {
     throw new StudioAiError('invalid-base-url', 'Base URL 必须是字符串。');
   }
@@ -952,19 +1069,21 @@ function normalizeOpenAiBaseUrl(value, { pageUrl = defaultPageUrl() } = {}) {
       page = null;
     }
     const localDevelopment = isLoopbackHostname(url.hostname)
-      && page?.protocol === 'http:'
-      && isLoopbackHostname(page.hostname);
+      && (allowLoopbackHttp || (page?.protocol === 'http:' && isLoopbackHostname(page.hostname)));
     if (!localDevelopment) {
       throw new StudioAiError(
         'insecure-base-url',
-        'HTTP 只允许从本机 HTTP RPN 页面连接本机回环地址。',
+        'HTTP 只允许桌面原生通道或本机 HTTP 预览连接回环地址。',
       );
     }
   }
 
   const pathname = url.pathname.replace(/\/+$/, '');
-  if (/(?:^|\/)models$|(?:^|\/)chat\/completions$/i.test(pathname)) {
-    throw new StudioAiError('base-url-is-endpoint', '请填写 API Base URL，不要填写具体的 models 或 chat/completions 端点。');
+  if (
+    /(?:^|\/)(?:models|messages|chat\/completions|api\/tags|api\/chat)$/i.test(pathname)
+    || /\/models\/[^/]+:generateContent$/i.test(pathname)
+  ) {
+    throw new StudioAiError('base-url-is-endpoint', '请填写 API Base URL，不要填写具体的模型列表或推理端点。');
   }
   return `${url.origin}${pathname}`;
 }
@@ -1015,6 +1134,229 @@ function createAbortScope(callerSignal, timeoutMs) {
       clearTimeout(timer);
       callerSignal?.removeEventListener('abort', onCallerAbort);
     },
+  };
+}
+
+let desktopAiRequestSequence = 0;
+
+function defaultDesktopAiRequestId() {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return uuid;
+  desktopAiRequestSequence += 1;
+  return `rpn-ai-${Date.now().toString(36)}-${desktopAiRequestSequence.toString(36)}`;
+}
+
+function normalizeDesktopAiError(error) {
+  if (error instanceof StudioAiError) return error;
+  let source = error;
+  if (typeof source === 'string') {
+    try {
+      source = JSON.parse(source);
+    } catch {
+      source = null;
+    }
+  }
+  if (isPlainRecord(source)) {
+    const normalizedCode = typeof source.code === 'string' ? source.code.replaceAll('_', '-') : '';
+    const code = /^[a-z][a-z0-9-]{0,63}$/.test(normalizedCode)
+      ? normalizedCode
+      : 'desktop-transport';
+    const message = typeof source.message === 'string'
+      && source.message.length > 0
+      && source.message.length <= 500
+      && !/[\r\n]/.test(source.message)
+      ? source.message
+      : '桌面原生网络请求失败。';
+    return new StudioAiError(code, message, {
+      status: Number.isInteger(source.status) ? source.status : null,
+      retryable: source.retryable === true,
+      cause: error,
+    });
+  }
+  return new StudioAiError('desktop-transport', '桌面原生网络请求失败。', {
+    retryable: true,
+    cause: error,
+  });
+}
+
+function normalizeGeminiModel(value) {
+  const model = String(value || '').trim().replace(/^models\//, '');
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(model)) {
+    throw new StudioAiError('invalid-model', 'Gemini model 必须是不含路径分隔符的有效模型 ID。');
+  }
+  return model;
+}
+
+function desktopAiTarget(input, method, apiFormat) {
+  const raw = String(input);
+  let url;
+  try {
+    url = new URL(raw);
+  } catch (error) {
+    throw new StudioAiError('desktop-transport-invalid', '桌面 AI 请求 URL 无效。', { cause: error });
+  }
+  if (!['http:', 'https:'].includes(url.protocol)
+    || url.username
+    || url.password
+    || url.search
+    || url.hash
+    || /[?#]/.test(raw)) {
+    throw new StudioAiError('desktop-transport-invalid', '桌面 AI 请求 URL 包含不允许的组成部分。');
+  }
+
+  const format = normalizeApiFormat(apiFormat);
+  let operation;
+  let suffix;
+  let model;
+  if (
+    method === 'GET'
+    && url.pathname.endsWith('/models')
+    && ['openai-compatible', 'openai-responses'].includes(format)
+  ) {
+    operation = 'models';
+    suffix = '/models';
+  } else if (method === 'POST' && url.pathname.endsWith('/chat/completions') && format === 'openai-compatible') {
+    operation = 'chatCompletions';
+    suffix = '/chat/completions';
+  } else if (method === 'POST' && url.pathname.endsWith('/responses') && format === 'openai-responses') {
+    operation = 'responses';
+    suffix = '/responses';
+  } else if (method === 'GET' && url.pathname.endsWith('/models') && format === 'anthropic-messages') {
+    operation = 'anthropicModels';
+    suffix = '/models';
+  } else if (method === 'POST' && url.pathname.endsWith('/messages') && format === 'anthropic-messages') {
+    operation = 'anthropicMessages';
+    suffix = '/messages';
+  } else if (method === 'GET' && url.pathname.endsWith('/models') && format === 'google-gemini') {
+    operation = 'geminiModels';
+    suffix = '/models';
+  } else if (method === 'POST' && format === 'google-gemini') {
+    const matched = url.pathname.match(/\/models\/([^/]+):generateContent$/);
+    if (matched) {
+      try {
+        model = normalizeGeminiModel(decodeURIComponent(matched[1]));
+      } catch (error) {
+        if (error instanceof StudioAiError) throw error;
+        throw new StudioAiError('desktop-transport-invalid', 'Gemini model URL 编码无效。', { cause: error });
+      }
+      suffix = matched[0];
+      operation = 'geminiGenerateContent';
+    }
+  } else if (method === 'GET' && url.pathname.endsWith('/v1/models') && format === 'cohere-v2') {
+    operation = 'cohereModels';
+    suffix = '/v1/models';
+  } else if (method === 'POST' && url.pathname.endsWith('/v2/chat') && format === 'cohere-v2') {
+    operation = 'cohereChat';
+    suffix = '/v2/chat';
+  } else if (
+    method === 'POST'
+    && url.pathname.endsWith('/services/aigc/text-generation/generation')
+    && format === 'dashscope-native'
+  ) {
+    operation = 'dashscopeGeneration';
+    suffix = '/services/aigc/text-generation/generation';
+  } else if (method === 'GET' && url.pathname.endsWith('/api/tags') && format === 'ollama-native') {
+    operation = 'ollamaTags';
+    suffix = '/api/tags';
+  } else if (method === 'POST' && url.pathname.endsWith('/api/chat') && format === 'ollama-native') {
+    operation = 'ollamaChat';
+    suffix = '/api/chat';
+  }
+  if (!operation || !suffix) {
+    throw new StudioAiError('desktop-transport-invalid', '桌面 AI 通道拒绝了与所选 API 格式不匹配的端点或方法。');
+  }
+  const basePath = url.pathname.slice(0, -suffix.length).replace(/\/+$/, '');
+  return {
+    baseUrl: `${url.origin}${basePath}`,
+    operation,
+    ...(operation === 'geminiGenerateContent' ? { model } : {}),
+  };
+}
+
+function createDesktopAiFetch({
+  invoke = globalThis.__TAURI__?.core?.invoke,
+  makeRequestId = defaultDesktopAiRequestId,
+} = {}) {
+  if (typeof invoke !== 'function') {
+    throw new StudioAiError('desktop-transport-unavailable', '当前页面不在 RPN 桌面程序中。');
+  }
+  if (typeof makeRequestId !== 'function') {
+    throw new StudioAiError('desktop-transport-invalid', '桌面请求 ID 生成器无效。');
+  }
+
+  return async (input, init = {}) => {
+    const requestId = String(makeRequestId());
+    if (!/^[A-Za-z0-9._:-]{1,128}$/.test(requestId)) {
+      throw new StudioAiError('desktop-transport-invalid', '桌面请求 ID 无效。');
+    }
+    if (init.signal?.aborted) {
+      throw new StudioAiError('cancelled', '请求已取消。');
+    }
+    const method = String(init.method || 'GET').toUpperCase();
+    if (!['GET', 'POST'].includes(method)) {
+      throw new StudioAiError('desktop-transport-invalid', '桌面 AI 通道只允许 GET 或 POST。');
+    }
+    if (init.body !== undefined && init.body !== null && typeof init.body !== 'string') {
+      throw new StudioAiError('desktop-transport-invalid', '桌面 AI 请求正文必须是字符串。');
+    }
+    if (method === 'GET' && init.body !== undefined && init.body !== null) {
+      throw new StudioAiError('desktop-transport-invalid', '桌面 AI GET 请求不得包含正文。');
+    }
+    const apiFormat = normalizeApiFormat(init.apiFormat);
+    const networkMode = normalizeNetworkMode(init.networkMode);
+    const target = desktopAiTarget(input, method, apiFormat);
+    const headers = {};
+    new Headers(init.headers).forEach((value, key) => {
+      headers[key] = value;
+    });
+    const request = {
+      requestId,
+      baseUrl: target.baseUrl,
+      operation: target.operation,
+      networkMode,
+      ...(target.operation === 'geminiGenerateContent' ? { model: target.model } : {}),
+      headers,
+      body: typeof init.body === 'string' ? init.body : null,
+      timeoutMs: normalizeTimeout(init.timeoutMs),
+      maxResponseBytes: normalizeMaxBytes(init.maxResponseBytes),
+    };
+
+    let rejectAbort;
+    const abortPromise = init.signal
+      ? new Promise((_, reject) => {
+        rejectAbort = reject;
+      })
+      : null;
+    const onAbort = () => {
+      void invoke('desktop_ai_cancel', { requestId }).catch(() => {});
+      rejectAbort?.(new StudioAiError('cancelled', '请求已取消。'));
+    };
+    init.signal?.addEventListener('abort', onAbort, { once: true });
+
+    try {
+      const invocation = invoke('desktop_ai_request', { request });
+      const result = await (abortPromise ? Promise.race([invocation, abortPromise]) : invocation);
+      if (!isPlainRecord(result)
+        || !Number.isInteger(result.status)
+        || result.status < 200
+        || result.status > 599
+        || typeof result.body !== 'string'
+        || !isPlainRecord(result.headers)) {
+        throw new StudioAiError('desktop-transport-response', '桌面原生通道返回了无效响应。');
+      }
+      const responseBody = [204, 205, 304].includes(result.status) ? null : result.body;
+      return new Response(responseBody, {
+        status: result.status,
+        headers: result.headers,
+      });
+    } catch (error) {
+      if (init.signal?.aborted) {
+        throw new StudioAiError('cancelled', '请求已取消。', { cause: error });
+      }
+      throw normalizeDesktopAiError(error);
+    } finally {
+      init.signal?.removeEventListener('abort', onAbort);
+    }
   };
 }
 
@@ -1169,6 +1511,303 @@ function buildChatCompletionBody(request) {
   return body;
 }
 
+function providerModelsEndpoint(apiFormat) {
+  if (apiFormat === 'ollama-native') return 'api/tags';
+  if (apiFormat === 'cohere-v2') return 'v1/models';
+  if (apiFormat === 'dashscope-native') {
+    throw new StudioAiError('models-unsupported', 'DashScope 原生文本接口不提供统一模型列表，请手动填写模型名。');
+  }
+  return 'models';
+}
+
+function providerChatEndpoint(apiFormat, model) {
+  if (apiFormat === 'openai-responses') return 'responses';
+  if (apiFormat === 'anthropic-messages') return 'messages';
+  if (apiFormat === 'google-gemini') return `models/${normalizeGeminiModel(model)}:generateContent`;
+  if (apiFormat === 'cohere-v2') return 'v2/chat';
+  if (apiFormat === 'dashscope-native') return 'services/aigc/text-generation/generation';
+  if (apiFormat === 'ollama-native') return 'api/chat';
+  return 'chat/completions';
+}
+
+function isOfficialOpenAiBaseUrl(baseUrl) {
+  try {
+    const hostname = new URL(baseUrl).hostname.toLowerCase();
+    return hostname === 'api.openai.com' || hostname.endsWith('.api.openai.com');
+  } catch {
+    return false;
+  }
+}
+
+function providerHeaders(apiFormat, apiKey, hasBody) {
+  const headers = { Accept: 'application/json' };
+  if (hasBody) headers['Content-Type'] = 'application/json';
+  if (apiFormat === 'anthropic-messages') {
+    headers['anthropic-version'] = '2023-06-01';
+    if (apiKey) headers['x-api-key'] = apiKey;
+  } else if (apiFormat === 'google-gemini') {
+    if (apiKey) headers['x-goog-api-key'] = apiKey;
+  } else if (apiFormat !== 'ollama-native' && apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+  return headers;
+}
+
+function providerChatBody(apiFormat, canonical) {
+  if (apiFormat === 'openai-compatible') return canonical;
+  if (apiFormat === 'openai-responses') {
+    const body = {
+      model: canonical.model,
+      input: canonical.messages,
+    };
+    if (canonical.temperature !== undefined) body.temperature = canonical.temperature;
+    if (canonical.top_p !== undefined) body.top_p = canonical.top_p;
+    if (canonical.max_tokens !== undefined) body.max_output_tokens = canonical.max_tokens;
+    if (canonical.response_format?.type === 'json_object') {
+      body.text = { format: { type: 'json_object' } };
+    }
+    return body;
+  }
+  const systemText = canonical.messages
+    .filter((message) => message.role === 'system')
+    .map((message) => message.content)
+    .join('\n\n');
+  const conversation = canonical.messages.filter((message) => message.role !== 'system');
+
+  if (apiFormat === 'anthropic-messages') {
+    const body = {
+      model: canonical.model,
+      messages: conversation,
+      max_tokens: canonical.max_tokens ?? 4096,
+    };
+    if (systemText) body.system = systemText;
+    if (canonical.stop !== undefined) {
+      body.stop_sequences = typeof canonical.stop === 'string' ? [canonical.stop] : canonical.stop;
+    }
+    return body;
+  }
+
+  if (apiFormat === 'google-gemini') {
+    const generationConfig = {};
+    if (canonical.temperature !== undefined) generationConfig.temperature = canonical.temperature;
+    if (canonical.top_p !== undefined) generationConfig.topP = canonical.top_p;
+    if (canonical.max_tokens !== undefined) generationConfig.maxOutputTokens = canonical.max_tokens;
+    if (canonical.stop !== undefined) {
+      generationConfig.stopSequences = typeof canonical.stop === 'string' ? [canonical.stop] : canonical.stop;
+    }
+    if (canonical.n !== undefined) generationConfig.candidateCount = canonical.n;
+    if (canonical.response_format?.type === 'json_object') generationConfig.responseMimeType = 'application/json';
+    return {
+      contents: conversation.map((message) => ({
+        role: message.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: message.content }],
+      })),
+      ...(systemText ? { systemInstruction: { parts: [{ text: systemText }] } } : {}),
+      ...(Object.keys(generationConfig).length ? { generationConfig } : {}),
+    };
+  }
+
+  if (apiFormat === 'cohere-v2') {
+    const body = {
+      model: canonical.model,
+      messages: canonical.messages,
+    };
+    if (canonical.temperature !== undefined) body.temperature = canonical.temperature;
+    if (canonical.top_p !== undefined) body.p = canonical.top_p;
+    if (canonical.max_tokens !== undefined) body.max_tokens = canonical.max_tokens;
+    if (canonical.seed !== undefined) body.seed = canonical.seed;
+    if (canonical.stop !== undefined) {
+      body.stop_sequences = typeof canonical.stop === 'string' ? [canonical.stop] : canonical.stop;
+    }
+    if (canonical.response_format?.type === 'json_object') {
+      body.response_format = { type: 'json_object' };
+    }
+    return body;
+  }
+
+  if (apiFormat === 'dashscope-native') {
+    const parameters = { result_format: 'message' };
+    if (canonical.temperature !== undefined) parameters.temperature = canonical.temperature;
+    if (canonical.top_p !== undefined) parameters.top_p = canonical.top_p;
+    if (canonical.max_tokens !== undefined) parameters.max_tokens = canonical.max_tokens;
+    if (canonical.seed !== undefined) parameters.seed = canonical.seed;
+    if (canonical.stop !== undefined) parameters.stop = canonical.stop;
+    return {
+      model: canonical.model,
+      input: { messages: canonical.messages },
+      parameters,
+    };
+  }
+
+  const options = {};
+  if (canonical.temperature !== undefined) options.temperature = canonical.temperature;
+  if (canonical.top_p !== undefined) options.top_p = canonical.top_p;
+  if (canonical.seed !== undefined) options.seed = canonical.seed;
+  if (canonical.max_tokens !== undefined) options.num_predict = canonical.max_tokens;
+  if (canonical.stop !== undefined) {
+    options.stop = typeof canonical.stop === 'string' ? [canonical.stop] : canonical.stop;
+  }
+  return {
+    model: canonical.model,
+    messages: canonical.messages,
+    stream: false,
+    ...(Object.keys(options).length ? { options } : {}),
+    ...(canonical.response_format?.type === 'json_object' ? { format: 'json' } : {}),
+  };
+}
+
+function normalizeUsage(promptTokens, completionTokens, totalTokens = undefined) {
+  const prompt = Number.isFinite(promptTokens) ? promptTokens : 0;
+  const completion = Number.isFinite(completionTokens) ? completionTokens : 0;
+  const total = Number.isFinite(totalTokens) ? totalTokens : prompt + completion;
+  return {
+    prompt_tokens: prompt,
+    completion_tokens: completion,
+    total_tokens: total,
+  };
+}
+
+function normalizeProviderChatResponse(apiFormat, data, requestedModel) {
+  if (!isPlainRecord(data)) {
+    throw new StudioAiError('invalid-response', '推理响应必须是 JSON 对象。');
+  }
+  if (apiFormat === 'openai-compatible') return data;
+  if (apiFormat === 'openai-responses') {
+    const text = typeof data.output_text === 'string'
+      ? data.output_text
+      : (Array.isArray(data.output) ? data.output : [])
+        .flatMap((item) => (isPlainRecord(item) && Array.isArray(item.content) ? item.content : []))
+        .filter((part) => isPlainRecord(part) && part.type === 'output_text' && typeof part.text === 'string')
+        .map((part) => part.text)
+        .join('');
+    return {
+      model: typeof data.model === 'string' ? data.model : requestedModel,
+      choices: [{
+        index: 0,
+        message: { role: 'assistant', content: text },
+        finish_reason: data.incomplete_details?.reason ?? (data.status === 'completed' ? 'stop' : data.status ?? null),
+      }],
+      usage: normalizeUsage(data.usage?.input_tokens, data.usage?.output_tokens, data.usage?.total_tokens),
+    };
+  }
+  if (apiFormat === 'anthropic-messages') {
+    const text = Array.isArray(data.content)
+      ? data.content
+        .filter((part) => isPlainRecord(part) && part.type === 'text' && typeof part.text === 'string')
+        .map((part) => part.text)
+        .join('')
+      : '';
+    return {
+      model: typeof data.model === 'string' ? data.model : requestedModel,
+      choices: [{
+        index: 0,
+        message: { role: 'assistant', content: text },
+        finish_reason: data.stop_reason ?? null,
+      }],
+      usage: normalizeUsage(data.usage?.input_tokens, data.usage?.output_tokens),
+    };
+  }
+  if (apiFormat === 'google-gemini') {
+    const candidate = Array.isArray(data.candidates) ? data.candidates[0] : null;
+    const text = Array.isArray(candidate?.content?.parts)
+      ? candidate.content.parts
+        .filter((part) => isPlainRecord(part) && typeof part.text === 'string')
+        .map((part) => part.text)
+        .join('')
+      : '';
+    return {
+      model: typeof data.modelVersion === 'string' ? data.modelVersion : requestedModel,
+      choices: [{
+        index: 0,
+        message: { role: 'assistant', content: text },
+        finish_reason: candidate?.finishReason ?? null,
+      }],
+      usage: normalizeUsage(
+        data.usageMetadata?.promptTokenCount,
+        data.usageMetadata?.candidatesTokenCount,
+        data.usageMetadata?.totalTokenCount,
+      ),
+    };
+  }
+  if (apiFormat === 'cohere-v2') {
+    const text = Array.isArray(data.message?.content)
+      ? data.message.content
+        .filter((part) => isPlainRecord(part) && part.type === 'text' && typeof part.text === 'string')
+        .map((part) => part.text)
+        .join('')
+      : '';
+    return {
+      model: typeof data.model === 'string' ? data.model : requestedModel,
+      choices: [{
+        index: 0,
+        message: { role: 'assistant', content: text },
+        finish_reason: data.finish_reason ?? null,
+      }],
+      usage: normalizeUsage(
+        data.usage?.tokens?.input_tokens,
+        data.usage?.tokens?.output_tokens,
+      ),
+    };
+  }
+  if (apiFormat === 'dashscope-native') {
+    const choice = Array.isArray(data.output?.choices) ? data.output.choices[0] : null;
+    return {
+      model: typeof data.output?.model === 'string' ? data.output.model : requestedModel,
+      choices: [{
+        index: 0,
+        message: {
+          role: 'assistant',
+          content: typeof choice?.message?.content === 'string' ? choice.message.content : '',
+        },
+        finish_reason: choice?.finish_reason ?? null,
+      }],
+      usage: normalizeUsage(
+        data.usage?.input_tokens,
+        data.usage?.output_tokens,
+        data.usage?.total_tokens,
+      ),
+    };
+  }
+  const promptTokens = data.prompt_eval_count;
+  const completionTokens = data.eval_count;
+  return {
+    model: typeof data.model === 'string' ? data.model : requestedModel,
+    choices: [{
+      index: 0,
+      message: {
+        role: 'assistant',
+        content: typeof data.message?.content === 'string' ? data.message.content : '',
+      },
+      finish_reason: data.done_reason ?? (data.done === true ? 'stop' : null),
+    }],
+    usage: normalizeUsage(promptTokens, completionTokens),
+  };
+}
+
+function normalizeProviderModels(apiFormat, data) {
+  let candidates;
+  if (apiFormat === 'ollama-native') candidates = data?.models;
+  else candidates = data?.data || data?.models;
+  if (!isPlainRecord(data) || !Array.isArray(candidates)) {
+    throw new StudioAiError('invalid-response', '模型列表响应缺少模型数组。');
+  }
+  const models = [];
+  const ids = new Set();
+  for (const candidate of candidates) {
+    if (!isPlainRecord(candidate)) continue;
+    let id = candidate.id;
+    if (['google-gemini', 'cohere-v2'].includes(apiFormat)) id = candidate.name;
+    if (apiFormat === 'ollama-native') id = candidate.name || candidate.model;
+    if (apiFormat === 'google-gemini' && typeof id === 'string') id = id.replace(/^models\//, '');
+    if (typeof id !== 'string') continue;
+    id = id.trim();
+    if (!id || id.length > MAX_MODEL_ID_LENGTH || /[\r\n]/.test(id) || ids.has(id)) continue;
+    ids.add(id);
+    models.push({ ...safeJsonClone(candidate), id });
+  }
+  return { models, ids: [...ids], data };
+}
+
 function assistantTextFromResponse(data) {
   const choice = Array.isArray(data?.choices) ? data.choices[0] : null;
   const content = choice?.message?.content;
@@ -1185,8 +1824,11 @@ function assistantTextFromResponse(data) {
 
 class OpenAICompatibleClient {
   #apiKey = '';
+  #apiFormat = DEFAULT_API_FORMAT;
+  #allowLoopbackHttp = false;
   #baseUrl = '';
   #fetchImpl;
+  #networkMode = DEFAULT_NETWORK_MODE;
   #pageUrl;
   #timeoutMs;
   #maxResponseBytes;
@@ -1194,6 +1836,9 @@ class OpenAICompatibleClient {
   constructor({
     baseUrl,
     apiKey = '',
+    apiFormat = DEFAULT_API_FORMAT,
+    networkMode = DEFAULT_NETWORK_MODE,
+    allowLoopbackHttp = false,
     fetchImpl = globalThis.fetch,
     pageUrl = defaultPageUrl(),
     timeoutMs = DEFAULT_TIMEOUT_MS,
@@ -1202,10 +1847,16 @@ class OpenAICompatibleClient {
     if (typeof fetchImpl !== 'function') {
       throw new StudioAiError('fetch-unavailable', '当前环境不支持 fetch。');
     }
+    if (typeof allowLoopbackHttp !== 'boolean') {
+      throw new StudioAiError('invalid-transport-option', 'allowLoopbackHttp 必须是布尔值。');
+    }
     this.#pageUrl = pageUrl;
-    this.#baseUrl = normalizeOpenAiBaseUrl(baseUrl, { pageUrl });
+    this.#allowLoopbackHttp = allowLoopbackHttp;
+    this.#apiFormat = normalizeApiFormat(apiFormat);
+    this.#networkMode = normalizeNetworkMode(networkMode);
+    this.#baseUrl = normalizeOpenAiBaseUrl(baseUrl, { pageUrl, allowLoopbackHttp });
     this.#apiKey = normalizeApiKey(apiKey);
-    this.#fetchImpl = fetchImpl;
+    this.#fetchImpl = fetchImpl.bind(globalThis);
     this.#timeoutMs = normalizeTimeout(timeoutMs);
     this.#maxResponseBytes = normalizeMaxBytes(maxResponseBytes);
   }
@@ -1218,8 +1869,19 @@ class OpenAICompatibleClient {
     return this.#apiKey.length > 0;
   }
 
+  get apiFormat() {
+    return this.#apiFormat;
+  }
+
+  get networkMode() {
+    return this.#networkMode;
+  }
+
   setBaseUrl(baseUrl) {
-    this.#baseUrl = normalizeOpenAiBaseUrl(baseUrl, { pageUrl: this.#pageUrl });
+    this.#baseUrl = normalizeOpenAiBaseUrl(baseUrl, {
+      pageUrl: this.#pageUrl,
+      allowLoopbackHttp: this.#allowLoopbackHttp,
+    });
   }
 
   setApiKey(apiKey) {
@@ -1231,7 +1893,12 @@ class OpenAICompatibleClient {
   }
 
   toJSON() {
-    return { baseUrl: this.#baseUrl, hasApiKey: this.hasApiKey };
+    return {
+      baseUrl: this.#baseUrl,
+      apiFormat: this.#apiFormat,
+      networkMode: this.#networkMode,
+      hasApiKey: this.hasApiKey,
+    };
   }
 
   async #requestJson(endpoint, {
@@ -1246,9 +1913,7 @@ class OpenAICompatibleClient {
     const maxBytes = normalizeMaxBytes(maxResponseBytes);
     const requestKey = apiKey === undefined ? this.#apiKey : normalizeApiKey(apiKey);
     const abortScope = createAbortScope(signal, timeout);
-    const headers = { Accept: 'application/json' };
-    if (requestKey) headers.Authorization = `Bearer ${requestKey}`;
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const headers = providerHeaders(this.#apiFormat, requestKey, body !== undefined);
 
     try {
       if (abortScope.callerAborted()) {
@@ -1264,6 +1929,10 @@ class OpenAICompatibleClient {
         redirect: 'error',
         cache: 'no-store',
         referrerPolicy: 'no-referrer',
+        timeoutMs: timeout,
+        maxResponseBytes: maxBytes,
+        apiFormat: this.#apiFormat,
+        networkMode: this.#networkMode,
       });
       if (abortScope.timedOut()) {
         throw new StudioAiError('timeout', '请求超时。', { retryable: true });
@@ -1298,13 +1967,13 @@ class OpenAICompatibleClient {
         });
       }
     } catch (error) {
-      if (error instanceof StudioAiError) throw error;
       if (abortScope.timedOut()) {
         throw new StudioAiError('timeout', '请求超时。', { retryable: true, cause: error });
       }
       if (abortScope.callerAborted()) {
         throw new StudioAiError('cancelled', '请求已取消。', { cause: error });
       }
+      if (error instanceof StudioAiError) throw error;
       throw new StudioAiError('network', '网络、CORS 或重定向检查失败。', { retryable: true, cause: error });
     } finally {
       abortScope.cleanup();
@@ -1312,37 +1981,39 @@ class OpenAICompatibleClient {
   }
 
   async listModels({ apiKey, signal, timeoutMs, maxResponseBytes } = {}) {
-    const data = await this.#requestJson('models', {
+    const data = await this.#requestJson(providerModelsEndpoint(this.#apiFormat), {
       method: 'GET',
       apiKey,
       signal,
       timeoutMs,
       maxResponseBytes,
     });
-    if (!isPlainRecord(data) || !Array.isArray(data.data)) {
-      throw new StudioAiError('invalid-response', '模型列表响应缺少 data 数组。');
-    }
-    const models = [];
-    const ids = new Set();
-    for (const model of data.data) {
-      if (!isPlainRecord(model) || typeof model.id !== 'string' || !model.id.trim() || ids.has(model.id)) continue;
-      ids.add(model.id);
-      models.push(safeJsonClone(model));
-    }
-    return { models, ids: [...ids], data };
+    return normalizeProviderModels(this.#apiFormat, data);
   }
 
   async createChatCompletion(request, options = {}) {
-    const body = buildChatCompletionBody(request);
-    const data = await this.#requestJson('chat/completions', { ...options, method: 'POST', body });
+    const canonical = buildChatCompletionBody(request);
+    const endpoint = providerChatEndpoint(this.#apiFormat, canonical.model);
+    const body = providerChatBody(this.#apiFormat, canonical);
+    if (
+      this.#apiFormat === 'openai-compatible'
+      && isOfficialOpenAiBaseUrl(this.#baseUrl)
+      && body.max_tokens !== undefined
+    ) {
+      body.max_completion_tokens = body.max_tokens;
+      delete body.max_tokens;
+    }
+    const providerData = await this.#requestJson(endpoint, { ...options, method: 'POST', body });
+    const data = normalizeProviderChatResponse(this.#apiFormat, providerData, canonical.model);
     const text = assistantTextFromResponse(data);
     const choice = data.choices[0];
     return {
       text,
-      model: typeof data.model === 'string' ? data.model : body.model,
+      model: typeof data.model === 'string' ? data.model : canonical.model,
       finishReason: choice?.finish_reason ?? null,
       usage: isPlainRecord(data.usage) ? safeJsonClone(data.usage) : null,
       data,
+      providerData,
     };
   }
 }
@@ -1351,10 +2022,17 @@ export {
   AIRP_SENSITIVE_FIELDS,
   AirpPresetError,
   OpenAICompatibleClient,
+  STUDIO_AI_API_FORMATS,
+  STUDIO_AI_NETWORK_MODES,
   StudioAiError,
+  apiFormatSwitchBaseUrl,
   assembleAirpPrompt,
+  createDesktopAiFetch,
   importAirpPreset,
   inspectAirpPreset,
+  normalizeApiFormat,
+  normalizeApiProfileTransport,
+  normalizeNetworkMode,
   normalizeOpenAiBaseUrl,
   parseAgentTurnResponse,
   summarizeAirpPreset,

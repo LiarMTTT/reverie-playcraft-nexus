@@ -9,6 +9,9 @@ fn require_release_value(name: &str) {
 }
 
 fn main() {
+    println!("cargo:rerun-if-changed=icons/icon.ico");
+    println!("cargo:rerun-if-changed=../package.json");
+
     if env::var_os("CARGO_FEATURE_RELEASE_UPDATER").is_some() {
         require_release_value("RPN_UPDATER_PUBLIC_KEY");
         require_release_value("RPN_UPDATER_ENDPOINT");
@@ -31,6 +34,11 @@ fn main() {
         "desktop_download_update",
         "desktop_install_update",
         "desktop_rpn_flush_complete",
+        "desktop_ai_request",
+        "desktop_ai_cancel",
+        "desktop_mcp_prepare",
+        "desktop_mcp_execute",
+        "desktop_mcp_cancel",
     ];
     let attributes = tauri_build::Attributes::new()
         .app_manifest(tauri_build::AppManifest::new().commands(COMMANDS));

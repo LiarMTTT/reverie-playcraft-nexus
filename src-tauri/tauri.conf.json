@@ -6,7 +6,7 @@
   "mainBinaryName": "rpn-desktop",
   "build": {
     "beforeDevCommand": "npm run build:pages",
-    "beforeBuildCommand": "npm run desktop:prepare",
+    "beforeBuildCommand": "npm run build:pages",
     "frontendDist": "../dist-pages"
   },
   "app": {
@@ -19,6 +19,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "useLocalToolsDir": true,
     "createUpdaterArtifacts": false,
     "icon": ["icons/icon.ico"],
     "windows": {

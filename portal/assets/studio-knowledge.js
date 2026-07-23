@@ -193,6 +193,31 @@ async function readSkillManifest(directoryHandle, directoryName, limits) {
   });
 }
 
+function normalizeSkillAlias(value) {
+  return String(value ?? '').normalize('NFKC').trim().toLocaleLowerCase('en-US');
+}
+
+function assertUniqueSkillAliases(skills) {
+  const owners = new Map();
+  for (const skill of skills) {
+    const aliases = new Set([
+      normalizeSkillAlias(skill.name),
+      normalizeSkillAlias(skill.directoryName),
+    ]);
+    for (const alias of aliases) {
+      if (!alias) continue;
+      const owner = owners.get(alias);
+      if (owner && owner !== skill) {
+        throw knowledgeError(
+          'duplicate-skill-alias',
+          `Skill 名称或目录别名重复：${skill.name || skill.directoryName}`,
+        );
+      }
+      owners.set(alias, skill);
+    }
+  }
+}
+
 export async function inspectStudioSkillDirectory(handle, options = {}) {
   if (!isDirectoryHandle(handle) || typeof handle.entries !== 'function') {
     throw knowledgeError('invalid-directory-handle', 'Skill 源必须是可枚举的目录句柄');
@@ -234,6 +259,7 @@ export async function inspectStudioSkillDirectory(handle, options = {}) {
       }
     }
   }
+  assertUniqueSkillAliases(skills);
   return Object.freeze(skills);
 }
 

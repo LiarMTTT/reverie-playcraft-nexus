@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reverie Playcraft Nexus</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      background: #020617;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(34, 197, 94, 0.12), transparent 46%),
+        #020617;
+      font-family: Inter, "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    main {
+      display: grid;
+      justify-items: center;
+      gap: 22px;
+    }
+
+    img {
+      width: 148px;
+      height: 148px;
+      animation: rpn-breathe 1.4s ease-in-out infinite;
+    }
+
+    .loading {
+      display: flex;
+      gap: 7px;
+      height: 7px;
+      align-items: center;
+    }
+
+    .loading i {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #4ade80;
+      opacity: 0.28;
+      animation: rpn-pulse 1.05s ease-in-out infinite;
+    }
+
+    .loading i:nth-child(2) { animation-delay: 0.14s; }
+    .loading i:nth-child(3) { animation-delay: 0.28s; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes rpn-breathe {
+      0%, 100% { transform: scale(0.985); opacity: 0.92; }
+      50% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes rpn-pulse {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.28; }
+      30% { transform: translateY(-3px); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      img,
+      .loading i { animation: none; }
+      .loading i { opacity: 0.72; }
+    }
+  </style>
+</head>
+<body>
+  <main aria-busy="true" aria-label="正在启动 Reverie Playcraft Nexus">
+    <img src="./favicon.svg" alt="" width="148" height="148">
+    <span class="loading" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="sr-only">正在加载主界面</span>
+  </main>
+  <script>
+    window.setTimeout(() => {
+      window.location.replace('../index.html');
+    }, 720);
+  </script>
+</body>
+</html>

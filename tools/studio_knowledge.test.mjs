@@ -223,6 +223,32 @@ const standaloneSkills = await inspectStudioSkillDirectory(standaloneSkill);
 assert.equal(standaloneSkills.length, 1);
 assert.equal(standaloneSkills[0].description, '旧版单 Skill');
 
+const duplicateManifestNames = directoryHandle('duplicate-manifest-names', {
+  alpha: directoryHandle('alpha', {
+    'SKILL.md': fileHandle('SKILL.md', '---\nname: shared-skill\n---\n\n# Alpha'),
+  }),
+  beta: directoryHandle('beta', {
+    'SKILL.md': fileHandle('SKILL.md', '---\nname: SHARED-SKILL\n---\n\n# Beta'),
+  }),
+});
+await assert.rejects(
+  () => inspectStudioSkillDirectory(duplicateManifestNames),
+  (error) => error?.code === 'duplicate-skill-alias',
+);
+
+const duplicateDirectoryAlias = directoryHandle('duplicate-directory-alias', {
+  alpha: directoryHandle('alpha', {
+    'SKILL.md': fileHandle('SKILL.md', '---\nname: first-skill\n---\n\n# First'),
+  }),
+  beta: directoryHandle('beta', {
+    'SKILL.md': fileHandle('SKILL.md', '---\nname: Ａｌｐｈａ\n---\n\n# Second'),
+  }),
+});
+await assert.rejects(
+  () => inspectStudioSkillDirectory(duplicateDirectoryAlias),
+  (error) => error?.code === 'duplicate-skill-alias',
+);
+
 const guideRoot = directoryHandle('ST开发指南DB', {
   'A3.md': fileHandle('A3.md', '# 世界书\n\n关键词激活。'),
   'A4.markdown': fileHandle('A4.markdown', '# MVU\n\n变量更新。'),
