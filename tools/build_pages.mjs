@@ -129,9 +129,6 @@ export async function buildPages({ root = DEFAULT_ROOT } = {}) {
 
   const versionMetadata = {
     version,
-    label: batch?.label ?? null,
-    level: batch?.level ?? null,
-    startedAt: batch?.startedAt ?? null,
     releaseDate,
   };
   await fs.writeFile(path.join(outDir, 'version.json'), `${JSON.stringify(versionMetadata, null, 2)}\n`, 'utf8');

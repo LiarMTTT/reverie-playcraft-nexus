@@ -175,9 +175,6 @@ try {
   assert.ok(firstIndex.includes('· 更新于 2026-07-22'), '页脚必须保留真实 UTF-8 中文');
   assert.deepEqual(JSON.parse(firstMetadata), {
     version: '2.4.6',
-    label: 'test-build',
-    level: 'minor',
-    startedAt: '2026-07-22T12:34:56.000Z',
     releaseDate: '2026-07-22',
   });
   const unversionedLocalReferences = [];
