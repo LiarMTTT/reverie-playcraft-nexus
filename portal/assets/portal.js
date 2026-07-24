@@ -2,12 +2,11 @@
   'use strict';
 
   const STORAGE_KEY = 'rolecard-portal-v0.3';
-  const validRoutes = new Set(['guide', 'vibe', 'play', 'studio', 'workshop']);
+  const validRoutes = new Set(['guide', 'play', 'studio', 'workshop']);
   const startPages = new Set(['last', 'guide', 'studio', 'play', 'workshop']);
   const uiScales = new Set([0.9, 1, 1.1]);
   const routeTitles = {
     guide: '制卡指南 · Reverie Playcraft Nexus',
-    vibe: 'Vibe Coding 新手避坑 · Reverie Playcraft Nexus',
     play: '前端组件预览 · Reverie Playcraft Nexus',
     studio: '制卡工作台 · Reverie Playcraft Nexus',
     workshop: '创意工坊 · Reverie Playcraft Nexus',
@@ -333,6 +332,10 @@
 
   function getRoute() {
     const route = location.hash.replace(/^#/, '').split(/[?&/]/)[0];
+    if (route === 'vibe') {
+      history.replaceState(null, '', '#studio/tutorial');
+      return 'studio';
+    }
     if (validRoutes.has(route)) return route;
     return state.startPage === 'last' ? state.lastRoute : state.startPage;
   }

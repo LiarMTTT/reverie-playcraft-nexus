@@ -938,6 +938,150 @@
   gap: 8px;
 }
 
+.rcs-tutorial-path-grid,
+.rcs-tutorial-handoff-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rcs-tutorial-path-grid article,
+.rcs-tutorial-handoff-grid article {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 13px;
+  border: 1px solid var(--rcs-line);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.rcs-tutorial-path-grid article {
+  border-top-color: rgba(87, 217, 155, 0.44);
+}
+
+.rcs-tutorial-path-grid span,
+.rcs-tutorial-handoff-grid span {
+  color: var(--rcs-blue);
+  font-size: 10px;
+  font-weight: 780;
+}
+
+.rcs-tutorial-path-grid strong,
+.rcs-tutorial-handoff-grid strong {
+  color: var(--rcs-text);
+  font-size: 12px;
+}
+
+.rcs-tutorial-path-grid p,
+.rcs-tutorial-handoff-grid p {
+  margin: 0;
+  color: var(--rcs-muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.rcs-tutorial-path-grid small {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--rcs-line);
+  color: var(--rcs-faint);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.rcs-tutorial-dilemma-grid,
+.rcs-tutorial-install-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rcs-tutorial-dilemma-grid details,
+.rcs-tutorial-install-grid details {
+  min-width: 0;
+  padding: 0 12px;
+  border: 1px solid var(--rcs-line);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.rcs-tutorial-dilemma-grid details[open] {
+  border-color: rgba(242, 200, 121, 0.3);
+  background: rgba(242, 200, 121, 0.035);
+}
+
+.rcs-tutorial-dilemma-grid summary,
+.rcs-tutorial-install-grid summary {
+  padding: 11px 0;
+  color: var(--rcs-text);
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.rcs-tutorial-dilemma-grid p {
+  margin: 0;
+  padding: 0 0 12px;
+  color: var(--rcs-muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.rcs-tutorial-dilemma-grid p strong { color: var(--rcs-warning); }
+
+.rcs-tutorial-install-grid ol {
+  margin: 0;
+  padding: 0 0 12px 18px;
+  color: var(--rcs-muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.rcs-tutorial-view code {
+  padding: 2px 4px;
+  border: 1px solid rgba(116, 184, 255, 0.18);
+  border-radius: 4px;
+  color: #dbeafe;
+  background: rgba(116, 184, 255, 0.06);
+  font: 600 10px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.rcs-tutorial-acceptance-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rcs-tutorial-acceptance-grid li {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid rgba(116, 184, 255, 0.38);
+  background: rgba(116, 184, 255, 0.025);
+}
+
+.rcs-tutorial-acceptance-grid span {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--rcs-blue);
+  background: var(--rcs-blue-soft);
+  font: 800 9px/1 ui-monospace, monospace;
+}
+
+.rcs-tutorial-acceptance-grid strong { color: var(--rcs-text); font-size: 11px; }
+.rcs-tutorial-acceptance-grid p { margin: 0; color: var(--rcs-faint); font-size: 10px; line-height: 1.5; }
+
 .rcs-tutorial-inline-actions {
   display: flex;
   flex-wrap: wrap;

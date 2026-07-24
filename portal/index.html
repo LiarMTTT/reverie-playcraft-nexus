@@ -23,7 +23,7 @@
     </a>
     <nav class="top-nav" aria-label="主页面">
       <a href="#guide" data-route-link="guide">制卡指南</a>
-      <a href="#vibe" data-route-link="vibe">新手避坑</a>
+      <a href="#studio/tutorial">工作台教程</a>
       <a href="#play" data-route-link="play">前端组件预览</a>
       <a href="#studio" data-route-link="studio">制卡工作台</a>
       <a href="#workshop" data-route-link="workshop">创意工坊</a>
@@ -36,7 +36,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19.1 13.5a7.6 7.6 0 0 0 0-3l2-1.55-2-3.46-2.48 1a8.5 8.5 0 0 0-2.6-1.5L13.68 2h-4l-.34 2.99a8.5 8.5 0 0 0-2.6 1.5l-2.48-1-2 3.46 2 1.55a7.6 7.6 0 0 0 0 3l-2 1.55 2 3.46 2.48-1a8.5 8.5 0 0 0 2.6 1.5L9.68 22h4l.34-2.99a8.5 8.5 0 0 0 2.6-1.5l2.48 1 2-3.46-2-1.55Z"/></svg>
         <span>设置</span>
       </button>
-      <span class="version-pill">RPN v0.19.4</span>
+      <span class="version-pill">RPN v0.19.5</span>
     </div>
   </header>
 
@@ -348,97 +348,6 @@
 
     </section>
 
-    <section class="page-shell vibe-page" data-page="vibe" aria-labelledby="vibe-guide-title" hidden>
-      <section class="vibe-guide-section">
-        <div class="vibe-guide">
-          <header class="vibe-page-header">
-            <div class="vibe-guide-summary-copy">
-              <span class="eyebrow">Vibe Coding 新手避坑</span>
-              <h1 id="vibe-guide-title" tabindex="-1">对话越长不等于信息越完整</h1>
-              <small>什么时候开新对话、怎样交接、如何安装 Skill 与授权开发指南 DB，以及最常见的施工错误。</small>
-            </div>
-            <a class="vibe-guide-summary-action" href="#guide">返回制卡指南</a>
-          </header>
-
-          <div class="vibe-guide-body">
-            <section class="vibe-guide-card vibe-guide-conversation" aria-labelledby="vibe-conversation-title">
-              <header>
-                <span>01 · 对话与上下文</span>
-                <h3 id="vibe-conversation-title">出现这些信号，就开新对话</h3>
-              </header>
-              <ul class="vibe-signal-list">
-                <li>一个大阶段已经完成并验收，下一步变成另一类任务。</li>
-                <li>AI 开始忘记当前版本、工作区、真相源或已经确认的红线。</li>
-                <li>对话混入大量旧日志，关键要求需要反复解释。</li>
-                <li>项目已经换版本、回滚、重新导入或切换了仓库。</li>
-              </ul>
-              <div class="vibe-handoff-card">
-                <strong>新对话先贴一张交接卡</strong>
-                <dl>
-                  <div><dt>当前现场</dt><dd>工作区、版本、真相源</dd></div>
-                  <div><dt>进度</dt><dd>已完成、未完成、已验收</dd></div>
-                  <div><dt>边界</dt><dd>禁止事项、不可覆盖内容</dd></div>
-                  <div><dt>证据</dt><dd>已运行检查、失败项、下一步</dd></div>
-                </dl>
-              </div>
-              <p class="vibe-callout"><strong>一句“继续”通常不够。</strong> 最好同时写明刚刚的验收结论和这次唯一目标；AI 说“完成”也不等于浏览器或真实 ST 已验收。</p>
-            </section>
-
-            <section class="vibe-guide-card" aria-labelledby="vibe-install-title">
-              <header>
-                <span>02 · TavernWeave 与开发指南 DB</span>
-                <h3 id="vibe-install-title">Skill 阵列负责分工，开发指南负责事实</h3>
-              </header>
-              <div class="vibe-tool-compare">
-                <article><strong>TavernWeave</strong><p>由 9 个专用 Skill 分担制卡、组件、构建、API、真实运行时、嵌入 UI、代码质量、React UI 与工坊运维；<code>tavern-card-builder</code> 仍是制卡入口。</p></article>
-                <article><strong>开发指南 DB</strong><p>提供 ST、插件、MVU 与接口的版本事实。它保持外部只读，不复制进 RPN，也不伪装成 Skill。</p></article>
-              </div>
-              <div class="vibe-install-grid">
-                <details>
-                  <summary>安装到 Codex / Claude Code</summary>
-                  <ol>
-                    <li>把 <code>https://github.com/LiarMTTT/TavernWeave</code> 交给 Codex 或 Claude Code，并明确要求“安装并启用这个 Skill 仓库”。</li>
-                    <li>让 Agent 根据当前客户端选择正确的插件安装入口；不要让 RPN 猜测或代替客户端安装。</li>
-                    <li>安装完成后新建任务或会话，确认 9 个 Skill 已出现，再开始制卡。</li>
-                  </ol>
-                </details>
-                <details>
-                  <summary>更新与工作台授权</summary>
-                  <ol>
-                    <li>更新时把同一仓库链接交给 Agent，并要求“把已安装的 TavernWeave 更新到最新版本”。</li>
-                    <li>更新完成后同样新建任务或会话；不要在旧上下文里假设新 Skill 已加载。</li>
-                    <li>如需内置 Agent 读取规范，可在工作台选择 TavernWeave 仓库根或其 <code>skills</code> 目录；RPN 不会安装或改写仓库，但运行内置 Agent / AI 解释时会把当前选中的 <code>SKILL.md</code> 正文发送到所选 API。</li>
-                  </ol>
-                </details>
-              </div>
-              <ol class="vibe-install-steps">
-                <li><span>安装</span><p>把 TavernWeave 作为一个插件阵列安装；不要把 9 个 Skill 拆成互相漂移的手工副本。</p></li>
-                <li><span>授权</span><p>工作台可选择 TavernWeave 仓库根、其 <code>skills</code> 目录和开发指南 DB。授权、路径、其他文件与脚本不会上传；只有用户运行内置 Agent / AI 解释时，当前选中 <code>SKILL.md</code> 正文会随该次请求发送到所选 API。</p></li>
-                <li><span>路由</span><p>每次只加载当前模块对应的一个主 Skill；精确 API、真实 ST、发布与 UI 分别交给专用 Skill，避免把全阵列塞进上下文。</p></li>
-                <li><span>停用</span><p>按 Codex 插件管理或 TavernWeave 当前 README 操作；撤销 RPN 目录授权不会卸载插件或删除磁盘原文件。</p></li>
-              </ol>
-            </section>
-
-            <section class="vibe-guide-card vibe-guide-errors" aria-labelledby="vibe-errors-title">
-              <header>
-                <span>03 · 常见施工错误</span>
-                <h3 id="vibe-errors-title">先定位证据链，再让 AI 写文件</h3>
-              </header>
-              <div class="vibe-error-grid">
-                <article><strong>现场错了</strong><ul><li>在旧版本或错误工作区修改</li><li>直接编辑 dist-pages 等生成物</li><li>没确认原卡版本和真相源</li></ul></article>
-                <article><strong>范围失控</strong><ul><li>一次同时大改卡片、变量、前端和发布链</li><li>不断改变目标却不重新同步边界</li><li>同时启用内置与外置 Agent</li></ul></article>
-                <article><strong>验证不足</strong><ul><li>只看截图，不测交互与控制台</li><li>把离线模拟通过当成真实 ST 验收</li><li>页面改了却没有重新构建或刷新缓存</li></ul></article>
-                <article><strong>数据有风险</strong><ul><li>无备份覆盖旧版本或原始角色卡</li><li>把 API Key、Token、私人路径写进项目</li><li>混淆源码、项目备份、角色卡 JSON 与 PNG</li></ul></article>
-              </div>
-              <div class="vibe-safe-order" aria-label="推荐施工顺序">
-                <span>确认工作区与版本</span><i aria-hidden="true">→</i><span>查询 Skill / DB</span><i aria-hidden="true">→</i><span>先列差异与风险</span><i aria-hidden="true">→</i><span>最小改动</span><i aria-hidden="true">→</i><span>自动检查</span><i aria-hidden="true">→</i><span>浏览器与真实 ST 验收</span>
-              </div>
-            </section>
-          </div>
-        </div>
-      </section>
-    </section>
-
     <section class="page-shell component-preview-page" data-page="play" data-component-preview aria-labelledby="component-preview-title" hidden>
       <header class="component-preview-hero">
         <div class="component-preview-copy">
@@ -580,49 +489,55 @@
             <section class="rcs-view rcs-tutorial-view" data-rcs-view="tutorial" aria-labelledby="rcs-tutorial-heading" hidden>
               <div class="rcs-view-heading compact rcs-tutorial-heading">
                 <div>
-                  <p class="eyebrow">工作台教程 · 第一次使用从这里开始</p>
-                  <h2 id="rcs-tutorial-heading" tabindex="-1">先选起点，再沿一条主线完成</h2>
-                  <p>教程只解释操作与边界，不会替你改动当前工作区。每一步都能直接返回对应模块。</p>
+                  <p class="eyebrow">工作台使用教程 · 新手避坑合并版</p>
+                  <h2 id="rcs-tutorial-heading" tabindex="-1">把“感觉”变成一条可验收的制卡路线</h2>
+                  <p>你负责体验、边界与最终判断，AI 负责查证和施工。教程不会改动当前工作区，章节入口可直接返回对应模块。</p>
                 </div>
                 <div class="rcs-heading-actions">
-                  <a class="rcs-button ghost" href="#guide">查看完整制卡指南</a>
+                  <a class="rcs-button ghost" href="#guide">生成 AI 开工指令</a>
                   <a class="rcs-button primary" href="#studio/project" data-rcs-route-link="project">回到工作区</a>
                 </div>
               </div>
 
               <nav class="rcs-tutorial-jump" aria-label="教程章节">
                 <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-start">首次上手</a>
-                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-map">模块地图</a>
-                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-storage">保存边界</a>
-                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-import">导入与变量</a>
-                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-agent">Agent 与知识</a>
-                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-export">检查与恢复</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-route">制卡路线</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-safety">数据边界</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-vibe">Vibe 困境</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-handoff">反馈交接</a>
+                <a href="#studio/tutorial" data-rcs-tutorial-target="rcs-tutorial-export">验收恢复</a>
               </nav>
 
               <section class="rcs-tutorial-section" id="rcs-tutorial-start" aria-labelledby="rcs-tutorial-start-title">
                 <header class="rcs-tutorial-section-head">
                   <span>01</span>
-                  <div><h3 id="rcs-tutorial-start-title">选择你的起点</h3><p>没有必须从总览开始的限制，但一次只推进一条最短路径。</p></div>
+                  <div><h3 id="rcs-tutorial-start-title">先建立一个不会丢的现场</h3><p>不要先选技术栈。先确认从零、接管还是局部修改，并且一次只推进一条最短路径。</p></div>
                 </header>
                 <div class="rcs-tutorial-start-grid">
                   <article><span>从零制作</span><h4>先写核心角色与一个开场</h4><p>适合只有想法的新卡。先让角色能对话，再逐步增加世界书、变量和前端。</p><a href="#studio/card" data-rcs-route-link="card">打开卡片基础</a></article>
                   <article><span>接管现有卡</span><h4>导入后先看拆分报告</h4><p>确认可编辑、原样保留与仅项目内容，避免新表单覆盖未知扩展。</p><a href="#studio/project" data-rcs-route-link="project">前往总览导入</a></article>
-                  <article><span>只改一个部件</span><h4>直接进入目标模块</h4><p>只改世界书、变量或前端时，先确认其上下游，不必重做整张卡。</p><a href="#studio/workflow" data-rcs-route-link="workflow">查看部件关系</a></article>
+                  <article><span>局部改造</span><h4>先说明必须保留什么</h4><p>只改世界书、变量或前端时，先标出上下游和不可破坏项，不必重做整张卡。</p><a href="#studio/workflow" data-rcs-route-link="workflow">查看部件关系</a></article>
                 </div>
                 <ol class="rcs-tutorial-quick-steps" aria-label="十分钟首次上手">
-                  <li><span>1</span><div><strong>建立现场</strong><p>新建空白工作区，或导入 JSON / PNG；有本机目录时再设置工作区、缓存与产出目录。</p></div></li>
-                  <li><span>2</span><div><strong>完成最小内容</strong><p>填写角色名、人设与一个可试玩开场；需要路由时再添加世界书。</p></div></li>
-                  <li><span>3</span><div><strong>只接必要系统</strong><p>变量卡先定义 InitVar，再写更新规则，最后让世界书或前端消费变量。</p></div></li>
-                  <li><span>4</span><div><strong>运行 Check</strong><p>先处理阻断，再理解警告和“待真实 ST”；不要用预览替代真机证据。</p></div></li>
-                  <li><span>5</span><div><strong>留下两类产物</strong><p>先下载工作区备份，再导出角色卡 JSON / PNG；两者用途不同。</p></div></li>
+                  <li><span>1</span><div><strong>确认现场</strong><p>核对工作区、版本、原卡和真相源；导入前保留原文件。</p></div></li>
+                  <li><span>2</span><div><strong>写体验句</strong><p>说清玩家做什么、角色如何回应、什么结果算“像你想要的”。</p></div></li>
+                  <li><span>3</span><div><strong>做最小闭环</strong><p>角色名、人设和一个可试玩开场先跑通，不为“以后可能”堆系统。</p></div></li>
+                  <li><span>4</span><div><strong>检查证据</strong><p>处理阻断，记录警告与待真实 ST；AI 的完成声明不算验收。</p></div></li>
+                  <li><span>5</span><div><strong>保存两份</strong><p>项目备份用于继续编辑，角色卡 JSON / PNG 用于交付和重导入。</p></div></li>
                 </ol>
               </section>
 
-              <section class="rcs-tutorial-section" id="rcs-tutorial-map" aria-labelledby="rcs-tutorial-map-title">
+              <section class="rcs-tutorial-section" id="rcs-tutorial-route" aria-labelledby="rcs-tutorial-route-title">
                 <header class="rcs-tutorial-section-head">
                   <span>02</span>
-                  <div><h3 id="rcs-tutorial-map-title">八个模块，各自只负责一类产物</h3><p>点击模块即可进入；不需要按固定顺序把所有页面填满。</p></div>
+                  <div><h3 id="rcs-tutorial-route-title">按卡的真实复杂度加东西</h3><p>先选择够用的路线。只有上一层已经能试玩、下一层确有需求时，才继续加世界书、变量或前端。</p></div>
                 </header>
+                <div class="rcs-tutorial-path-grid">
+                  <article><span>路线 A · 纯文本卡</span><strong>角色 + 场景 + 开场</strong><p>先证明人设、语气和互动目标成立。没有条件知识、可变状态或界面需求，就停在这里。</p><small>完成证据：能在目标模型里连续试玩，并保留核心人设。</small></article>
+                  <article><span>路线 B · 知识路由</span><strong>再加世界书</strong><p>只有内容需要按关键词、条件或插入位置出现时才加条目；每条都要说明触发与不触发条件。</p><small>完成证据：触发、顺序和未触发场景都已复测。</small></article>
+                  <article><span>路线 C · 状态玩法</span><strong>再接变量 / MVU</strong><p>先定义变量根和初始值，再写更新规则，最后接世界书与 UI 消费者；不要从状态栏倒推数据结构。</p><small>完成证据：初始值、更新、异常输入和重开对话可复现。</small></article>
+                  <article><span>路线 D · 完整前端</span><strong>最后做组件与界面</strong><p>界面只展示或操作已确认的数据链。预览好看不代表真实 ST 的插件、楼层和 Tavern Helper 已工作。</p><small>完成证据：RPN 预览、WebView 与目标 ST 都完成交互复测。</small></article>
+                </div>
                 <div class="rcs-tutorial-module-grid">
                   <a href="#studio/project" data-rcs-route-link="project"><span>工作区</span><strong>总览</strong><p>导入、目录、恢复点与项目设置</p><small>产物：可继续工作的项目现场</small></a>
                   <a href="#studio/card" data-rcs-route-link="card"><span>内容</span><strong>卡片基础</strong><p>名称、人设、场景、示例和多开场</p><small>产物：chara_card_v3 基础字段</small></a>
@@ -635,10 +550,10 @@
                 </div>
               </section>
 
-              <section class="rcs-tutorial-section" id="rcs-tutorial-storage" aria-labelledby="rcs-tutorial-storage-title">
+              <section class="rcs-tutorial-section" id="rcs-tutorial-safety" aria-labelledby="rcs-tutorial-safety-title">
                 <header class="rcs-tutorial-section-head">
                   <span>03</span>
-                  <div><h3 id="rcs-tutorial-storage-title">先分清保存在哪里</h3><p>自动保存、磁盘检查点、项目备份和角色卡文件不是同一个东西。</p></div>
+                  <div><h3 id="rcs-tutorial-safety-title">导入、保存和变量都有边界</h3><p>工作台只解析可验证结构，不执行导入卡中的 Zod、脚本、正则、动态 EJS 或任意命令。</p></div>
                 </header>
                 <div class="rcs-tutorial-storage-grid">
                   <article><span>浏览器现场</span><strong>自动保存当前工作区</strong><p>卡片、世界书、状态草稿、组件选择、工作流和 UI Builder 源稿属于工作区内容。跨页面前留意顶栏保存状态。</p></article>
@@ -650,13 +565,6 @@
                   <ul><li>API Key 与一次性凭证</li><li>未发送的 Agent 临时输入</li><li>临时搜索条件与页面筛选</li><li>真实 ST 的玩家数据与运行结果</li></ul>
                   <p>自动保存失败、浏览器空间不足或目录失去授权时，先停止继续编辑并下载项目备份。</p>
                 </div>
-              </section>
-
-              <section class="rcs-tutorial-section" id="rcs-tutorial-import" aria-labelledby="rcs-tutorial-import-title">
-                <header class="rcs-tutorial-section-head">
-                  <span>04</span>
-                  <div><h3 id="rcs-tutorial-import-title">导入先拆卡，变量再沿主链核对</h3><p>工作台只解析可验证结构，不执行导入卡中的 Zod、脚本、正则或动态 EJS。</p></div>
-                </header>
                 <div class="rcs-tutorial-chain" role="group" aria-label="导入角色卡与变量核对主链">
                   <span>导入 JSON / PNG</span><i aria-hidden="true">→</i><span>内容拆分树</span><i aria-hidden="true">→</i><span>InitVar / Schema 来源</span><i aria-hidden="true">→</i><span>更新规则</span><i aria-hidden="true">→</i><span>世界书与 UI 消费者</span><i aria-hidden="true">→</i><span>Check / 真机</span>
                 </div>
@@ -668,15 +576,44 @@
                 </div>
               </section>
 
-              <section class="rcs-tutorial-section" id="rcs-tutorial-agent" aria-labelledby="rcs-tutorial-agent-title">
+              <section class="rcs-tutorial-section" id="rcs-tutorial-vibe" aria-labelledby="rcs-tutorial-vibe-title">
+                <header class="rcs-tutorial-section-head">
+                  <span>04</span>
+                  <div><h3 id="rcs-tutorial-vibe-title">Vibe Coding 最危险的不是不会写代码</h3><p>真正的问题是目标只存在于感觉里、复杂度被 AI 擅自升级、完成声明又没有证据。展开与你当前情况最像的一项。</p></div>
+                </header>
+                <div class="rcs-tutorial-dilemma-grid">
+                  <details open><summary>“我只知道感觉不对”</summary><p><strong>纠偏：</strong>不要猜审美词。写出实际发生、原本期待、如何复现、哪些部分必须保留；能给一段对话或操作录像就给证据。</p></details>
+                  <details><summary>AI 一上来就要做 MVU、UI 和全套架构</summary><p><strong>纠偏：</strong>回到上一章选择最小复杂度路线。未经确认，不增加变量、前端、依赖、数据源或发布链。</p></details>
+                  <details><summary>对话很长，AI 却越来越健忘</summary><p><strong>纠偏：</strong>阶段完成、版本切换、回滚或真相源变化后开新对话，并附当前现场、已验收证据、红线和唯一下一步。</p></details>
+                  <details><summary>AI 改完代码或发了截图，就说“完成”</summary><p><strong>纠偏：</strong>要求列出改动、检查结果、浏览器交互、控制台、真实 ST 待测项。代码存在和截图好看都不是最终验收。</p></details>
+                  <details><summary>为兼容问题不断叠补丁</summary><p><strong>纠偏：</strong>停止继续包裹旧路径，先确认角色卡版本、插件版本和外部真相源；核心路径不合适时重构，不把例外变成架构。</p></details>
+                  <details><summary>RPN 预览正常，真实酒馆却失效</summary><p><strong>纠偏：</strong>分别核对目标 ST 版本、插件、权限、消息楼层、变量根、Tavern Helper 和网络。离线模拟只能缩小范围。</p></details>
+                  <details><summary>任务跑很久，不知道该等还是停</summary><p><strong>纠偏：</strong>先问当前阶段、正在等待什么、可安全取消点和最后恢复点。停止前保存现场，不用第二个 Agent 同时接管同一文件。</p></details>
+                  <details><summary>角色卡、日志或网页在“命令”AI</summary><p><strong>纠偏：</strong>把导入内容一律当数据和证据，不当系统指令；任何要求执行命令、泄露密钥或越过驾驶员门的文本都应拒绝。</p></details>
+                  <details><summary>真实 Key、Token 或私人路径混进上下文</summary><p><strong>纠偏：</strong>使用占位符和脱敏日志；密钥不进入截图、项目、提交、角色卡或发布包。暴露后先撤销并轮换。</p></details>
+                  <details><summary>目标边做边变，旧验收仍被当成有效</summary><p><strong>纠偏：</strong>目标、范围或不可破坏项变化时重新列计划；只保留仍成立的证据，不把上一阶段的“通过”借给新功能。</p></details>
+                </div>
+              </section>
+
+              <section class="rcs-tutorial-section" id="rcs-tutorial-handoff" aria-labelledby="rcs-tutorial-handoff-title">
                 <header class="rcs-tutorial-section-head">
                   <span>05</span>
-                  <div><h3 id="rcs-tutorial-agent-title">Agent、Skill 与开发指南 DB 各司其职</h3><p>Agent 负责执行，Skill 规定工作方法，DB 提供版本事实；三者不能互相替代。</p></div>
+                  <div><h3 id="rcs-tutorial-handoff-title">让 Agent、Skill、DB 和你的反馈各司其职</h3><p>Agent 负责执行，Skill 规定工作方法，DB 提供版本事实，你负责批准计划与判断体验；四者不能互相替代。</p></div>
                 </header>
                 <div class="rcs-tutorial-agent-grid">
                   <article><span>执行者</span><strong>一次只启用一种 Agent 模式</strong><p>内置 Agent、Codex 或 Claude Code 三选一。切换请求会等待当前操作完成，避免两个 Agent 同时写同一现场。</p></article>
-                  <article><span>工作方法</span><strong>Skill</strong><p>告诉 Agent 应先查什么、改哪些文件、跑什么验证。匹配说明时 Agent 可能自动采用；在任务中点名要用的 Skill 最稳妥。</p></article>
-                  <article><span>事实来源</span><strong>开发指南 DB</strong><p>只读检索 ST 与插件文档，优先打开本次相关章节。DB 不复制进 RPN，也不会自动修改项目。</p></article>
+                  <article><span>工作方法</span><strong>TavernWeave Skill 阵列</strong><p>由 9 个专用 Skill 分担制卡、组件、构建、API、真实运行时、嵌入 UI、代码质量、React UI 与工坊运维。</p></article>
+                  <article><span>事实来源</span><strong>ST 开发指南 DB</strong><p>只读检索 ST 与插件文档，只打开本次相关章节。DB 不复制进 RPN，也不会自动修改项目。</p></article>
+                </div>
+                <div class="rcs-tutorial-install-grid">
+                  <details><summary>安装或更新 TavernWeave</summary><ol><li>把 <code>https://github.com/LiarMTTT/TavernWeave</code> 交给 Codex 或 Claude Code，要求安装并启用该插件仓库。</li><li>让客户端使用自己的插件安装入口；RPN 不代替客户端安装。</li><li>安装或更新后新建任务，确认 9 个 Skill 已出现，再开始制卡。</li></ol></details>
+                  <details><summary>工作台授权与单 Skill 路由</summary><ol><li>工作台可选择 TavernWeave 仓库根或 <code>skills</code> 目录，以及只读开发指南 DB。</li><li>每次只加载当前模块对应的一个主 Skill；不要把整个阵列同时塞进上下文。</li><li>授权、路径、其他文件与脚本不会上传；只有用户运行内置 Agent / AI 解释时，当前选中 <code>SKILL.md</code> 正文会随该次请求发送到所选 API。</li></ol></details>
+                </div>
+                <div class="rcs-tutorial-handoff-grid">
+                  <article><span>开工卡</span><strong>先对齐再写入</strong><p>唯一目标 / 当前现场与版本 / 必须保留 / 禁止事项 / 验收方式 / 写入前是否要确认。</p></article>
+                  <article><span>问题反馈卡</span><strong>把“不对”变成证据</strong><p>实际发生 / 原本期待 / 最短复现 / 影响范围 / 不可破坏项 / 截图、日志或样例。</p></article>
+                  <article><span>阶段交接卡</span><strong>新对话不靠猜</strong><p>已完成与已验收 / 未完成 / 真相源 / 当前工作区 / 已跑检查 / 下一步唯一目标。</p></article>
+                  <article><span>止损恢复卡</span><strong>停在可恢复的位置</strong><p>立即停止什么 / 最后正确版本 / 备份位置 / 可撤销改动 / 需要保留的失败证据。</p></article>
                 </div>
                 <div class="rcs-tutorial-inline-actions">
                   <a class="rcs-button ghost" href="#studio/project" data-rcs-route-link="project">设置工作区、Skill 与 DB</a>
@@ -688,8 +625,15 @@
               <section class="rcs-tutorial-section" id="rcs-tutorial-export" aria-labelledby="rcs-tutorial-export-title">
                 <header class="rcs-tutorial-section-head">
                   <span>06</span>
-                  <div><h3 id="rcs-tutorial-export-title">检查、导出与恢复</h3><p>先看问题等级，再选择正确产物；出错时优先恢复现场，不要立即重写。</p></div>
+                  <div><h3 id="rcs-tutorial-export-title">沿证据阶梯验收，再导出与恢复</h3><p>先看问题等级，再选择正确产物。每一层只证明自己的范围，不能用截图或模拟替代真实 ST。</p></div>
                 </header>
+                <ol class="rcs-tutorial-acceptance-grid" aria-label="制卡验收证据阶梯">
+                  <li><span>1</span><strong>内容确认</strong><p>人设、体验目标、开场和禁区符合预期。</p></li>
+                  <li><span>2</span><strong>结构检查</strong><p>字段、世界书、变量根、消费者和导出计划无阻断。</p></li>
+                  <li><span>3</span><strong>本地模拟</strong><p>触发、变量更新、异常动作与恢复路径可复现。</p></li>
+                  <li><span>4</span><strong>RPN / WebView</strong><p>目标桌面尺寸、交互、控制台和保存往返通过。</p></li>
+                  <li><span>5</span><strong>真实 ST 重导入</strong><p>目标版本、插件、楼层、权限和实际对话完成复测。</p></li>
+                </ol>
                 <div class="rcs-tutorial-export-grid">
                   <dl>
                     <div><dt>阻断</dt><dd>会产生错误或不完整角色卡；修复前不能继续导出卡片。</dd></div>
@@ -2499,7 +2443,7 @@
                   </header>
                   <article class="rcs-about-brand-card">
                     <div class="rcs-about-brand-mark" aria-hidden="true">R</div>
-                    <div><strong>Reverie Playcraft Nexus</strong><span>版本 <b data-desktop-current-version>0.19.4</b></span></div>
+                    <div><strong>Reverie Playcraft Nexus</strong><span>版本 <b data-desktop-current-version>0.19.5</b></span></div>
                   </article>
                   <dl class="rcs-settings-facts rcs-about-facts">
                     <div><dt>产品形态</dt><dd>桌面薄壳与内置 Web 前端</dd></div>
@@ -2767,7 +2711,7 @@
   </main>
 
   <footer class="site-footer">
-        <p>Reverie Playcraft Nexus · v0.19.4 · 更新于 2026-07-24</p>
+        <p>Reverie Playcraft Nexus · v0.19.5 · 更新于 2026-07-24</p>
     <p>制卡指南、前端组件预览、制卡工作台与创意工坊各自分区；组件选择与编辑仍统一在制卡工作台内完成。</p>
   </footer>
 

@@ -1,6 +1,6 @@
 {
   "name": "reverie-playcraft-nexus",
-  "version": "0.19.4",
+  "version": "0.19.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -39,9 +39,9 @@
     "node": ">=20"
   },
   "rpnBatch": {
-    "label": "m10-ai-connection-preset-state",
-    "version": "0.19.4",
+    "label": "m11-studio-tutorial-vibe-guide",
+    "version": "0.19.5",
     "level": "patch",
-    "startedAt": "2026-07-24T10:35:41.712Z"
+    "startedAt": "2026-07-24T11:13:21.340Z"
   }
 }

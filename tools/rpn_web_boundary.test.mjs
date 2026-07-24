@@ -39,7 +39,7 @@ const componentCatalog = JSON.parse(readFileSync(componentCatalogPath, 'utf8'));
 
 assert.doesNotMatch(portalSource, /\bdata-route-load-state\b/u, '入口不得保留可能永久占屏的路由加载门');
 const initialPageTags = [...portalSource.matchAll(/<section\b[^>]*\bdata-page="[^"]+"[^>]*>/gu)].map((match) => match[0]);
-assert.ok(initialPageTags.length >= 5, '入口必须识别全部顶层 data-page');
+assert.ok(initialPageTags.length >= 4, '入口必须识别合并教程后的全部顶层 data-page');
 const initialGuideTag = initialPageTags.find((tag) => /\bdata-page="guide"/u.test(tag)) || '';
 assert.ok(initialGuideTag, '入口必须保留 guide 回退页');
 assert.doesNotMatch(initialGuideTag, /\bhidden\b/u, 'portal.js 接管前 guide 回退页必须可见');
@@ -191,23 +191,33 @@ assert.match(studioSource, /const ROUTES = new Set\(\[[^\]]*'tutorial'[^\]]*\]\)
 assert.match(studioSource, /tutorial:\s*\['工作台教程'/, 'Agent 上下文必须识别工作台教程');
 assert.match(portalSource, /data-rcs-route-link="tutorial"/, '工作台顶栏必须提供教程入口');
 assert.match(portalSource, /data-rcs-view="tutorial"/, '工作台必须提供独立教程页面');
-for (const chapter of ['start', 'map', 'storage', 'import', 'agent', 'export']) {
+for (const chapter of ['start', 'route', 'safety', 'vibe', 'handoff', 'export']) {
   assert.match(portalSource, new RegExp(`data-rcs-tutorial-target="rcs-tutorial-${chapter}"`), `工作台教程缺少章节入口：${chapter}`);
 }
 assert.match(studioSource, /\$\$\('\[data-rcs-tutorial-target\]'\)[\s\S]{0,360}scrollIntoView\(\{ block: 'start' \}\)/, '教程章节入口必须在当前路由内滚动定位');
-const vibePageStart = portalSource.indexOf('<section class="page-shell vibe-page"');
-assert.ok(vibePageStart > guidePathStart && vibePageStart < componentPreviewStart, 'Vibe Coding 新手避坑必须位于制卡指南外的独立页面');
-const vibePageSource = portalSource.slice(vibePageStart, componentPreviewStart);
-assert.equal((portalSource.match(/data-page="vibe"/g) || []).length, 1, '#vibe 必须只对应一个页面');
-assert.match(portalSource, /href="#vibe" data-route-link="vibe">新手避坑<\/a>/, '主导航必须提供独立 #vibe Tab');
-assert.match(vibePageSource, /data-page="vibe"[^>]*aria-labelledby="vibe-guide-title"/, '#vibe 必须保留独立页面与标题契约');
-assert.match(vibePageSource, /<h1 id="vibe-guide-title" tabindex="-1">/, '#vibe 必须提供路由焦点目标');
-assert.doesNotMatch(vibePageSource, /<span class="vibe-guide-summary-copy">[\s\S]*?<h1/, '#vibe 的 h1 不得放进只允许短语内容的 span');
-assert.match(portalScriptSource, /const validRoutes = new Set\(\[[^\]]*'vibe'/, '#vibe 必须注册为顶层路由');
-assert.match(portalScriptSource, /vibe:\s*'Vibe Coding 新手避坑 · Reverie Playcraft Nexus'/, '#vibe 文档标题必须使用独立语义');
-assert.ok(vibePageSource.includes('https://github.com/LiarMTTT/TavernWeave'), '新手页必须指向 TavernWeave 仓库真相源');
-assert.ok(vibePageSource.includes('由 9 个专用 Skill 分担'), '新手页必须解释 TavernWeave 阵列而非旧单 Skill');
-assert.ok(vibePageSource.includes('每次只加载当前模块对应的一个主 Skill'), '新手页必须明确单路由单主 Skill 的上下文边界');
+const tutorialPageStart = portalSource.indexOf('<section class="rcs-view rcs-tutorial-view"');
+const tutorialPageEnd = portalSource.indexOf('<section class="rcs-view" data-rcs-view="project"', tutorialPageStart);
+assert.ok(tutorialPageStart >= 0 && tutorialPageEnd > tutorialPageStart, '工作台教程必须是独立子页面');
+const tutorialPageSource = portalSource.slice(tutorialPageStart, tutorialPageEnd);
+assert.equal((portalSource.match(/data-page="vibe"/g) || []).length, 0, '新手避坑不得继续维护为第二份顶层页面');
+assert.match(portalSource, /href="#studio\/tutorial">工作台教程<\/a>/, '主导航必须直接进入工作台教程');
+assert.doesNotMatch(portalScriptSource, /const validRoutes = new Set\(\[[^\]]*'vibe'/, '#vibe 不得继续注册为顶层页面');
+assert.match(portalScriptSource, /if \(route === 'vibe'\)[\s\S]{0,160}history\.replaceState\(null, '', '#studio\/tutorial'\)/, '旧 #vibe 书签必须迁移到工作台教程');
+for (const pathLabel of ['路线 A · 纯文本卡', '路线 B · 知识路由', '路线 C · 状态玩法', '路线 D · 完整前端']) {
+  assert.ok(tutorialPageSource.includes(pathLabel), `工作台教程缺少真实制卡复杂度路线：${pathLabel}`);
+}
+for (const dilemma of ['我只知道感觉不对', 'AI 一上来就要做 MVU、UI 和全套架构', 'RPN 预览正常，真实酒馆却失效', '角色卡、日志或网页在“命令”AI']) {
+  assert.ok(tutorialPageSource.includes(dilemma), `工作台教程缺少 Vibe Coding 困境：${dilemma}`);
+}
+for (const handoff of ['开工卡', '问题反馈卡', '阶段交接卡', '止损恢复卡']) {
+  assert.ok(tutorialPageSource.includes(handoff), `工作台教程缺少反馈或交接模板：${handoff}`);
+}
+for (const evidence of ['内容确认', '结构检查', '本地模拟', 'RPN / WebView', '真实 ST 重导入']) {
+  assert.ok(tutorialPageSource.includes(evidence), `工作台教程缺少验收证据阶梯：${evidence}`);
+}
+assert.ok(tutorialPageSource.includes('https://github.com/LiarMTTT/TavernWeave'), '工作台教程必须指向 TavernWeave 仓库真相源');
+assert.ok(tutorialPageSource.includes('由 9 个专用 Skill 分担'), '工作台教程必须解释 TavernWeave 阵列而非旧单 Skill');
+assert.ok(tutorialPageSource.includes('每次只加载当前模块对应的一个主 Skill'), '工作台教程必须明确单路由单主 Skill 的上下文边界');
 
 const tavernWeaveConstantsSource = studioSource.slice(
   studioSource.indexOf('const TAVERNWEAVE_SKILL_NAMES'),
@@ -271,9 +281,9 @@ assert.match(studioWorkbenchSkillMessagesSource, /const skill = selectedStudioSk
 assert.match(studioWorkbenchSkillMessagesSource, /if \(!skill\?\.text\) return \[\]/, '用户选择的 Skill 不可用时不得注入其他 Skill');
 const skillApiDisclosure = '授权、路径、其他文件与脚本不会上传；只有用户运行内置 Agent / AI 解释时，当前选中 SKILL.md 正文会随该次请求发送到所选 API。';
 assert.match(
-  vibePageSource,
+  tutorialPageSource,
   /授权、路径、其他文件与脚本不会上传；只有用户运行内置 Agent \/ AI 解释时，当前选中 <code>SKILL\.md<\/code> 正文会随该次请求发送到所选 API。/,
-  '新手 Skill 授权说明必须披露当前 SKILL.md 正文会发送到所选 API',
+  '工作台教程的 Skill 授权说明必须披露当前 SKILL.md 正文会发送到所选 API',
 );
 assert.ok(studioSource.includes(skillApiDisclosure), '工作台 Skill 就绪状态必须披露当前 SKILL.md 正文会发送到所选 API');
 assert.equal(portalSource.includes('目录内容只驻留本页内存'), false, 'Skill 隐私文案不得继续声称全部目录内容只驻留本页');
