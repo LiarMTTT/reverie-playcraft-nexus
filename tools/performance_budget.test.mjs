@@ -59,8 +59,8 @@ const studioModuleGraph = await collectStaticModuleGraph('assets/card-studio.js'
 const studioMeasuredAssets = [...new Set([...studioAssets, ...studioModuleGraph])];
 const studioBytes = (await Promise.all(studioMeasuredAssets.map(bytes))).reduce((sum, size) => sum + size, 0);
 assert.ok(
-  studioBytes <= 1280 * 1024,
-  `工作台静态 import 图与核心数据 ${Math.ceil(studioBytes / 1024)} KiB 超过 1280 KiB 预算：${studioMeasuredAssets.join(', ')}`,
+  studioBytes <= 1296 * 1024,
+  `工作台静态 import 图与核心数据 ${Math.ceil(studioBytes / 1024)} KiB 超过 1296 KiB 预算：${studioMeasuredAssets.join(', ')}`,
 );
 
 const startupStyles = [

@@ -9,7 +9,7 @@
   <title>Reverie Playcraft Nexus</title>
   <link rel="stylesheet" href="./assets/portal.css?v=0723m7a1">
   <link rel="stylesheet" href="./assets/component-preview.css?v=0723m6p1">
-  <link rel="stylesheet" href="./assets/card-studio.css?v=0723m8a1">
+  <link rel="stylesheet" href="./assets/card-studio.css?v=0724m9a1">
   <link rel="stylesheet" href="./assets/workshop-studio.css?v=0723m6p1">
   <link rel="stylesheet" href="./assets/component-workshop.css?v=0723m6p1">
 </head>
@@ -36,7 +36,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19.1 13.5a7.6 7.6 0 0 0 0-3l2-1.55-2-3.46-2.48 1a8.5 8.5 0 0 0-2.6-1.5L13.68 2h-4l-.34 2.99a8.5 8.5 0 0 0-2.6 1.5l-2.48-1-2 3.46 2 1.55a7.6 7.6 0 0 0 0 3l-2 1.55 2 3.46 2.48-1a8.5 8.5 0 0 0 2.6 1.5L9.68 22h4l.34-2.99a8.5 8.5 0 0 0 2.6-1.5l2.48 1 2-3.46-2-1.55Z"/></svg>
         <span>设置</span>
       </button>
-      <span class="version-pill">RPN v0.19.3</span>
+      <span class="version-pill">RPN v0.19.4</span>
     </div>
   </header>
 
@@ -2166,10 +2166,26 @@
 
                   <div class="rcs-ai-connection-grid">
                     <section class="rcs-ai-settings-card" aria-labelledby="rcs-ai-endpoint-title">
-                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-ai-endpoint-title">服务与凭证</h4><span data-rcs-ai-format-state>OpenAI Compatible</span></div>
-                      <label><span>服务商预设（可选）</span><select data-rcs-ai-provider-preset></select></label>
+                      <div class="rcs-ai-settings-card-head"><h4 id="rcs-ai-endpoint-title">服务与凭证</h4><span data-rcs-ai-format-state>自定义连接</span></div>
+                      <label><span>连接类型</span><select data-rcs-ai-connection-mode>
+                        <option value="provider">供应商 API</option>
+                        <option value="codingPlan">Coding Plan</option>
+                        <option value="custom">自定义 / 本地服务</option>
+                      </select></label>
+                      <label data-rcs-ai-provider-field hidden><span>供应商预设</span><select data-rcs-ai-provider-preset></select></label>
+                      <label data-rcs-ai-coding-plan-field hidden><span>Coding Plan 预设</span><select data-rcs-ai-coding-plan-preset>
+                        <option value="">自定义 / 手动配置</option>
+                        <option value="aliyun">阿里云百炼 Coding Plan</option>
+                        <option value="minimax">MiniMax Token Plan</option>
+                        <option value="glm">智谱 GLM Coding Plan</option>
+                        <option value="kimi">Kimi Code</option>
+                      </select></label>
+                      <div class="rcs-ai-managed-connection" data-rcs-ai-managed-connection hidden>
+                        <strong data-rcs-ai-managed-connection-title>预设托管连接</strong>
+                        <span data-rcs-ai-managed-connection-detail></span>
+                      </div>
                       <div class="rcs-ai-model-row">
-                        <label><span>原生 API 格式</span><select data-rcs-ai-api-format>
+                        <label data-rcs-ai-custom-format-field><span>原生 API 格式</span><select data-rcs-ai-api-format>
                           <option value="openai-compatible">OpenAI Compatible</option>
                           <option value="openai-responses">OpenAI Responses</option>
                           <option value="anthropic-messages">Anthropic Messages</option>
@@ -2183,20 +2199,11 @@
                           <option value="systemProxy">使用系统代理</option>
                         </select></label>
                       </div>
-                      <div class="rcs-ai-model-row">
-                        <label><span>凭证类型</span><select data-rcs-ai-credential-kind>
-                          <option value="sessionApiKey">按量 API Key</option>
-                          <option value="sessionCodingPlanKey">Coding Plan Key</option>
-                        </select></label>
-                        <label data-rcs-ai-coding-plan-field hidden><span>Coding Plan 预设</span><select data-rcs-ai-coding-plan-preset>
-                          <option value="">自定义 / 手动配置</option>
-                          <option value="aliyun">阿里云百炼 Coding Plan</option>
-                          <option value="minimax">MiniMax Token Plan</option>
-                          <option value="glm">智谱 GLM Coding Plan</option>
-                          <option value="kimi">Kimi Code</option>
-                        </select></label>
-                      </div>
-                      <label><span>Base URL</span><input type="url" data-rcs-ai-base-url placeholder="https://api.example.com/v1" spellcheck="false" autocomplete="off"></label>
+                      <select data-rcs-ai-credential-kind hidden aria-hidden="true" tabindex="-1">
+                        <option value="sessionApiKey">按量 API Key</option>
+                        <option value="sessionCodingPlanKey">Coding Plan Key</option>
+                      </select>
+                      <label data-rcs-ai-custom-base-field><span>Base URL</span><input type="url" data-rcs-ai-base-url placeholder="https://api.example.com/v1" spellcheck="false" autocomplete="off"></label>
                       <div class="rcs-ai-key-field">
                         <label for="rcs-ai-api-key"><span data-rcs-ai-key-label>API Key</span><small data-rcs-ai-credential-state>本次页面未载入 Key</small></label>
                         <div class="rcs-ai-key-row">
@@ -2492,7 +2499,7 @@
                   </header>
                   <article class="rcs-about-brand-card">
                     <div class="rcs-about-brand-mark" aria-hidden="true">R</div>
-                    <div><strong>Reverie Playcraft Nexus</strong><span>版本 <b data-desktop-current-version>0.19.3</b></span></div>
+                    <div><strong>Reverie Playcraft Nexus</strong><span>版本 <b data-desktop-current-version>0.19.4</b></span></div>
                   </article>
                   <dl class="rcs-settings-facts rcs-about-facts">
                     <div><dt>产品形态</dt><dd>桌面薄壳与内置 Web 前端</dd></div>
@@ -2760,13 +2767,13 @@
   </main>
 
   <footer class="site-footer">
-        <p>Reverie Playcraft Nexus · v0.19.3 · 更新于 2026-07-24</p>
+        <p>Reverie Playcraft Nexus · v0.19.4 · 更新于 2026-07-24</p>
     <p>制卡指南、前端组件预览、制卡工作台与创意工坊各自分区；组件选择与编辑仍统一在制卡工作台内完成。</p>
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./assets/portal.js?v=0723m7a1" defer></script>
-  <script type="module" src="./assets/card-studio.js?v=0723m8c1"></script>
+  <script type="module" src="./assets/card-studio.js?v=0724m9a1"></script>
   <script type="module" src="./assets/workshop-studio.js?v=0723m5a1"></script>
   <script type="module" src="./assets/component-workshop.js?v=0723m5a1"></script>
 </body>

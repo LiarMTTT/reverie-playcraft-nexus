@@ -593,12 +593,14 @@ const activeStudioAiProfileSource = studioSource.slice(
 );
 assert.match(activeStudioAiProfileSource, /roleBindings\?\.primary/, '运行时必须只以 primary 绑定选择主模型');
 assert.doesNotMatch(activeStudioAiProfileSource, /activeApiId/, 'activeApiId 只能作为持久化兼容镜像，不得成为静默运行时回退');
-const switchStudioAiCredentialKindSource = studioSource.slice(
-  studioSource.indexOf('function switchStudioAiCredentialKind'),
+const switchStudioAiConnectionModeSource = studioSource.slice(
+  studioSource.indexOf('function switchStudioAiConnectionMode'),
   studioSource.indexOf('function switchStudioAiCodingPlanPreset'),
 );
-assert.match(switchStudioAiCredentialKindSource, /codingPlanSessionKeys\.delete\(existing\.id\)/, '从 Coding Plan 切换凭证类型必须销毁旧 Plan Key');
-assert.match(switchStudioAiCredentialKindSource, /aiSessionKeys\.delete\(existing\.id\)/, '从普通 API 切换凭证类型必须销毁旧 API Key');
+assert.match(switchStudioAiConnectionModeSource, /codingPlanSessionKeys\.delete\(existing\.id\)/, '从 Coding Plan 切换连接类型必须销毁旧 Plan Key');
+assert.match(switchStudioAiConnectionModeSource, /aiSessionKeys\.delete\(existing\.id\)/, '从普通 API 切换连接类型必须销毁旧 API Key');
+assert.match(switchStudioAiConnectionModeSource, /applyProviderPreset\([\s\S]*overwriteBaseUrl:\s*true/, '供应商模式必须原子套用格式与固定端点');
+assert.match(switchStudioAiConnectionModeSource, /applyCodingPlanPreset\([\s\S]*overwriteBaseUrl:\s*true/, 'Coding Plan 模式必须原子套用格式与固定端点');
 assert.match(portalSource, /data-rcs-ai-api-key aria-label="API Key"/, 'API Key 输入框必须拥有独立可访问名称');
 const activateStudioAiProfileSource = studioSource.slice(
   studioSource.indexOf('async function activateStudioAiProfile'),
@@ -1969,7 +1971,13 @@ const assistantPanelSource = portalSource.slice(
   portalSource.indexOf('<section class="rcs-agent-dock"'),
   portalSource.indexOf('<nav class="rcs-mobile-nav"', portalSource.indexOf('<section class="rcs-agent-dock"')),
 );
-assert.match(aiSettingsDialogSource, /服务商预设（可选）/u, '设置页必须明确服务商预设不是必选项');
+assert.match(aiSettingsDialogSource, /<span>连接类型<\/span><select data-rcs-ai-connection-mode>/u, '设置页必须先选择连接类型');
+assert.match(aiSettingsDialogSource, /<option value="provider">供应商 API<\/option>/u);
+assert.match(aiSettingsDialogSource, /<option value="codingPlan">Coding Plan<\/option>/u);
+assert.match(aiSettingsDialogSource, /<option value="custom">自定义 \/ 本地服务<\/option>/u);
+assert.match(aiSettingsDialogSource, /data-rcs-ai-provider-field hidden/u, '供应商选择只应在供应商模式出现');
+assert.match(aiSettingsDialogSource, /data-rcs-ai-custom-format-field/u, '原生格式只应作为自定义连接字段');
+assert.match(aiSettingsDialogSource, /data-rcs-ai-managed-connection hidden/u, '固定预设必须显示只读连接摘要');
 assert.match(aiSettingsDialogSource, /AIRP 是可选项/u, '设置页必须明确 AIRP 不是必选项');
 for (const settingsOnlyHook of ['data-rcs-ai-base-url', 'data-rcs-ai-api-key', 'data-rcs-ai-model', 'data-rcs-airp-file']) {
   assert.ok(aiSettingsDialogSource.includes(settingsOnlyHook), `AI 设置弹窗缺少 ${settingsOnlyHook}`);

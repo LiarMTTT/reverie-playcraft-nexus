@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  STUDIO_AI_CONNECTION_MODES,
   STUDIO_AI_CREDENTIAL_KINDS,
   STUDIO_AI_PROVIDER_GROUPS,
   STUDIO_AI_PROVIDER_PRESETS,
@@ -8,14 +9,20 @@ import {
   applyProviderPreset,
   codingPlanPreset,
   credentialStorageBucket,
+  normalizeConnectionMode,
   normalizeCodingPlanPreset,
   normalizeCredentialKind,
   normalizeProviderPreset,
   profileDelegationAllowed,
+  profileConnectionMode,
   providerPreset,
+  reconcileApiProfilePresetState,
   sanitizeApiProfileCredentialMetadata,
 } from '../portal/assets/studio-api-profiles.js';
 
+assert.deepEqual(Object.keys(STUDIO_AI_CONNECTION_MODES), ['provider', 'codingPlan', 'custom']);
+assert.equal(normalizeConnectionMode('provider'), 'provider');
+assert.equal(normalizeConnectionMode('unknown'), 'custom');
 assert.equal(normalizeCredentialKind('sessionApiKey'), 'sessionApiKey');
 assert.equal(normalizeCredentialKind('sessionCodingPlanKey'), 'sessionCodingPlanKey');
 assert.equal(normalizeCredentialKind('oauth'), 'sessionApiKey', 'CLI/OAuth 不得成为隐式凭证类型');
@@ -49,8 +56,14 @@ const retainedGateway = applyProviderPreset({
   apiFormat: 'openai-compatible',
   providerPreset: 'custom',
 }, 'anthropic');
-assert.equal(retainedGateway.baseUrl, 'https://gateway.example.test/v1', '切换预设不得静默覆盖自定义网关');
+assert.equal(retainedGateway.baseUrl, 'https://api.anthropic.com/v1', '固定供应商预设必须接管 Base URL');
 assert.equal(retainedGateway.apiFormat, 'anthropic-messages');
+const explicitCustomGateway = applyProviderPreset({
+  baseUrl: 'https://gateway.example.test/v1',
+  apiFormat: 'openai-compatible',
+  providerPreset: 'custom',
+}, 'anthropic', { overwriteBaseUrl: false });
+assert.equal(explicitCustomGateway.baseUrl, 'https://gateway.example.test/v1', '自定义模式仍可显式保留代理网关');
 
 assert.deepEqual(Object.keys(STUDIO_CODING_PLAN_PRESETS), ['aliyun', 'minimax', 'glm', 'kimi']);
 for (const [id, preset] of Object.entries(STUDIO_CODING_PLAN_PRESETS)) {
@@ -94,7 +107,7 @@ const customBase = applyCodingPlanPreset({
   baseUrl: 'https://gateway.example.test/coding',
   codingPlanPreset: 'aliyun',
 }, 'minimax');
-assert.equal(customBase.baseUrl, 'https://gateway.example.test/coding', '自定义网关不得被预设切换静默覆盖');
+assert.equal(customBase.baseUrl, STUDIO_CODING_PLAN_PRESETS.minimax.baseUrl, '固定套餐预设必须接管 Base URL');
 assert.equal(customBase.apiFormat, 'anthropic-messages');
 
 const previousDefault = applyCodingPlanPreset({
@@ -102,6 +115,47 @@ const previousDefault = applyCodingPlanPreset({
   codingPlanPreset: 'aliyun',
 }, 'glm');
 assert.equal(previousDefault.baseUrl, STUDIO_CODING_PLAN_PRESETS.glm.baseUrl);
+
+const canonicalProviderProfile = reconcileApiProfilePresetState({
+  baseUrl: 'https://api.moonshot.cn/v1/',
+  apiFormat: 'openai-compatible',
+  providerPreset: 'kimi',
+  credentialKind: 'sessionApiKey',
+  codingPlanPreset: 'aliyun',
+});
+assert.equal(canonicalProviderProfile.providerPreset, 'kimi');
+assert.equal(canonicalProviderProfile.codingPlanPreset, '');
+assert.equal(profileConnectionMode(canonicalProviderProfile), 'provider');
+
+const conflictingLegacyProvider = reconcileApiProfilePresetState({
+  baseUrl: STUDIO_CODING_PLAN_PRESETS.aliyun.baseUrl,
+  apiFormat: 'openai-compatible',
+  providerPreset: 'kimi',
+  credentialKind: 'sessionApiKey',
+});
+assert.equal(conflictingLegacyProvider.providerPreset, 'custom', '端点与供应商冲突的旧配置必须降级为自定义');
+assert.equal(conflictingLegacyProvider.baseUrl, STUDIO_CODING_PLAN_PRESETS.aliyun.baseUrl, '旧配置降级不得覆盖用户端点');
+assert.equal(profileConnectionMode(conflictingLegacyProvider), 'custom');
+
+const canonicalCodingPlanProfile = reconcileApiProfilePresetState({
+  baseUrl: STUDIO_CODING_PLAN_PRESETS.glm.baseUrl,
+  apiFormat: STUDIO_CODING_PLAN_PRESETS.glm.apiFormat,
+  providerPreset: 'glm',
+  credentialKind: 'sessionCodingPlanKey',
+  codingPlanPreset: 'glm',
+});
+assert.equal(canonicalCodingPlanProfile.providerPreset, 'custom');
+assert.equal(canonicalCodingPlanProfile.codingPlanPreset, 'glm');
+assert.equal(profileConnectionMode(canonicalCodingPlanProfile), 'codingPlan');
+
+const conflictingLegacyCodingPlan = reconcileApiProfilePresetState({
+  baseUrl: 'https://gateway.example.test/coding',
+  apiFormat: 'openai-compatible',
+  credentialKind: 'sessionCodingPlanKey',
+  codingPlanPreset: 'aliyun',
+});
+assert.equal(conflictingLegacyCodingPlan.codingPlanPreset, '', '冲突套餐必须降级为手动 Coding Plan');
+assert.equal(conflictingLegacyCodingPlan.baseUrl, 'https://gateway.example.test/coding');
 
 assert.deepEqual(
   sanitizeApiProfileCredentialMetadata({

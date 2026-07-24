@@ -7149,6 +7149,34 @@
   margin: 0;
 }
 
+.rcs-ai-managed-connection {
+  display: grid;
+  gap: 3px;
+  padding: 10px 11px;
+  border: 1px solid rgba(116, 184, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(116, 184, 255, 0.055);
+}
+
+.rcs-ai-managed-connection strong {
+  font-size: 10px;
+}
+
+.rcs-ai-managed-connection span {
+  color: var(--rcs-faint);
+  font-size: 9px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+[data-rcs-ai-provider-field][hidden],
+[data-rcs-ai-coding-plan-field][hidden],
+[data-rcs-ai-custom-format-field][hidden],
+[data-rcs-ai-custom-base-field][hidden],
+[data-rcs-ai-managed-connection][hidden] {
+  display: none;
+}
+
 .rcs-ai-key-row {
   min-width: 0;
   display: grid;

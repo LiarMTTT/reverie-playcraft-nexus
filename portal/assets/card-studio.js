@@ -98,6 +98,7 @@ import {
   summarizeAirpPreset,
 } from './studio-ai.js?v=0723m8c1';
 import {
+  STUDIO_AI_CONNECTION_MODES,
   STUDIO_AI_CREDENTIAL_KINDS,
   STUDIO_AI_PROVIDER_GROUPS,
   STUDIO_AI_PROVIDER_PRESETS,
@@ -106,11 +107,14 @@ import {
   applyProviderPreset,
   codingPlanPreset,
   credentialStorageBucket,
+  normalizeConnectionMode,
   normalizeProviderPreset,
   profileDelegationAllowed,
+  profileConnectionMode,
   providerPreset,
+  reconcileApiProfilePresetState,
   sanitizeApiProfileCredentialMetadata,
-} from './studio-api-profiles.js?v=0723m8b1';
+} from './studio-api-profiles.js?v=0724m9a1';
 import {
   STUDIO_AGENT_ORCHESTRATOR_LIMITS,
   normalizeStudioAgentRoutingSettings,
@@ -2616,8 +2620,14 @@ if (root) {
     return STUDIO_AI_API_FORMATS[value] ? value : 'openai-compatible';
   }
 
+  function studioAiDraftConnectionMode() {
+    return normalizeConnectionMode($('[data-rcs-ai-connection-mode]')?.value);
+  }
+
   function studioAiDraftProviderPreset() {
-    return normalizeProviderPreset($('[data-rcs-ai-provider-preset]')?.value);
+    return studioAiDraftConnectionMode() === 'provider'
+      ? normalizeProviderPreset($('[data-rcs-ai-provider-preset]')?.value)
+      : 'custom';
   }
 
   function studioAiDraftNetworkMode() {
@@ -2626,8 +2636,9 @@ if (root) {
   }
 
   function studioAiDraftCredentialKind() {
-    const value = $('[data-rcs-ai-credential-kind]')?.value;
-    return STUDIO_AI_CREDENTIAL_KINDS[value] ? value : 'sessionApiKey';
+    return studioAiDraftConnectionMode() === 'codingPlan'
+      ? 'sessionCodingPlanKey'
+      : 'sessionApiKey';
   }
 
   function studioAiDraftCodingPlanPreset() {
@@ -2635,6 +2646,36 @@ if (root) {
     return studioAiDraftCredentialKind() === 'sessionCodingPlanKey' && STUDIO_CODING_PLAN_PRESETS[value]
       ? value
       : '';
+  }
+
+  function studioAiDraftConnectionMetadata() {
+    const mode = studioAiDraftConnectionMode();
+    const source = {
+      baseUrl: $('[data-rcs-ai-base-url]')?.value.trim() || '',
+      apiFormat: studioAiDraftApiFormat(),
+      providerPreset: studioAiDraftProviderPreset(),
+      credentialKind: studioAiDraftCredentialKind(),
+      codingPlanPreset: studioAiDraftCodingPlanPreset(),
+    };
+    if (mode === 'provider') {
+      return {
+        ...applyProviderPreset(source, source.providerPreset, { overwriteBaseUrl: true }),
+        credentialKind: 'sessionApiKey',
+        codingPlanPreset: '',
+      };
+    }
+    if (mode === 'codingPlan' && source.codingPlanPreset) {
+      return {
+        ...applyCodingPlanPreset(source, source.codingPlanPreset, { overwriteBaseUrl: true }),
+        providerPreset: 'custom',
+      };
+    }
+    return {
+      ...source,
+      providerPreset: 'custom',
+      credentialKind: mode === 'codingPlan' ? 'sessionCodingPlanKey' : 'sessionApiKey',
+      codingPlanPreset: '',
+    };
   }
 
   function studioAiTransportOptions() {
@@ -2657,11 +2698,12 @@ if (root) {
   function createStudioAiClient({ useDraft = false } = {}) {
     const draftKey = useDraft ? $('[data-rcs-ai-api-key]')?.value.trim() : '';
     const profile = useDraft ? editingStudioAiProfile() : activeStudioAiProfile();
-    const credentialKind = useDraft ? studioAiDraftCredentialKind() : profile?.credentialKind;
+    const draft = useDraft ? studioAiDraftConnectionMetadata() : null;
+    const credentialKind = useDraft ? draft.credentialKind : profile?.credentialKind;
     const client = new OpenAICompatibleClient({
-      baseUrl: useDraft ? $('[data-rcs-ai-base-url]')?.value : profile?.baseUrl,
+      baseUrl: useDraft ? draft.baseUrl : profile?.baseUrl,
       apiKey: useDraft ? draftKey : studioAiSessionKey(profile),
-      apiFormat: useDraft ? studioAiDraftApiFormat() : profile?.apiFormat,
+      apiFormat: useDraft ? draft.apiFormat : profile?.apiFormat,
       networkMode: useDraft ? studioAiDraftNetworkMode() : profile?.networkMode,
       pageUrl: location.href,
       ...studioAiTransportOptions(),
@@ -2745,13 +2787,14 @@ if (root) {
 
   function studioAiConnectionFormDirty(profile = editingStudioAiProfile()) {
     if (!profile) return true;
+    const draft = studioAiDraftConnectionMetadata();
     return ($('[data-rcs-ai-profile-name]')?.value.trim() || '') !== profile.name
-      || ($('[data-rcs-ai-base-url]')?.value.trim() || '') !== profile.baseUrl
-      || studioAiDraftProviderPreset() !== profile.providerPreset
-      || studioAiDraftApiFormat() !== profile.apiFormat
+      || draft.baseUrl !== profile.baseUrl
+      || draft.providerPreset !== profile.providerPreset
+      || draft.apiFormat !== profile.apiFormat
       || studioAiDraftNetworkMode() !== profile.networkMode
-      || studioAiDraftCredentialKind() !== profile.credentialKind
-      || studioAiDraftCodingPlanPreset() !== profile.codingPlanPreset
+      || draft.credentialKind !== profile.credentialKind
+      || draft.codingPlanPreset !== profile.codingPlanPreset
       || studioAiDraftModel() !== profile.model
       || Boolean($('[data-rcs-ai-api-key]')?.value.trim());
   }
@@ -2785,6 +2828,7 @@ if (root) {
     select.disabled = aiSettingsMutationBusy;
     [
       '[data-rcs-ai-profile-name]',
+      '[data-rcs-ai-connection-mode]',
       '[data-rcs-ai-provider-preset]',
       '[data-rcs-ai-api-format]',
       '[data-rcs-ai-network-mode]',
@@ -2820,37 +2864,56 @@ if (root) {
   }
 
   function renderStudioAiFormatFields() {
-    const format = studioAiDraftApiFormat();
-    const metadata = STUDIO_AI_API_FORMATS[format];
+    const mode = studioAiDraftConnectionMode();
+    const draft = studioAiDraftConnectionMetadata();
+    const metadata = STUDIO_AI_API_FORMATS[draft.apiFormat];
     const baseUrl = $('[data-rcs-ai-base-url]');
     const authHelp = $('[data-rcs-ai-auth-help]');
     const formatState = $('[data-rcs-ai-format-state]');
-    const credentialKind = studioAiDraftCredentialKind();
+    const credentialKind = draft.credentialKind;
     const credential = STUDIO_AI_CREDENTIAL_KINDS[credentialKind];
+    const providerField = $('[data-rcs-ai-provider-field]');
     const codingPlanField = $('[data-rcs-ai-coding-plan-field]');
-    const codingPlanPresetId = studioAiDraftCodingPlanPreset();
-    const codingPlan = codingPlanPreset(codingPlanPresetId);
+    const customFormatField = $('[data-rcs-ai-custom-format-field]');
+    const customBaseField = $('[data-rcs-ai-custom-base-field]');
+    const managedConnection = $('[data-rcs-ai-managed-connection]');
+    const managedTitle = $('[data-rcs-ai-managed-connection-title]');
+    const managedDetail = $('[data-rcs-ai-managed-connection-detail]');
+    const codingPlan = codingPlanPreset(draft.codingPlanPreset);
     const keyLabel = $('[data-rcs-ai-key-label]');
     const keyInput = $('[data-rcs-ai-api-key]');
     const manualModel = $('[data-rcs-ai-model-manual]');
     const refreshModels = $('[data-rcs-ai-refresh-models]');
     const providerSelect = $('[data-rcs-ai-provider-preset]');
-    const provider = providerPreset(studioAiDraftProviderPreset());
+    const provider = providerPreset(draft.providerPreset);
+    const hasManagedPreset = mode === 'provider' || Boolean(codingPlan);
+    const manualTransport = mode === 'custom' || (mode === 'codingPlan' && !codingPlan);
+    const variableProviderEndpoint = mode === 'provider' && !provider.baseUrl;
     if (baseUrl) baseUrl.placeholder = provider.baseUrlPlaceholder || metadata.baseUrlPlaceholder;
     if (authHelp) {
       authHelp.textContent = codingPlan
         ? `${credential.help} ${codingPlan.usageBoundary}`
         : `${metadata.credentialHelp} ${credential.help} ${provider.help || ''}`.trim();
     }
-    if (formatState) formatState.textContent = metadata.label;
-    if (codingPlanField) codingPlanField.hidden = credentialKind !== 'sessionCodingPlanKey';
+    if (formatState) formatState.textContent = `${STUDIO_AI_CONNECTION_MODES[mode].label} · ${metadata.label}`;
+    if (providerField) providerField.hidden = mode !== 'provider';
+    if (codingPlanField) codingPlanField.hidden = mode !== 'codingPlan';
+    if (customFormatField) customFormatField.hidden = !manualTransport;
+    if (customBaseField) customBaseField.hidden = !manualTransport && !variableProviderEndpoint;
+    if (managedConnection) managedConnection.hidden = !hasManagedPreset;
+    if (managedTitle) managedTitle.textContent = codingPlan?.label || provider.label;
+    if (managedDetail) {
+      managedDetail.textContent = `${metadata.label} · ${draft.baseUrl || '请填写供应商资源 Base URL'}`;
+    }
     if (keyLabel) keyLabel.textContent = credential.shortLabel;
     if (keyInput) keyInput.placeholder = credentialKind === 'sessionCodingPlanKey'
       ? '不会读取或导入 CLI OAuth；请手动输入 Plan Key'
       : '无需鉴权的本地服务可留空';
     if (manualModel) manualModel.placeholder = codingPlan?.modelPlaceholder || '例如：gpt-5';
     if (manualModel && !codingPlan) manualModel.placeholder = provider.modelPlaceholder || '填写服务端模型名';
-    if (providerSelect) providerSelect.disabled = aiSettingsMutationBusy || credentialKind === 'sessionCodingPlanKey';
+    if (providerSelect) providerSelect.disabled = aiSettingsMutationBusy;
+    const credentialSelect = $('[data-rcs-ai-credential-kind]');
+    if (credentialSelect) credentialSelect.value = credentialKind;
     if (refreshModels) {
       refreshModels.disabled = aiSettingsMutationBusy || metadata.supportsModelList === false;
       refreshModels.title = metadata.supportsModelList === false
@@ -2864,7 +2927,7 @@ if (root) {
     if (!select || select.options.length) return;
     Object.entries(STUDIO_AI_PROVIDER_GROUPS).forEach(([groupId, groupLabel]) => {
       const entries = Object.entries(STUDIO_AI_PROVIDER_PRESETS)
-        .filter(([, preset]) => preset.group === groupId);
+        .filter(([id, preset]) => id !== 'custom' && preset.group === groupId);
       if (!entries.length) return;
       const group = document.createElement('optgroup');
       group.label = groupLabel;
@@ -2881,19 +2944,18 @@ if (root) {
   function switchStudioAiProviderPreset(nextPresetId) {
     cancelStudioAiModelRequest();
     const presetSelect = $('[data-rcs-ai-provider-preset]');
-    const previousPresetId = normalizeProviderPreset(
-      presetSelect?.dataset.previousValue || editingStudioAiProfile()?.providerPreset,
-    );
+    const previousPresetId = normalizeProviderPreset(presetSelect?.dataset.previousValue);
+    const requestedPresetId = normalizeProviderPreset(nextPresetId);
+    const nextProviderId = requestedPresetId === 'custom' ? 'openai' : requestedPresetId;
     const currentFormat = studioAiDraftApiFormat();
     const currentBaseUrl = $('[data-rcs-ai-base-url]')?.value.trim() || '';
     const next = applyProviderPreset({
       baseUrl: currentBaseUrl,
       apiFormat: currentFormat,
       providerPreset: previousPresetId,
-    }, nextPresetId, {
+    }, nextProviderId, {
       previousPresetId,
-      overwriteBaseUrl: !currentBaseUrl
-        || currentBaseUrl === STUDIO_AI_API_FORMATS[currentFormat].defaultBaseUrl,
+      overwriteBaseUrl: true,
     });
     const format = $('[data-rcs-ai-api-format]');
     const baseUrl = $('[data-rcs-ai-base-url]');
@@ -2901,7 +2963,11 @@ if (root) {
       format.value = next.apiFormat || format.value;
       format.dataset.previousValue = format.value;
     }
-    if (baseUrl && (next.baseUrl || next.providerPreset === 'azure')) baseUrl.value = next.baseUrl;
+    if (baseUrl) {
+      baseUrl.value = providerPreset(nextProviderId).baseUrl
+        ? next.baseUrl
+        : previousPresetId === nextProviderId ? currentBaseUrl : '';
+    }
     if (presetSelect) {
       presetSelect.value = next.providerPreset;
       presetSelect.dataset.previousValue = next.providerPreset;
@@ -2916,7 +2982,6 @@ if (root) {
     cancelStudioAiModelRequest();
     const format = STUDIO_AI_API_FORMATS[nextFormat] ? nextFormat : 'openai-compatible';
     const formatSelect = $('[data-rcs-ai-api-format]');
-    const providerSelect = $('[data-rcs-ai-provider-preset]');
     const previousFormat = STUDIO_AI_API_FORMATS[formatSelect?.dataset.previousValue]
       ? formatSelect.dataset.previousValue
       : 'openai-compatible';
@@ -2927,40 +2992,72 @@ if (root) {
       formatSelect.value = format;
       formatSelect.dataset.previousValue = format;
     }
-    if (providerSelect) {
-      providerSelect.value = 'custom';
-      providerSelect.dataset.previousValue = 'custom';
-    }
     aiModelIds = [];
     renderStudioAiFormatFields();
     renderAiModels();
     renderStudioAiProfileManager();
   }
 
-  function switchStudioAiCredentialKind(nextKind) {
+  function switchStudioAiConnectionMode(nextMode) {
     cancelStudioAiModelRequest();
-    const next = STUDIO_AI_CREDENTIAL_KINDS[nextKind] ? nextKind : 'sessionApiKey';
+    const mode = normalizeConnectionMode(nextMode);
     const existing = editingStudioAiProfile();
     const previous = existing?.credentialKind || studioAiDraftCredentialKind();
-    if (existing && previous !== next) {
+    const nextCredential = mode === 'codingPlan' ? 'sessionCodingPlanKey' : 'sessionApiKey';
+    if (existing && previous !== nextCredential) {
       if (previous === 'sessionCodingPlanKey') codingPlanSessionKeys.delete(existing.id);
       else aiSessionKeys.delete(existing.id);
       invalidateStudioAgentPlan('API 凭证类型与页面会话 Key 已变化。');
     }
+    const modeSelect = $('[data-rcs-ai-connection-mode]');
     const kind = $('[data-rcs-ai-credential-kind]');
     const preset = $('[data-rcs-ai-coding-plan-preset]');
     const providerSelect = $('[data-rcs-ai-provider-preset]');
     const key = $('[data-rcs-ai-api-key]');
-    if (kind) kind.value = next;
-    if (providerSelect && next === 'sessionCodingPlanKey') {
-      providerSelect.value = 'custom';
-      providerSelect.dataset.previousValue = 'custom';
+    const format = $('[data-rcs-ai-api-format]');
+    const baseUrl = $('[data-rcs-ai-base-url]');
+    if (modeSelect) modeSelect.value = mode;
+    if (kind) kind.value = nextCredential;
+    if (mode === 'provider') {
+      const providerId = normalizeProviderPreset(providerSelect?.value) === 'custom'
+        ? 'openai'
+        : normalizeProviderPreset(providerSelect?.value);
+      const next = applyProviderPreset({
+        baseUrl: baseUrl?.value.trim() || '',
+        apiFormat: studioAiDraftApiFormat(),
+      }, providerId, { overwriteBaseUrl: true });
+      if (providerSelect) {
+        providerSelect.value = providerId;
+        providerSelect.dataset.previousValue = providerId;
+      }
+      if (format) {
+        format.value = next.apiFormat;
+        format.dataset.previousValue = next.apiFormat;
+      }
+      if (baseUrl) baseUrl.value = next.baseUrl;
     }
-    if (preset && next !== 'sessionCodingPlanKey') {
+    if (mode === 'codingPlan') {
+      const planId = codingPlanPreset(preset?.value) ? preset.value : 'aliyun';
+      const next = applyCodingPlanPreset({
+        baseUrl: baseUrl?.value.trim() || '',
+        apiFormat: studioAiDraftApiFormat(),
+      }, planId, { overwriteBaseUrl: true });
+      if (preset) {
+        preset.value = planId;
+        preset.dataset.previousValue = planId;
+      }
+      if (format) {
+        format.value = next.apiFormat;
+        format.dataset.previousValue = next.apiFormat;
+      }
+      if (baseUrl) baseUrl.value = next.baseUrl;
+    } else if (preset) {
       preset.value = '';
       preset.dataset.previousValue = '';
     }
     if (key) key.value = '';
+    aiModelIds = [];
+    renderAiModels();
     renderStudioAiFormatFields();
     renderStudioAiProfileManager();
   }
@@ -2968,7 +3065,7 @@ if (root) {
   function switchStudioAiCodingPlanPreset(nextPresetId) {
     cancelStudioAiModelRequest();
     const presetSelect = $('[data-rcs-ai-coding-plan-preset]');
-    const previousPresetId = presetSelect?.dataset.previousValue || editingStudioAiProfile()?.codingPlanPreset || '';
+    const previousPresetId = presetSelect?.dataset.previousValue || '';
     const currentFormat = studioAiDraftApiFormat();
     const currentBaseUrl = $('[data-rcs-ai-base-url]')?.value.trim() || '';
     const next = applyCodingPlanPreset({
@@ -2977,8 +3074,7 @@ if (root) {
       codingPlanPreset: previousPresetId,
     }, nextPresetId, {
       previousPresetId,
-      overwriteBaseUrl: !currentBaseUrl
-        || currentBaseUrl === STUDIO_AI_API_FORMATS[currentFormat].defaultBaseUrl,
+      overwriteBaseUrl: true,
     });
     const format = $('[data-rcs-ai-api-format]');
     const baseUrl = $('[data-rcs-ai-base-url]');
@@ -2986,15 +3082,10 @@ if (root) {
       format.value = next.apiFormat || format.value;
       format.dataset.previousValue = format.value;
     }
-    if (baseUrl) baseUrl.value = next.baseUrl || baseUrl.value;
+    if (baseUrl && next.codingPlanPreset) baseUrl.value = next.baseUrl;
     if (presetSelect) {
       presetSelect.value = next.codingPlanPreset;
       presetSelect.dataset.previousValue = next.codingPlanPreset;
-    }
-    const providerSelect = $('[data-rcs-ai-provider-preset]');
-    if (providerSelect && next.codingPlanPreset) {
-      providerSelect.value = 'custom';
-      providerSelect.dataset.previousValue = 'custom';
     }
     aiModelIds = [];
     renderAiModels();
@@ -3007,16 +3098,20 @@ if (root) {
     const apiKey = $('[data-rcs-ai-api-key]');
     const manual = $('[data-rcs-ai-model-manual]');
     const name = $('[data-rcs-ai-profile-name]');
+    const connectionMode = $('[data-rcs-ai-connection-mode]');
     const format = $('[data-rcs-ai-api-format]');
     const networkMode = $('[data-rcs-ai-network-mode]');
     const credentialKind = $('[data-rcs-ai-credential-kind]');
     const codingPlanPreset = $('[data-rcs-ai-coding-plan-preset]');
     const providerPresetSelect = $('[data-rcs-ai-provider-preset]');
     const profile = editingStudioAiProfile();
+    const mode = profile ? profileConnectionMode(profile) : 'custom';
     renderStudioAiProviderOptions();
     if (name) name.value = profile?.name || '';
+    if (connectionMode) connectionMode.value = mode;
     if (providerPresetSelect) {
-      providerPresetSelect.value = normalizeProviderPreset(profile?.providerPreset);
+      const providerId = normalizeProviderPreset(profile?.providerPreset);
+      providerPresetSelect.value = providerId === 'custom' ? 'openai' : providerId;
       providerPresetSelect.dataset.previousValue = providerPresetSelect.value;
     }
     if (format) {
@@ -3024,7 +3119,7 @@ if (root) {
       format.dataset.previousValue = format.value;
     }
     if (networkMode) networkMode.value = profile?.networkMode || 'direct';
-    if (credentialKind) credentialKind.value = profile?.credentialKind || 'sessionApiKey';
+    if (credentialKind) credentialKind.value = mode === 'codingPlan' ? 'sessionCodingPlanKey' : 'sessionApiKey';
     if (codingPlanPreset) {
       codingPlanPreset.value = profile?.codingPlanPreset || '';
       codingPlanPreset.dataset.previousValue = codingPlanPreset.value;
@@ -3265,13 +3360,14 @@ if (root) {
     const apiKeyInput = $('[data-rcs-ai-api-key]');
     const nameInput = $('[data-rcs-ai-profile-name]');
     const name = nameInput?.value.trim() || '';
-    const baseUrl = baseUrlInput?.value.trim() || '';
     const model = studioAiDraftModel();
-    const apiFormat = studioAiDraftApiFormat();
+    const connection = studioAiDraftConnectionMetadata();
+    const baseUrl = connection.baseUrl;
+    const apiFormat = connection.apiFormat;
     const networkMode = studioAiDraftNetworkMode();
-    const credentialKind = studioAiDraftCredentialKind();
-    const codingPlanPreset = studioAiDraftCodingPlanPreset();
-    const providerPresetId = studioAiDraftProviderPreset();
+    const credentialKind = connection.credentialKind;
+    const codingPlanPreset = connection.codingPlanPreset;
+    const providerPresetId = connection.providerPreset;
     if (!name) throw new Error('请填写配置名称。');
     if (!baseUrl) throw new Error('请填写 Base URL。');
     if (!model) throw new Error('请选择或填写模型名称。');
@@ -4327,14 +4423,21 @@ if (root) {
       const name = typeof item.name === 'string' && item.name.trim() ? item.name.trim() : '未命名 API';
       const transport = normalizeApiProfileTransport(item);
       const credential = sanitizeApiProfileCredentialMetadata(item);
+      const presetState = reconcileApiProfilePresetState({
+        ...item,
+        baseUrl: typeof item.baseUrl === 'string' ? item.baseUrl.trim() : '',
+        ...transport,
+        ...credential,
+      });
       return [{
         id,
         name,
-        baseUrl: typeof item.baseUrl === 'string' ? item.baseUrl.trim() : '',
+        baseUrl: presetState.baseUrl,
         model: typeof item.model === 'string' ? item.model.trim() : '',
-        providerPreset: normalizeProviderPreset(item.providerPreset),
+        providerPreset: presetState.providerPreset,
         ...transport,
-        ...credential,
+        credentialKind: presetState.credentialKind,
+        codingPlanPreset: presetState.codingPlanPreset,
       }];
     });
   }
@@ -12838,9 +12941,9 @@ if (root) {
     const aiApiKey = $('[data-rcs-ai-api-key]');
     const aiBaseUrl = $('[data-rcs-ai-base-url]');
     const aiApiFormat = $('[data-rcs-ai-api-format]');
+    const aiConnectionMode = $('[data-rcs-ai-connection-mode]');
     const aiProviderPreset = $('[data-rcs-ai-provider-preset]');
     const aiNetworkMode = $('[data-rcs-ai-network-mode]');
-    const aiCredentialKind = $('[data-rcs-ai-credential-kind]');
     const aiCodingPlanPreset = $('[data-rcs-ai-coding-plan-preset]');
     const aiModel = $('[data-rcs-ai-model]');
     const aiManualModel = $('[data-rcs-ai-model-manual]');
@@ -12987,24 +13090,25 @@ if (root) {
     $('[data-rcs-ai-key-clear]').addEventListener('click', clearStudioAiSessionKey);
     aiBaseUrl.addEventListener('input', () => {
       cancelStudioAiModelRequest();
-      const provider = providerPreset(aiProviderPreset.value);
-      if (aiProviderPreset.value !== 'custom' && aiBaseUrl.value.trim() !== provider.baseUrl) {
-        aiProviderPreset.value = 'custom';
-        aiProviderPreset.dataset.previousValue = 'custom';
-        renderStudioAiFormatFields();
-      }
       aiModelIds = [];
       renderAiModels();
+      renderStudioAiFormatFields();
       queueMicrotask(renderStudioAiProfileManager);
+    });
+    aiConnectionMode.addEventListener('change', (event) => {
+      switchStudioAiConnectionMode(event.currentTarget.value);
+      setStudioAiSettingsStatus(
+        event.currentTarget.value === 'provider'
+          ? '供应商预设将统一管理原生 API 格式与固定 Base URL。'
+          : event.currentTarget.value === 'codingPlan'
+            ? 'Coding Plan 使用独立的页面会话 Key，不会读取 CLI OAuth。'
+            : '自定义模式可手动配置原生 API 格式、Base URL 与本地服务。',
+      );
     });
     aiProviderPreset.addEventListener('change', (event) => {
       switchStudioAiProviderPreset(event.currentTarget.value);
       const preset = providerPreset(event.currentTarget.value);
-      setStudioAiSettingsStatus(
-        event.currentTarget.value === 'custom'
-          ? '已切换为自定义服务；协议、Base URL 与模型可手动配置。'
-          : `已套用 ${preset.label} 的协议与默认端点；可继续调整模型或自定义网关。`,
-      );
+      setStudioAiSettingsStatus(`已套用 ${preset.label} 的协议与${preset.baseUrl ? '固定端点' : '资源地址规则'}；模型需要单独选择。`);
     });
     aiApiFormat.addEventListener('change', (event) => {
       if (studioAiDraftCredentialKind() === 'sessionCodingPlanKey' && aiCodingPlanPreset.value) {
@@ -13020,20 +13124,12 @@ if (root) {
       cancelStudioAiModelRequest();
       renderStudioAiProfileManager();
     });
-    aiCredentialKind.addEventListener('change', (event) => {
-      switchStudioAiCredentialKind(event.currentTarget.value);
-      setStudioAiSettingsStatus(
-        event.currentTarget.value === 'sessionCodingPlanKey'
-          ? '已切换为 Coding Plan Key；普通 API Key 已隔离，CLI OAuth 不会被读取。'
-          : '已切换为按量 API Key；Coding Plan Key 已隔离。',
-      );
-    });
     aiCodingPlanPreset.addEventListener('change', (event) => {
       switchStudioAiCodingPlanPreset(event.currentTarget.value);
       const preset = codingPlanPreset(event.currentTarget.value);
       setStudioAiSettingsStatus(
         preset
-          ? `已套用 ${preset.label} 的原生格式与默认端点；已有自定义网关不会被覆盖。`
+          ? `已套用 ${preset.label} 的原生格式与固定端点。`
           : '已切换为自定义 Coding Plan 配置。',
       );
     });

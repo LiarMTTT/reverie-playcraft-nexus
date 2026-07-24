@@ -9,6 +9,21 @@
 
 const DEFAULT_CREDENTIAL_KIND = 'sessionApiKey';
 const DEFAULT_PROVIDER_PRESET = 'custom';
+const DEFAULT_CONNECTION_MODE = 'custom';
+const STUDIO_AI_CONNECTION_MODES = Object.freeze({
+  provider: Object.freeze({
+    label: '供应商 API',
+    help: '由供应商预设管理原生格式与固定端点。',
+  }),
+  codingPlan: Object.freeze({
+    label: 'Coding Plan',
+    help: '套餐 Key 与普通 API Key 分开保存。',
+  }),
+  custom: Object.freeze({
+    label: '自定义 / 本地服务',
+    help: '手动配置原生格式、Base URL 与模型。',
+  }),
+});
 const STUDIO_AI_CREDENTIAL_KINDS = Object.freeze({
   sessionApiKey: Object.freeze({
     label: '按量 API Key',
@@ -317,12 +332,16 @@ function normalizeProviderPreset(value) {
   return Object.hasOwn(STUDIO_AI_PROVIDER_PRESETS, value) ? value : DEFAULT_PROVIDER_PRESET;
 }
 
+function normalizeConnectionMode(value) {
+  return Object.hasOwn(STUDIO_AI_CONNECTION_MODES, value) ? value : DEFAULT_CONNECTION_MODE;
+}
+
 function providerPreset(value) {
   return STUDIO_AI_PROVIDER_PRESETS[normalizeProviderPreset(value)];
 }
 
 function applyProviderPreset(profile, presetId, {
-  overwriteBaseUrl = false,
+  overwriteBaseUrl = true,
   previousPresetId = profile?.providerPreset,
 } = {}) {
   const source = profile && typeof profile === 'object' ? profile : {};
@@ -340,7 +359,7 @@ function applyProviderPreset(profile, presetId, {
     ...source,
     providerPreset: nextId,
     apiFormat: nextPreset.apiFormat,
-    baseUrl: replaceBaseUrl ? nextPreset.baseUrl : currentBaseUrl,
+    baseUrl: nextPreset.baseUrl && replaceBaseUrl ? nextPreset.baseUrl : currentBaseUrl,
   };
 }
 
@@ -365,7 +384,7 @@ function profileDelegationAllowed(profile) {
 }
 
 function applyCodingPlanPreset(profile, presetId, {
-  overwriteBaseUrl = false,
+  overwriteBaseUrl = true,
   previousPresetId = profile?.codingPlanPreset,
 } = {}) {
   const source = profile && typeof profile === 'object' ? profile : {};
@@ -391,6 +410,50 @@ function applyCodingPlanPreset(profile, presetId, {
   };
 }
 
+function samePresetEndpoint(left, right) {
+  return String(left || '').trim().replace(/\/+$/, '') === String(right || '').trim().replace(/\/+$/, '');
+}
+
+function reconcileApiProfilePresetState(profile) {
+  const source = profile && typeof profile === 'object' ? profile : {};
+  const credential = sanitizeApiProfileCredentialMetadata(source);
+  const baseUrl = typeof source.baseUrl === 'string' ? source.baseUrl.trim() : '';
+  const apiFormat = typeof source.apiFormat === 'string' ? source.apiFormat : '';
+  if (credential.credentialKind === 'sessionCodingPlanKey') {
+    const plan = codingPlanPreset(credential.codingPlanPreset);
+    const planMatches = Boolean(
+      plan
+      && apiFormat === plan.apiFormat
+      && samePresetEndpoint(baseUrl, plan.baseUrl)
+    );
+    return {
+      ...source,
+      baseUrl,
+      providerPreset: DEFAULT_PROVIDER_PRESET,
+      credentialKind: 'sessionCodingPlanKey',
+      codingPlanPreset: planMatches ? credential.codingPlanPreset : '',
+    };
+  }
+  const providerId = normalizeProviderPreset(source.providerPreset);
+  const preset = providerPreset(providerId);
+  const providerMatches = providerId !== DEFAULT_PROVIDER_PRESET
+    && apiFormat === preset.apiFormat
+    && (!preset.baseUrl || samePresetEndpoint(baseUrl, preset.baseUrl));
+  return {
+    ...source,
+    baseUrl,
+    providerPreset: providerMatches ? providerId : DEFAULT_PROVIDER_PRESET,
+    credentialKind: DEFAULT_CREDENTIAL_KIND,
+    codingPlanPreset: '',
+  };
+}
+
+function profileConnectionMode(profile) {
+  const reconciled = reconcileApiProfilePresetState(profile);
+  if (reconciled.credentialKind === 'sessionCodingPlanKey') return 'codingPlan';
+  return reconciled.providerPreset === DEFAULT_PROVIDER_PRESET ? 'custom' : 'provider';
+}
+
 function sanitizeApiProfileCredentialMetadata(profile) {
   const source = profile && typeof profile === 'object' ? profile : {};
   const credentialKind = normalizeCredentialKind(source.credentialKind);
@@ -401,8 +464,10 @@ function sanitizeApiProfileCredentialMetadata(profile) {
 }
 
 export {
+  DEFAULT_CONNECTION_MODE,
   DEFAULT_CREDENTIAL_KIND,
   DEFAULT_PROVIDER_PRESET,
+  STUDIO_AI_CONNECTION_MODES,
   STUDIO_AI_CREDENTIAL_KINDS,
   STUDIO_AI_PROVIDER_GROUPS,
   STUDIO_AI_PROVIDER_PRESETS,
@@ -411,10 +476,13 @@ export {
   applyProviderPreset,
   codingPlanPreset,
   credentialStorageBucket,
+  normalizeConnectionMode,
   normalizeCodingPlanPreset,
   normalizeCredentialKind,
   normalizeProviderPreset,
   profileDelegationAllowed,
+  profileConnectionMode,
   providerPreset,
+  reconcileApiProfilePresetState,
   sanitizeApiProfileCredentialMetadata,
 };
