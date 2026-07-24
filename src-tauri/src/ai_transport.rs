@@ -248,6 +248,7 @@ impl Resolve for GlobalDnsResolver {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct AiTransportState {
     direct_public_client: Client,
     system_proxy_client: Client,
@@ -368,6 +369,24 @@ impl AiTransportState {
         }
         registry.pre_cancelled.insert(request_id.to_string(), now);
         Ok(true)
+    }
+
+    pub(crate) fn cancel_all(&self) -> usize {
+        let Ok(mut registry) = self.requests.lock() else {
+            return 0;
+        };
+        registry.pre_cancelled.clear();
+        for token in registry.active.values() {
+            token.cancel();
+        }
+        registry.active.len()
+    }
+
+    pub(crate) fn active_request_count(&self) -> usize {
+        self.requests
+            .lock()
+            .map(|registry| registry.active.len())
+            .unwrap_or_default()
     }
 }
 
@@ -1234,6 +1253,22 @@ mod tests {
             .unwrap()
             .active
             .contains_key("request-1"));
+    }
+
+    #[test]
+    fn global_cancel_signals_all_active_requests_without_pre_cancel_entries() {
+        let state = AiTransportState::new().unwrap();
+        let (first, first_guard) = state.register("request-1").unwrap();
+        let (second, second_guard) = state.register("request-2").unwrap();
+
+        assert_eq!(state.cancel_all(), 2);
+        assert!(first.is_cancelled());
+        assert!(second.is_cancelled());
+        assert!(state.requests.lock().unwrap().pre_cancelled.is_empty());
+        assert_eq!(state.active_request_count(), 2);
+
+        drop((first_guard, second_guard));
+        assert_eq!(state.active_request_count(), 0);
     }
 
     #[test]

@@ -14,6 +14,7 @@ use std::{
         mpsc::SyncSender,
         Arc, Mutex, MutexGuard,
     },
+    time::{Duration, Instant},
 };
 use tauri::{
     menu::{Menu, MenuBuilder, MenuItemBuilder, SubmenuBuilder},
@@ -24,7 +25,7 @@ use tauri::{
 #[cfg(feature = "release-updater")]
 use std::{
     sync::mpsc,
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 #[cfg(feature = "release-updater")]
@@ -34,6 +35,9 @@ const RPN_LABEL: &str = "rpn";
 const ST_LABEL: &str = "st";
 const DEFAULT_ST_URL: &str = "http://127.0.0.1:8000/";
 const DATA_ROOT_NAME: &str = "ReveriePlaycraftNexus";
+const SHUTDOWN_WAIT_TIMEOUT: Duration = Duration::from_secs(2);
+const FORCED_EXIT_GRACE: Duration = Duration::from_secs(1);
+const SHUTDOWN_POLL_INTERVAL: Duration = Duration::from_millis(25);
 const REMOVE_TAURI_BRIDGE: &str = r#"
 try { delete globalThis.__TAURI__; } catch (_) { globalThis.__TAURI__ = undefined; }
 try { delete globalThis.__TAURI_INTERNALS__; } catch (_) { globalThis.__TAURI_INTERNALS__ = undefined; }
@@ -102,6 +106,7 @@ struct DesktopState {
     config_path: PathBuf,
     update_message: Mutex<String>,
     update_busy: Arc<AtomicBool>,
+    shutdown_started: AtomicBool,
     flush_waiter: Mutex<Option<FlushWaiter>>,
     #[cfg(feature = "release-updater")]
     pending_update: Mutex<Option<PendingUpdate>>,
@@ -114,11 +119,47 @@ impl DesktopState {
             config_path,
             update_message: Mutex::new(String::new()),
             update_busy: Arc::new(AtomicBool::new(false)),
+            shutdown_started: AtomicBool::new(false),
             flush_waiter: Mutex::new(None),
             #[cfg(feature = "release-updater")]
             pending_update: Mutex::new(None),
         }
     }
+}
+
+fn begin_shutdown(app: &AppHandle) {
+    let desktop = app.state::<DesktopState>();
+    if desktop.shutdown_started.swap(true, Ordering::AcqRel) {
+        return;
+    }
+
+    let ai = app.state::<AiTransportState>().inner().clone();
+    let mcp = app.state::<McpHostState>().inner().clone();
+    ai.cancel_all();
+    mcp.cancel_all();
+
+    let force_exit_ready = Arc::new(AtomicBool::new(false));
+    let ready_after_cleanup = force_exit_ready.clone();
+    let app = app.clone();
+    std::thread::spawn(move || {
+        let started = Instant::now();
+        while started.elapsed() < SHUTDOWN_WAIT_TIMEOUT
+            && (ai.active_request_count() > 0 || mcp.active_execution_count() > 0)
+        {
+            std::thread::sleep(SHUTDOWN_POLL_INTERVAL);
+        }
+        ready_after_cleanup.store(true, Ordering::Release);
+        app.exit(0);
+    });
+    std::thread::spawn(move || {
+        let started = Instant::now();
+        while !force_exit_ready.load(Ordering::Acquire) && started.elapsed() < SHUTDOWN_WAIT_TIMEOUT
+        {
+            std::thread::sleep(SHUTDOWN_POLL_INTERVAL);
+        }
+        std::thread::sleep(FORCED_EXIT_GRACE);
+        std::process::exit(0);
+    });
 }
 
 struct BusyGuard(Arc<AtomicBool>);
@@ -844,10 +885,12 @@ fn main() {
             _ => {}
         })
         .on_window_event(|window, event| {
-            if matches!(event, WindowEvent::CloseRequested { .. })
-                && matches!(window.label(), RPN_LABEL | ST_LABEL)
-            {
-                window.app_handle().exit(0);
+            if matches!(window.label(), RPN_LABEL | ST_LABEL) {
+                if let WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                    begin_shutdown(window.app_handle());
+                }
             }
         })
         .invoke_handler(tauri::generate_handler![

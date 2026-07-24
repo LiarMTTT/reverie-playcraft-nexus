@@ -27,6 +27,16 @@ use tokio::{
 };
 use tokio_util::{sync::CancellationToken, task::AbortOnDropHandle};
 
+#[cfg(windows)]
+use windows_sys::Win32::{
+    Foundation::{CloseHandle, HANDLE},
+    System::JobObjects::{
+        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+        SetInformationJobObject, TerminateJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+    },
+};
+
 const INTENT_TTL: Duration = Duration::from_secs(5 * 60);
 const MAX_INTENTS: usize = 16;
 const MAX_NATIVE_APPROVALS: usize = 1;
@@ -511,6 +521,33 @@ impl McpHostState {
             }
             IntentLifecycle::Finished | IntentLifecycle::Cancelled => Ok(false),
         }
+    }
+
+    pub(crate) fn cancel_all(&self) -> usize {
+        let Ok(mut intents) = self.inner.intents.lock() else {
+            return 0;
+        };
+        let mut cancelled = 0;
+        for record in intents.values_mut() {
+            match &record.lifecycle {
+                IntentLifecycle::Prepared => {
+                    record.lifecycle = IntentLifecycle::Cancelled;
+                    cancelled += 1;
+                }
+                IntentLifecycle::AwaitingApproval { cancel }
+                | IntentLifecycle::Running { cancel } => {
+                    cancel.cancel();
+                    record.lifecycle = IntentLifecycle::Cancelled;
+                    cancelled += 1;
+                }
+                IntentLifecycle::Finished | IntentLifecycle::Cancelled => {}
+            }
+        }
+        cancelled
+    }
+
+    pub(crate) fn active_execution_count(&self) -> usize {
+        MAX_EXECUTIONS.saturating_sub(self.execution_gate.available_permits())
     }
 
     fn reserve_execution(&self) -> Result<OwnedSemaphorePermit, McpHostError> {
@@ -1778,7 +1815,93 @@ fn apply_clean_environment(command: &mut Command, explicit: &BTreeMap<String, St
     command.envs(explicit);
 }
 
-async fn terminate_child(child: &mut Child) {
+#[cfg(windows)]
+struct ProcessTreeJob(isize);
+
+#[cfg(windows)]
+impl ProcessTreeJob {
+    fn new() -> Result<Self, McpHostError> {
+        let handle = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
+        if handle.is_null() {
+            return Err(McpHostError::new(
+                "spawn_failed",
+                "无法初始化 Windows MCP 进程树托管",
+                false,
+            ));
+        }
+        let job = Self(handle as isize);
+        let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
+        limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        let configured = unsafe {
+            SetInformationJobObject(
+                job.handle(),
+                JobObjectExtendedLimitInformation,
+                std::ptr::from_ref(&limits).cast(),
+                std::mem::size_of_val(&limits) as u32,
+            )
+        };
+        if configured == 0 {
+            return Err(McpHostError::new(
+                "spawn_failed",
+                "无法配置 Windows MCP 进程树托管",
+                false,
+            ));
+        }
+        Ok(job)
+    }
+
+    fn handle(&self) -> HANDLE {
+        self.0 as HANDLE
+    }
+
+    fn assign(&self, child: &Child) -> Result<(), McpHostError> {
+        let process = child
+            .raw_handle()
+            .ok_or_else(|| McpHostError::new("spawn_failed", "无法取得 MCP 子进程句柄", false))?;
+        if unsafe { AssignProcessToJobObject(self.handle(), process as HANDLE) } == 0 {
+            return Err(McpHostError::new(
+                "spawn_failed",
+                "无法把 MCP 子进程加入 Windows 进程树托管",
+                false,
+            ));
+        }
+        Ok(())
+    }
+
+    fn terminate(&self) {
+        unsafe {
+            TerminateJobObject(self.handle(), 1);
+        }
+    }
+}
+
+#[cfg(windows)]
+impl Drop for ProcessTreeJob {
+    fn drop(&mut self) {
+        unsafe {
+            CloseHandle(self.handle());
+        }
+    }
+}
+
+#[cfg(not(windows))]
+struct ProcessTreeJob;
+
+#[cfg(not(windows))]
+impl ProcessTreeJob {
+    fn new() -> Result<Self, McpHostError> {
+        Ok(Self)
+    }
+
+    fn assign(&self, _child: &Child) -> Result<(), McpHostError> {
+        Ok(())
+    }
+
+    fn terminate(&self) {}
+}
+
+async fn terminate_child(child: &mut Child, process_job: &ProcessTreeJob) {
+    process_job.terminate();
     let _ = child.start_kill();
     let _ = timeout(CHILD_WAIT_TIMEOUT, child.wait()).await;
 }
@@ -1814,6 +1937,7 @@ async fn execute_prepared_intent(
     if cancel.is_cancelled() {
         return Err(McpHostError::cancelled("MCP 运行已取消"));
     }
+    let process_job = ProcessTreeJob::new()?;
     let mut child = command.spawn().map_err(|_| {
         McpHostError::new(
             "spawn_failed",
@@ -1821,6 +1945,10 @@ async fn execute_prepared_intent(
             false,
         )
     })?;
+    if let Err(error) = process_job.assign(&child) {
+        terminate_child(&mut child, &process_job).await;
+        return Err(error);
+    }
     let mut stdin = child
         .stdin
         .take()
@@ -1862,7 +1990,7 @@ async fn execute_prepared_intent(
     };
     drop(stdin);
     drop(stdout);
-    terminate_child(&mut child).await;
+    terminate_child(&mut child, &process_job).await;
     if !stderr_finished {
         match timeout(CHILD_WAIT_TIMEOUT, &mut stderr_task).await {
             Ok(Ok(Ok(()))) => {}
@@ -2495,6 +2623,36 @@ mod tests {
         );
     }
 
+    #[test]
+    fn global_cancel_covers_prepared_awaiting_and_running_intents() {
+        let cwd = std::env::temp_dir();
+        let state = McpHostState::new();
+        let prepared_summary =
+            prepare_in_state(&state, prepared(&cwd, McpOperationKind::ListTools));
+        let awaiting = prepare_in_state(&state, prepared(&cwd, McpOperationKind::ListTools));
+        let (_, awaiting_cancel) = state
+            .begin_approval(&awaiting.intent_id, &source(), Instant::now())
+            .unwrap();
+        let running = prepare_in_state(&state, prepared(&cwd, McpOperationKind::ListTools));
+        let (_, running_cancel) = state
+            .begin_approval(&running.intent_id, &source(), Instant::now())
+            .unwrap();
+        state
+            .begin_running(&running.intent_id, &source(), &running_cancel)
+            .unwrap();
+
+        assert_eq!(state.cancel_all(), 3);
+        assert!(awaiting_cancel.is_cancelled());
+        assert!(running_cancel.is_cancelled());
+        for intent_id in [
+            prepared_summary.intent_id,
+            awaiting.intent_id,
+            running.intent_id,
+        ] {
+            assert_eq!(state.lifecycle_name(&intent_id), Some("cancelled"));
+        }
+    }
+
     #[tokio::test]
     async fn approval_decision_injection_runs_off_thread() {
         assert!(request_approval_with(|| true).await.unwrap());
@@ -2527,10 +2685,14 @@ mod tests {
     #[test]
     fn execution_and_native_approval_limits_are_stable() {
         let state = McpHostState::new();
+        assert_eq!(state.active_execution_count(), 0);
         let first = state.reserve_execution().unwrap();
+        assert_eq!(state.active_execution_count(), 1);
         let second = state.reserve_execution().unwrap();
+        assert_eq!(state.active_execution_count(), 2);
         assert_eq!(state.reserve_execution().err().unwrap().code, "busy");
         drop(first);
+        assert_eq!(state.active_execution_count(), 1);
         assert!(state.reserve_execution().is_ok());
         drop(second);
 
@@ -2698,16 +2860,26 @@ rl.on('line', (line) => {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn cancelling_stdio_execution_kills_the_child_process() {
+    async fn cancelling_stdio_execution_kills_the_process_tree() {
         let cwd = temp_test_dir();
         fs::create_dir_all(&cwd).unwrap();
         let script = cwd.join("slow-mcp.cjs");
+        let heartbeat_script = cwd.join("heartbeat-child.cjs");
         let heartbeat = cwd.join("heartbeat.txt");
         fs::write(
-            &script,
+            &heartbeat_script,
             r#"const fs = require('node:fs');
-const readline = require('node:readline');
 const heartbeat = process.argv[2];
+setInterval(() => fs.appendFileSync(heartbeat, 'x'), 20);
+"#,
+        )
+        .unwrap();
+        fs::write(
+            &script,
+            r#"const { spawn } = require('node:child_process');
+const readline = require('node:readline');
+const heartbeatScript = process.argv[2];
+const heartbeat = process.argv[3];
 const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
 const send = (value) => process.stdout.write(`${JSON.stringify(value)}\n`);
 rl.on('line', (line) => {
@@ -2725,7 +2897,7 @@ rl.on('line', (line) => {
     return;
   }
   if (message.method === 'tools/list') {
-    setInterval(() => fs.appendFileSync(heartbeat, 'x'), 20);
+    spawn(process.execPath, [heartbeatScript, heartbeat], { stdio: 'ignore' });
   }
 });
 "#,
@@ -2736,6 +2908,7 @@ rl.on('line', (line) => {
         let mut value = runtime_request(&cwd, McpOperationKind::ListTools);
         value.args = vec![
             script.to_string_lossy().into_owned(),
+            heartbeat_script.to_string_lossy().into_owned(),
             heartbeat.to_string_lossy().into_owned(),
         ];
         let summary = prepare_in_state(&state, validate_prepare_request(value, source()).unwrap());

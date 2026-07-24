@@ -1,6 +1,6 @@
 {
   "name": "reverie-playcraft-nexus",
-  "version": "0.19.2",
+  "version": "0.19.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -39,9 +39,9 @@
     "node": ">=20"
   },
   "rpnBatch": {
-    "label": "m8-agent-reply-cleanup",
-    "version": "0.19.2",
+    "label": "m9-desktop-process-lifecycle",
+    "version": "0.19.3",
     "level": "patch",
-    "startedAt": "2026-07-23T14:13:17.523Z"
+    "startedAt": "2026-07-24T06:04:08.761Z"
   }
 }

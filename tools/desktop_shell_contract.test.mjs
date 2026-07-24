@@ -183,6 +183,8 @@ assert.match(aiTransport, /saturating_add\(chunk\.len\(\)\) > request\.max_respo
 assert.match(aiTransport, /run_until_cancelled/);
 assert.match(aiTransport, /const PRE_CANCEL_TTL: Duration = Duration::from_secs\(5\)/u);
 assert.match(aiTransport, /const MAX_PRE_CANCELLED_REQUESTS: usize = 64/u);
+assert.match(aiTransport, /pub\(crate\) fn cancel_all\(&self\)/u,
+  '桌面关闭必须能一次取消全部活动 AI 请求');
 assert.match(aiTransport, /pre_cancelled\.remove\(request_id\)[\s\S]*token\.cancel\(\)/u,
   'AI cancel-before-register must be consumed before any request can run');
 assert.match(aiTransport, /if token\.is_cancelled\(\)[\s\S]*let client = state\.client_for/u,
@@ -254,6 +256,29 @@ for (const envName of ['PATH', 'PATHEXT', 'COMSPEC', 'NODE_OPTIONS', 'PYTHONPATH
 assert.match(mcpHost, /\.kill_on_drop\(true\)/);
 assert.match(mcpHost, /child\.start_kill\(\)/u);
 assert.match(mcpHost, /timeout\(CHILD_WAIT_TIMEOUT,\s*child\.wait\(\)\)/u);
+assert.match(mcpHost, /pub\(crate\) fn cancel_all\(&self\)/u,
+  '桌面关闭必须能一次取消全部待审批与运行中的 MCP intent');
+for (const windowsProcessTreeContract of [
+  'CreateJobObjectW',
+  'SetInformationJobObject',
+  'JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE',
+  'AssignProcessToJobObject',
+  'TerminateJobObject',
+]) {
+  assert.match(
+    mcpHost,
+    new RegExp(`\\b${windowsProcessTreeContract}\\b`, 'u'),
+    `Windows MCP 进程树托管缺少 ${windowsProcessTreeContract}`,
+  );
+}
+for (const windowsFeature of [
+  'Win32_Foundation',
+  'Win32_Security',
+  'Win32_System_JobObjects',
+  'Win32_System_Threading',
+]) {
+  assert.match(cargo, new RegExp(`"${windowsFeature}"`, 'u'), `windows-sys 缺少 ${windowsFeature} feature`);
+}
 assert.match(mcpHost, /cancel\.cancelled\(\)/u);
 assert.match(mcpHost, /timeout\(EXECUTION_TIMEOUT,\s*session\)/u);
 for (const method of ['initialize', 'notifications/initialized', 'tools/list', 'tools/call']) {
@@ -331,6 +356,23 @@ assert.match(rust, /"page_rpn"\s*=>\s*\{[\s\S]{0,120}switch_page\(app, RPN_LABEL
 assert.match(rust, /"page_st"\s*=>\s*\{[\s\S]{0,120}switch_page\(app, ST_LABEL\)/);
 assert.match(rust, /fn desktop_open_rpn\([\s\S]{0,320}switch_page\(&app, RPN_LABEL\)\?/);
 assert.match(rust, /fn desktop_open_st\([\s\S]{0,320}switch_page\(&app, ST_LABEL\)\?/);
+const shutdownSource = rustSection('fn begin_shutdown(', '\nstruct BusyGuard(', '桌面关闭协调器');
+assert.match(shutdownSource, /state::<AiTransportState>\(\)/u);
+assert.match(shutdownSource, /state::<McpHostState>\(\)/u);
+assert.match(shutdownSource, /shutdown_started\.swap\(true,\s*Ordering::AcqRel\)/u,
+  '重复关闭事件只能启动一次清理流程');
+assert.match(shutdownSource, /ai\.cancel_all\(\)[\s\S]*mcp\.cancel_all\(\)/u,
+  '桌面关闭入口必须先取消 AI 与 MCP 活动');
+assert.equal((shutdownSource.match(/std::thread::spawn/gu) || []).length, 2,
+  '正常退出与强退看门狗必须位于独立线程，避免 app.exit 阻塞兜底');
+assert.match(shutdownSource, /ready_after_cleanup\.store\(true,\s*Ordering::Release\)[\s\S]*app\.exit\(0\)/u);
+assert.match(shutdownSource, /FORCED_EXIT_GRACE[\s\S]*std::process::exit\(0\)/u,
+  '正常退出失效时必须有宿主进程终止兜底');
+assert.match(
+  rust,
+  /WindowEvent::CloseRequested\s*\{\s*api,\s*\.\.\s*\}[\s\S]*api\.prevent_close\(\)[\s\S]*begin_shutdown/u,
+  '关闭窗口必须拦截默认销毁并进入有界清理流程',
+);
 
 const setStUrlSource = rustSection('fn desktop_set_st_url(', '\n#[tauri::command]\nasync fn desktop_check_update(', 'ST 地址更新命令');
 assert.match(setStUrlSource, /let normalized = normalize_st_url\(&url\)\?/);
